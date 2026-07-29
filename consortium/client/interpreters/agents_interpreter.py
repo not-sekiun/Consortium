@@ -76,6 +76,14 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         self._task_ids[task["task_id"]] = None
         self.refresh_autocomplete()
 
+    async def _task_deleted_event_handler(
+        self,
+        event: dict[str, Any],
+    ) -> None:
+        task = event["data"]
+        self._task_ids.pop(task["task_id"], None)
+        self.refresh_autocomplete()
+
     async def _agent_registered_event_handler(
         self,
         event: dict[str, Any],
@@ -90,15 +98,10 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         self,
         event: dict[str, Any],
     ) -> None:
-        # The AGENT_DELETED event carries the deleted agent's JSON alongside a snapshot
-        # of the task IDs it owned at deletion time. The agent's tasks are removed along
-        # with the agent server side, so both the agent ID and every one of its task IDs
-        # must be pruned from their respective completion sets.
-        agent = event["data"]["agent"]
-        task_ids = event["data"]["task_ids"]
+        # Task records are globally owned and remain queryable after their agent is
+        # deleted, so only the agent ID is removed from completion.
+        agent = event["data"]
         self._agent_ids.pop(agent["agent_id"], None)
-        for task_id in task_ids:
-            self._task_ids.pop(task_id, None)
         self.refresh_autocomplete()
 
     # Single source of truth for this interpreter's event subscriptions, so that setup
@@ -109,6 +112,7 @@ class AgentsInterpreter(BaseConnectedInterpreter):
             "AGENT_REGISTERED": self._agent_registered_event_handler,
             "AGENT_TASKED": self._agent_tasked_event_handler,
             "AGENT_DELETED": self._agent_deleted_event_handler,
+            "TASK_DELETED": self._task_deleted_event_handler,
         }
 
     async def _setup_event_handlers(self) -> None:

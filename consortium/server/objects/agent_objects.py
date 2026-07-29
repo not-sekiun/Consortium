@@ -55,6 +55,7 @@ from consortium.server.objects.task_objects import Task, TaskState
 from consortium.server.utils import (
     generate_random_human_readable_name,
     normalize_uuid,
+    run_async_background_task,
     utc_now,
 )
 
@@ -753,6 +754,76 @@ class Agent:
             del self._tasks[str(task.task_id)]
         except KeyError:
             raise AgentTaskNotFoundError(task_id=str(task_id)) from None
+
+    async def delete_terminal_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
+        task = self.get_task_by_task_id(task_id=task_id)
+        if task.status.state not in {
+            TaskState.SUCCEEDED,
+            TaskState.FAILED,
+            TaskState.ERRORED,
+        }:
+            raise AgentTaskNotFoundError(task_id=str(task_id))
+
+        await self._discard_task_runtime(str(task.task_id))
+        try:
+            del self._tasks[str(task.task_id)]
+        except KeyError:
+            raise AgentTaskNotFoundError(task_id=str(task_id)) from None
+
+    def error_pending_tasks(self, error_message: str) -> list[Task]:
+        # This method is deliberately synchronous end to end. No await runs between the
+        # state check and the terminal transition below, so a cancelled capability
+        # handler cannot interleave and drive its own terminal transition first (which
+        # would raise out of the terminal-state transition table). The queue shutdowns
+        # are the only awaitable part and are deferred to a single background coroutine
+        # rather than fired one by one, so they are awaited in a defined order.
+        errored_tasks = []
+        queues_to_shut_down = []
+        for task in self._tasks.values():
+            if task.status.state not in {TaskState.QUEUED, TaskState.RUNNING}:
+                continue
+
+            task_id = str(task.task_id)
+            handler_task = self._task_handler_async_tasks.pop(task_id, None)
+            if handler_task is not None:
+                handler_task.cancel()
+
+            # The queues are dropped from their maps synchronously so no new reader can
+            # pick them up, and are shut down afterwards.
+            inbox = self._task_inboxes.pop(task_id, None)
+            if inbox is not None:
+                queues_to_shut_down.append(inbox)
+            outbox = self._task_outboxes.pop(task_id, None)
+            if outbox is not None:
+                queues_to_shut_down.append(outbox)
+
+            task.status._transition_to_errored(
+                error=AgentCapabilityExecutionError(
+                    agent_capability_name=task.command,
+                    error_message=error_message,
+                )
+            )
+            task.datetime_completed = utc_now()
+            task.event_logger.error(
+                message=error_message,
+                data={"agent_id": str(self.agent_id)},
+            )
+            errored_tasks.append(task)
+
+        if queues_to_shut_down:
+            run_async_background_task(
+                coroutine=self._shutdown_task_queues(queues=queues_to_shut_down)
+            )
+
+        return errored_tasks
+
+    @staticmethod
+    async def _shutdown_task_queues(queues: list[TaskMessagesQueue]) -> None:
+        # Immediate shutdown drops buffered messages and wakes any reader already
+        # blocked in get() so it sees end of stream rather than the errored task's
+        # messages.
+        for queue in queues:
+            await queue.shutdown(immediate=True)
 
     def mark_as_active(self) -> None:
         self._status = AgentStatus.ACTIVE

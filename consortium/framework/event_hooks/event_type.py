@@ -33,6 +33,7 @@ class EventType(StrEnum):
         AGENT_DELETED: An agent is deleted.
         AGENT_TASKED: A task is assigned to an agent.
         AGENT_TASK_COMPLETED: An agent completes a task.
+        TASK_DELETED: A retained task record is deleted.
         USER_LOGGED_IN: A user signs in.
         USER_LOGGED_OUT: A user signs out.
         PAYLOAD_CREATED: A payload is created.
@@ -74,6 +75,7 @@ class EventType(StrEnum):
     AGENT_DELETED = "AGENT_DELETED"
     AGENT_TASKED = "AGENT_TASKED"
     AGENT_TASK_COMPLETED = "AGENT_TASK_COMPLETED"
+    TASK_DELETED = "TASK_DELETED"
 
     USER_LOGGED_IN = "USER_LOGGED_IN"
     USER_LOGGED_OUT = "USER_LOGGED_OUT"

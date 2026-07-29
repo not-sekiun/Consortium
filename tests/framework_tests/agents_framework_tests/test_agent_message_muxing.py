@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 
 import pytest
 
@@ -20,6 +21,7 @@ def _make_agent() -> Agent:
     # (which needs a fully configured server). Build a bare instance and wire up just
     # those attributes so the muxing logic can be exercised in isolation.
     agent = Agent.__new__(Agent)
+    agent.agent_id = uuid.uuid4()
     agent._tasks = {}
     agent._task_inboxes = {}
     agent._task_outboxes = {}
@@ -29,7 +31,7 @@ def _make_agent() -> Agent:
 
 
 def _add_outbox(agent: Agent) -> tuple[Task, TaskMessagesQueue]:
-    task = Task(command="mock_cmd", arguments={})
+    task = Task(agent_id=agent.agent_id, command="mock_cmd", arguments={})
     agent._tasks[str(task.task_id)] = task
     outbox = TaskMessagesQueue(agent=agent)
     agent._task_outboxes[str(task.task_id)] = outbox
@@ -93,7 +95,7 @@ async def test_get_by_id_returns_end_of_stream_when_exhausted_and_drops_outbox()
 async def test_get_by_id_returns_end_of_stream_for_missing_outbox():
     # A task with no outbox (never produced or already drained) reports end of stream.
     agent = _make_agent()
-    task = Task(command="mock_cmd", arguments={})
+    task = Task(agent_id=agent.agent_id, command="mock_cmd", arguments={})
     agent._tasks[str(task.task_id)] = task
 
     result = await agent.get_next_task_message_by_task_id(

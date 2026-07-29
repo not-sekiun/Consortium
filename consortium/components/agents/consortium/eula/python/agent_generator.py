@@ -10,11 +10,11 @@ from consortium.framework.agents import (
     BaseAgentGenerator,
     BaseAgentGeneratorBuildStep,
 )
-from consortium.framework.agents.agent_generator_utils import multiple_string_replace
 from consortium.framework.signal_exceptions import (
     AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorStartError,
 )
+from consortium.framework.utils.string_utils import replace_all
 
 
 class BuildAgent(BaseAgentGeneratorBuildStep):
@@ -29,7 +29,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
             self.root_directory / "agent_source" / "agent.py",
         ) as file:
             template_source_code = file.read()
-            source_code = multiple_string_replace(
+            source_code = replace_all(
                 template_source_code,
                 {
                     'REMOTE_HOST = "127.0.0.1"': f"REMOTE_HOST = {repr(parameters['remote_host'])}",

@@ -37,7 +37,8 @@ class TaskCommand(TaskAgentsInterpreterCommand):
         """
         Examples:
           task list  # If no filters are provided, list all tasks for the current agent being interacted with regardless of status.
-          task list --running --completed  # Filters can be combined; this lists all tasks with status RUNNING and COMPLETED.
+          task list --running --completed
+            # Lists RUNNING plus terminal SUCCEEDED, FAILED, and ERRORED tasks.
           task list 123e4567-e89b-12d3-a456-42661417400
         """,
     )

@@ -155,6 +155,14 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         self._task_ids[task["task_id"]] = None
         self.refresh_autocomplete()
 
+    async def _task_deleted_event_handler(
+        self,
+        event: dict[str, Any],
+    ) -> None:
+        task = event["data"]
+        self._task_ids.pop(task["task_id"], None)
+        self.refresh_autocomplete()
+
     async def _agent_task_completed_event_handler(
         self,
         event: dict[str, Any],
@@ -207,6 +215,7 @@ class InteractAgentInterpreter(BaseConnectedInterpreter):
         return {
             "AGENT_TASK_COMPLETED": self._agent_task_completed_event_handler,
             "AGENT_TASKED": self._agent_tasked_event_handler,
+            "TASK_DELETED": self._task_deleted_event_handler,
         }
 
     async def _setup_event_handlers(self) -> None:

@@ -70,7 +70,8 @@ class TaskCommand(BaseConnectedCommand):
         """
         Examples:
           task list  # If no filters are provided, list all tasks across all agents regardless of status.
-          task list --running --completed  # Filters can be combined; this lists all tasks with status RUNNING and COMPLETED.
+          task list --running --completed
+            # Lists RUNNING plus terminal SUCCEEDED, FAILED, and ERRORED tasks.
           task list 123e4567-e89b-12d3-a456-42661417400
         """,
     )
@@ -108,7 +109,9 @@ class TaskCommand(BaseConnectedCommand):
         parser_list.add_argument(
             "-c",
             "--completed",
-            help="List only tasks with status COMPLETED.",
+            help=(
+                "List only terminal tasks with status SUCCEEDED, FAILED, or ERRORED."
+            ),
             action="store_true",
         )
 
@@ -222,7 +225,7 @@ class TaskCommand(BaseConnectedCommand):
         # delete sub-command
         parser_delete = subparsers.add_parser(
             "delete",
-            help="Delete a queued task by its ID.",
+            help="Delete a queued or terminal task by its ID.",
             formatter_class=RawDescriptionHelpFormatter,
             epilog=format_argparse_epilog(
                 """
@@ -230,14 +233,14 @@ class TaskCommand(BaseConnectedCommand):
                   task delete 123e4567-e89b-12d3-a456-42661417400
 
                 Notes:
-                  Only tasks that are still QUEUED can be deleted. Once an agent has
-                  picked a task up there is nothing left to remove from its queue.
+                  QUEUED tasks and terminal SUCCEEDED, FAILED, or ERRORED tasks can
+                  be deleted. RUNNING tasks cannot be deleted.
                 """,
             ),
         )
         parser_delete.add_argument(
             "task_id",
-            help="ID of the queued task to delete.",
+            help="ID of the queued or terminal task to delete.",
             type=str,
         )
 
@@ -505,7 +508,7 @@ class TaskCommand(BaseConnectedCommand):
                 offset=offset,
             )
 
-            if status == "COMPLETED":
+            if status in {"SUCCEEDED", "FAILED", "ERRORED"}:
                 print_info("Task is already completed. Displaying final status:\n")
                 console.print(display)
             else:
@@ -517,7 +520,7 @@ class TaskCommand(BaseConnectedCommand):
                     display, console=console, refresh_per_second=1 / interval
                 ) as live:
                     while True:
-                        if status == "COMPLETED":
+                        if status in {"SUCCEEDED", "FAILED", "ERRORED"}:
                             print_info("Task completed. Stopping watch.")
                             break
 
@@ -544,21 +547,20 @@ class TaskCommand(BaseConnectedCommand):
         rest_api = context.client_session.rest_api
         task_id = parsed_args.task_id
 
-        # Fetched first so that a task that does not exist at all is reported as such by
-        # the REST API rather than as an agent that could not be found for it.
         task = await rest_api.get_agent_task_by_task_id(task_id=task_id)
         state = task["status"]["state"]
-        if state != "QUEUED":
+        if state == "QUEUED":
+            await rest_api.delete_queued_agent_task_by_task_id(task_id=task_id)
+            print_success(f"Deleted queued task '{task_id}'")
+        elif state in {"SUCCEEDED", "FAILED", "ERRORED"}:
+            await rest_api.delete_terminal_agent_task_by_task_id(task_id=task_id)
+            print_success(f"Deleted terminal task '{task_id}'")
+        else:
             print_error(
-                f"Only tasks that are still QUEUED can be deleted. Task '{task_id}' "
-                f"has status {state}.",
+                f"Task '{task['command']}' ('{task_id}') is in status {state}, so it "
+                "cannot be deleted."
             )
-            return ContinueSignal()
 
-        await rest_api.delete_queued_agent_task_by_task_id(
-            task_id=task_id,
-        )
-        print_success(f"Deleted queued task '{task_id}'")
         return ContinueSignal()
 
     async def run(

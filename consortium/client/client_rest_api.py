@@ -434,7 +434,8 @@ class RestAPI:
         # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/tasks/agents/{agent_id}",
+            url=f"{self._api_base_url}/tasks/all",
+            params={"agent_id": agent_id},
         )
 
     @_requires_authentication
@@ -442,12 +443,10 @@ class RestAPI:
         self,
         agent_id: str,
     ) -> list[dict[str, JsonValue]]:
-        # Collection responses omit per-task event log entries, so this endpoint takes no
-        # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/tasks/agents/{agent_id}",
-            params={"status": "QUEUED"},
+            url=f"{self._api_base_url}/tasks/all",
+            params={"agent_id": agent_id, "status": "QUEUED"},
         )
 
     @_requires_authentication
@@ -455,12 +454,10 @@ class RestAPI:
         self,
         agent_id: str,
     ) -> list[dict[str, JsonValue]]:
-        # Collection responses omit per-task event log entries, so this endpoint takes no
-        # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
         return await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/tasks/agents/{agent_id}",
-            params={"status": "RUNNING"},
+            url=f"{self._api_base_url}/tasks/all",
+            params={"agent_id": agent_id, "status": "RUNNING"},
         )
 
     @_requires_authentication
@@ -468,39 +465,35 @@ class RestAPI:
         self,
         agent_id: str,
     ) -> list[dict[str, JsonValue]]:
-        # Collection responses omit per-task event log entries, so this endpoint takes no
-        # limit/offset. Use get_agent_task_by_task_id to page a specific task's events.
-        return await self._make_api_request(
+        tasks = await self._make_api_request(
             method="GET",
-            url=f"{self._api_base_url}/tasks/agents/{agent_id}",
-            params={"status": "COMPLETED"},
+            url=f"{self._api_base_url}/tasks/all",
+            params={"agent_id": agent_id},
         )
-
-    @_requires_authentication
-    async def get_agent_task_by_agent_id_and_task_id(
-        self,
-        agent_id: str,
-        task_id: str,
-        limit: int | None = None,
-        offset: int | None = None,
-    ):
-        params = self._build_event_log_params(limit, offset)
-        return await self._make_api_request(
-            method="GET",
-            url=f"{self._api_base_url}/tasks/agents/{agent_id}/{task_id}",
-            params=params if params else None,
-        )
+        return [
+            task
+            for task in tasks
+            if task["status"]["state"] in {"SUCCEEDED", "FAILED", "ERRORED"}
+        ]
 
     @_requires_authentication
     async def delete_queued_agent_task_by_task_id(
         self,
         task_id: str,
     ) -> None:
-        # Only queued tasks can be deleted: once an agent has picked a task up there is
-        # nothing left to remove from its queue.
         return await self._make_api_request(
             method="DELETE",
-            url=f"{self._api_base_url}/tasks/{task_id}",
+            url=f"{self._api_base_url}/tasks/queued/{task_id}",
+        )
+
+    @_requires_authentication
+    async def delete_terminal_agent_task_by_task_id(
+        self,
+        task_id: str,
+    ) -> None:
+        return await self._make_api_request(
+            method="DELETE",
+            url=f"{self._api_base_url}/tasks/terminal/{task_id}",
         )
 
     @_requires_authentication

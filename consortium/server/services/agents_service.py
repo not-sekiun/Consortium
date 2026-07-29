@@ -9,21 +9,15 @@ from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
-from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
-    AgentTaskNotFoundError,
-)
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
 )
 from consortium.server.models.logging_models import LoggerType
-from consortium.server.models.task_models import (
-    TaskState,
-)
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.objects.task_objects import Task
 from consortium.server.services.events_service import EventsService
+from consortium.server.services.tasks_service import TasksService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
@@ -33,8 +27,13 @@ from consortium.server.utils import (
 
 
 class AgentsService:
-    def __init__(self, events_service: EventsService):
+    def __init__(
+        self,
+        events_service: EventsService,
+        tasks_service: TasksService,
+    ):
         self._events_service = events_service
+        self._tasks_service = tasks_service
         self._agents = {}
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
@@ -51,7 +50,7 @@ class AgentsService:
         self,
         listener_id: str | uuid.UUID,
         payload_id: str | uuid.UUID | None = None,
-        agent_type: BaseAgentType | None = None,
+        agent_type: str | None = None,
         name: str | None = None,
         description: str = "",
         endpoint: str = "",
@@ -74,9 +73,8 @@ class AgentsService:
                 connecting through.
             payload_id: The ID of the payload that generated
                 this agent. When `None`, the agent is not attributed to any payload.
-            agent_type: The agent type classification object
-                describing this agent's capabilities and command set. When `None`, the
-                agent has no associated type.
+            agent_type: The agent type name. When `None`, the agent has no associated
+                type.
             name: A human-readable display name for the agent. When `None`,
                 a name is derived from the agent's identity later.
             description: A short human-readable description of the agent. Defaults
@@ -154,6 +152,10 @@ class AgentsService:
             AgentNotFoundError: If no agent with the given ID is registered.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        self._tasks_service.error_pending_tasks_for_agent(
+            agent=agent,
+            error_message=("The owning agent deregistered before this task completed."),
+        )
         del self._agents[str(agent.agent_id)]
 
         run_async_background_task(
@@ -181,20 +183,20 @@ class AgentsService:
             AgentNotFoundError: If no agent with the given ID is registered.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        # Snapshot the agent's task IDs before removal. They vanish along with the agent
-        # (tasks are held on the agent object), so consumers such as the client
-        # autocompleter need this snapshot to prune the now-dangling task references.
-        task_ids = [str(task.task_id) for task in agent.get_all_tasks()]
+        self._tasks_service.error_pending_tasks_for_agent(
+            agent=agent,
+            error_message=(
+                "The owning agent was deleted by an operator before this task "
+                "completed."
+            ),
+        )
         del self._agents[str(agent.agent_id)]
 
         run_async_background_task(
             coroutine=self._events_service.trigger_event(
                 event_type=EventType.AGENT_DELETED,
                 message=f"Deleted agent: {agent}",
-                data={
-                    "agent": agent.to_json(),
-                    "task_ids": task_ids,
-                },
+                data=agent.to_json(),
             )
         )
         self._logger.info("Deleted agent: {}", agent)
@@ -475,122 +477,6 @@ class AgentsService:
         return all_agents
 
     @log_and_propagate_error_on_service_method
-    def get_all_agent_tasks(self, status: TaskState | None = None) -> list[Task]:
-        """Returns all tasks across every registered agent, optionally filtered by state.
-
-        Args:
-            status: When provided, only tasks in this state are
-                returned. When `None`, all tasks regardless of state are returned.
-
-        Returns:
-            A list of matching tasks. Empty if no tasks match.
-        """
-        all_tasks = []
-        for agent in self._agents.values():
-            all_tasks.extend(agent.get_all_tasks(state=status))
-        if status is None:
-            self._logger.debug(
-                "Retrieved all tasks from all agents ({} retrieved)",
-                len(all_tasks),
-            )
-        else:
-            self._logger.debug(
-                "Retrieved all tasks from all agents with status {} ({} retrieved)",
-                status,
-                len(all_tasks),
-            )
-        return all_tasks
-
-    @log_and_propagate_error_on_service_method
-    def get_agent_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
-        """Returns a task by its ID, searching across all registered agents.
-
-        Args:
-            task_id: The ID of the task to retrieve.
-
-        Returns:
-            The task with the specified ID.
-
-        Raises:
-            AgentTaskNotFoundError: If no task with the given ID exists on any agent.
-        """
-        for agent in self._agents.values():
-            try:
-                task = agent.get_task_by_task_id(task_id=task_id)
-                self._logger.debug(
-                    "Retrieved task {} from agent {}",
-                    task_id,
-                    agent,
-                )
-                return task
-            except AgentTaskNotFoundError:
-                continue
-
-        raise AgentTaskNotFoundError(task_id=task_id) from None
-
-    @log_and_propagate_error_on_service_method
-    def get_all_agent_tasks_by_agent_id(
-        self, agent_id: str | uuid.UUID, status: TaskState | None = None
-    ) -> list[Task]:
-        """Returns all tasks for a specific agent, optionally filtered by state.
-
-        Args:
-            agent_id: The ID of the agent whose tasks to retrieve.
-            status: When provided, only tasks in this state are
-                returned. When `None`, all tasks regardless of state are returned.
-
-        Returns:
-            A list of matching tasks. Empty if no tasks match.
-
-        Raises:
-            AgentNotFoundError: If no agent with the given ID is registered.
-        """
-        agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        all_tasks = agent.get_all_tasks(state=status)
-        if status is None:
-            self._logger.debug(
-                "Retrieved agent tasks from agent {} ({} retrieved)",
-                agent,
-                len(all_tasks),
-            )
-        else:
-            self._logger.debug(
-                "Retrieved agent tasks from agent {} with status {} ({} retrieved)",
-                agent,
-                status,
-                len(all_tasks),
-            )
-        return all_tasks
-
-    @log_and_propagate_error_on_service_method
-    def get_agent_task_by_agent_id_and_task_id(
-        self,
-        agent_id: str | uuid.UUID,
-        task_id: str | uuid.UUID,
-    ) -> Task:
-        """Returns a specific task belonging to a specific agent.
-
-        Args:
-            agent_id: The ID of the agent that owns the task.
-            task_id: The ID of the task to retrieve.
-
-        Returns:
-            The requested task.
-
-        Raises:
-            AgentNotFoundError: If no agent with the given agent ID is registered.
-            AgentTaskNotFoundError: If the agent has no task with the given task ID.
-        """
-        agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        task = agent.get_task_by_task_id(task_id=task_id)
-        self._logger.debug(
-            "Retrieved task {} from agent {}",
-            task_id,
-            agent,
-        )
-        return task
-
-    @log_and_propagate_error_on_service_method
     async def task_agent_by_agent_id(
         self,
         agent_id: str | uuid.UUID,
@@ -612,8 +498,13 @@ class AgentsService:
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
 
-        task = Task(command=command, arguments=arguments)
+        task = Task(
+            agent_id=agent.agent_id,
+            command=command,
+            arguments=arguments,
+        )
         await agent.submit_task(task=task)
+        self._tasks_service.register_task(task=task, agent=agent)
 
         run_async_background_task(
             coroutine=self._events_service.trigger_event(
@@ -704,37 +595,3 @@ class AgentsService:
             )
 
         return agent
-
-    @log_and_propagate_error_on_service_method
-    async def delete_queued_agent_task_by_task_id(
-        self,
-        task_id: str | uuid.UUID,
-    ):
-        """Deletes a queued (not yet dispatched) task from the specified agent's task queue.
-
-        Args:
-            agent_id: The ID of the agent that owns the task.
-            task_id: The ID of the queued task to delete.
-
-        Returns:
-            None
-
-        Raises:
-            AgentNotFoundError: If no agent with the given agent ID is registered.
-            AgentTaskNotFoundError: If the agent has no queued task with the given
-                task ID.
-        """
-        for agent in self._agents.values():
-            try:
-                task = agent.get_task_by_task_id(task_id=task_id)
-                agent.delete_queued_task_by_task_id(task_id=task_id)
-                self._logger.debug(
-                    "Deleted task {} from agent {}",
-                    task_id,
-                    agent,
-                )
-                return task
-            except AgentTaskNotFoundError:
-                continue
-
-        raise AgentTaskNotFoundError(task_id=task_id) from None

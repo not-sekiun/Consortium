@@ -104,10 +104,12 @@ class TaskStatus:
 class Task:
     def __init__(
         self,
+        agent_id: str | uuid.UUID,
         command: str,
         arguments: dict[str, Any],
     ):
         self.task_id = uuid.uuid4()
+        self.agent_id = uuid.UUID(str(agent_id))
         self.command = command
         self.arguments = arguments
         self.status = TaskStatus()
@@ -129,6 +131,7 @@ class Task:
         return (
             f"Task("
             f"task_id={self.task_id!r}, "
+            f"agent_id={self.agent_id!r}, "
             f"command={self.command!r}, "
             f"arguments={self.arguments!r}, "
             f"status={self.status!r},"
@@ -143,6 +146,7 @@ class Task:
     ) -> dict[str, Any]:
         return {
             "task_id": str(self.task_id),
+            "agent_id": str(self.agent_id),
             "command": self.command,
             "arguments": self.arguments,
             "status": self.status.to_json(),

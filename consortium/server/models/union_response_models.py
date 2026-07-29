@@ -34,7 +34,6 @@ from consortium.server.exceptions.api_exceptions.pydantic_validation_api_excepti
 from consortium.server.exceptions.object_exceptions import agent_object_exceptions
 from consortium.server.exceptions.service_exceptions import (
     agent_generators_service_exceptions,
-    agents_service_exceptions,
     listeners_service_exceptions,
     user_accounts_service_exceptions,
 )
@@ -52,20 +51,6 @@ _unprocessable_entity_error = UnprocessableEntityError(
 )
 
 # Agents.
-_agent_not_found_error = (
-    agents_api_exceptions.AgentNotFoundError.from_consortium_exception(
-        consortium_exception=agents_service_exceptions.AgentNotFoundError(
-            agent_id="string"
-        ),
-    )
-)
-_agent_task_not_found_error = (
-    agents_api_exceptions.AgentTaskNotFoundError.from_consortium_exception(
-        consortium_exception=agent_object_exceptions.AgentTaskNotFoundError(
-            task_id="string"
-        ),
-    )
-)
 _agent_capability_option_value_validation_error = agents_api_exceptions.AgentCapabilityOptionValueValidationError.from_consortium_exception(
     consortium_exception=agent_object_exceptions.AgentCapabilityOptionValueValidationError(
         agent_str="<agent_str>",
@@ -275,12 +260,6 @@ _directory_file_not_archive_file_error = (
 RequestValidationErrorResponse = create_union_response_model(
     "RequestValidationErrorResponse",
     (_invalid_uuid_error, _unprocessable_entity_error),
-)
-
-# Shared: the agent, the task, or both could not be found.
-AgentOrAgentTaskNotFoundErrorResponse = create_union_response_model(
-    "AgentOrAgentTaskNotFoundErrorResponse",
-    (_agent_not_found_error, _agent_task_not_found_error),
 )
 
 # Tasking an agent: capability and option validation on top of the shared request errors.

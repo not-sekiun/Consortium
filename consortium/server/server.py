@@ -33,6 +33,7 @@ from consortium.server.api.repository_apis.payloads_api import (
     router as payloads_api_router,
 )
 from consortium.server.api.server_api import router as server_api_router
+from consortium.server.api.tasks_api import router as tasks_api_router
 from consortium.server.api.user_accounts_api import router as user_accounts_api_router
 from consortium.server.api.users_api import router as users_api_router
 from consortium.server.models.logging_models import LoggerType
@@ -78,6 +79,7 @@ class Server:
         self._app.include_router(agent_templates_api_router)
         self._app.include_router(agent_generators_api_router)
         self._app.include_router(agents_api_router)
+        self._app.include_router(tasks_api_router)
         self._app.include_router(events_api_router)
         self._app.include_router(assets_api_router)
         self._app.include_router(artifacts_api_router)

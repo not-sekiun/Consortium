@@ -55,6 +55,7 @@ if TYPE_CHECKING:
     from consortium.server.services.payloads_service import PayloadsService
     from consortium.server.services.plugins_service import PluginsService
     from consortium.server.services.release_service import ReleaseService
+    from consortium.server.services.tasks_service import TasksService
     from consortium.server.services.user_accounts_service import UserAccountsService
     from consortium.server.services.users_service import UsersService
 
@@ -173,6 +174,7 @@ class Services:
     listener_templates_service: ListenerTemplatesService
     listeners_service: ListenersService
     c2_types_service: C2TypesService
+    tasks_service: TasksService
     agents_service: AgentsService
     payloads_service: PayloadsService
     assets_service: AssetsService
@@ -199,6 +201,7 @@ def construct_services_dataclass(
         listener_templates_service=server_singletons.listener_templates_service,
         listeners_service=server_singletons.listeners_service,
         c2_types_service=server_singletons.c2_types_service,
+        tasks_service=server_singletons.tasks_service,
         agents_service=server_singletons.agents_service,
         payloads_service=server_singletons.payloads_service,
         assets_service=server_singletons.assets_service,

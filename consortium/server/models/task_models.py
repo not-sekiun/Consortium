@@ -22,6 +22,7 @@ class TaskStatusModel(BaseModel):
 
 class TaskModel(BaseModel):
     task_id: UUID4
+    agent_id: UUID4
     command: str
     arguments: dict[str, JsonValue]
     status: TaskStatusModel

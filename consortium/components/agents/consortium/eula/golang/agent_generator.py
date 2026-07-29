@@ -5,11 +5,11 @@ from consortium.framework.agents import (
     BaseAgentGenerator,
     BaseAgentGeneratorBuildStep,
 )
-from consortium.framework.agents.agent_generator_utils import run_command
 from consortium.framework.signal_exceptions import (
     AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorStartError,
 )
+from consortium.framework.utils.shell_utils import run_command
 
 
 class SetupDockerContainer(BaseAgentGeneratorBuildStep):
