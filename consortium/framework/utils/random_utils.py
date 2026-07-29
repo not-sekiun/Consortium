@@ -41,8 +41,10 @@ def random_ascii(length: int = 16) -> str:
     Returns:
         A string containing ASCII letters, digits, and punctuation.
     """
-    alphabet = string.ascii_letters + string.digits + string.punctuation
-    return "".join(secrets.choice(alphabet) for _ in range(length))
+    return random_string(
+        character_set=string.ascii_letters + string.digits + string.punctuation,
+        length=length,
+    )
 
 
 def random_urlsafe(length: int = 16) -> str:
@@ -57,17 +59,25 @@ def random_urlsafe(length: int = 16) -> str:
     return secrets.token_urlsafe(length)
 
 
-def random_alphanumeric(length: int = 16) -> str:
-    """Return a cryptographically secure alphanumeric string.
+def random_string(character_set: str, length: int = 16) -> str:
+    """Return a cryptographically secure string from a supplied character set.
 
     Args:
+        character_set: Characters from which to sample each output character.
         length: Number of characters to generate.
 
     Returns:
-        A string containing ASCII letters and digits.
+        A string containing characters sampled from the supplied character set.
+
+    Raises:
+        ValueError: If character_set is empty or length is negative.
     """
-    alphabet = string.ascii_letters + string.digits
-    return "".join(secrets.choice(alphabet) for _ in range(length))
+    if not character_set:
+        raise ValueError("character_set must not be empty")
+    if length < 0:
+        raise ValueError("length must not be negative")
+
+    return "".join(secrets.choice(character_set) for _ in range(length))
 
 
 def random_hex(length: int = 16) -> str:
