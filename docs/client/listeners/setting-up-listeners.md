@@ -36,8 +36,8 @@ Commands available here:
 | Command                                | Description                                                     |
 |----------------------------------------|-----------------------------------------------------------------|
 | `list`                                 | List all listeners                                              |
-| `lt-list`                              | List all listener templates                                     |
-| `lt-info <template_id>`                | Show details of a listener template                             |
+| `template list`                        | List all listener templates                                     |
+| `template info <template_id>`          | Show details of a listener template                             |
 | `use <template_id>`                    | Enter the template's context to configure and create a listener |
 | `info <listener_id>`                   | Show details of a listener                                      |
 | `start <listener_id>`                  | Start a non running listener                                    |
@@ -53,8 +53,8 @@ Listener IDs, template IDs, and (for `update`) parameter names all tab complete.
 ## The typical workflow
 
 1. Enter the Listeners interpreter with `listeners`.
-2. Browse the available templates with `lt-list`, and inspect one with
-   `lt-info <template_id>`.
+2. Browse the available templates with `template list`, and inspect one with
+   `template info <template_id>`.
 3. Enter its context with `use <template_id>` to configure options and create a
    listener.
    This is described in [Using Listener Templates](using-listener-templates.md).

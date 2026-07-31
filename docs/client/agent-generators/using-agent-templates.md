@@ -25,7 +25,8 @@ run `create`.
 | `unset <option>`       | Clear an option's value                                  |
 | `reset <option>`       | Reset an option back to its default value                |
 | `create`               | Create an agent generator from the current option values |
-| `at-info`              | Show details of the current template                     |
+| `template list`        | List all agent templates                                 |
+| `template info`        | Show details of the current template                     |
 | `generators`           | Return to the Generators interpreter                     |
 
 Option names tab complete. Values are typed according to each option's expected value
@@ -55,7 +56,7 @@ create --no-start # create the generator without starting it
 
 ```text
 generators                      # enter the Generators interpreter
-at-list                         # find the template you want
+template list                   # find the template you want
 use a1b2c3d4-...                # enter the template's context
 opt-list                        # review the configurable options
 set callback_host 10.0.0.5      # configure options as needed

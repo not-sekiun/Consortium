@@ -42,8 +42,8 @@ Commands available here:
 | Command                                 | Description                                                      |
 |-----------------------------------------|------------------------------------------------------------------|
 | `list`                                  | List all agent generators                                        |
-| `at-list`                               | List all agent templates                                         |
-| `at-info <template_id>`                 | Show details of an agent template                                |
+| `template list`                         | List all agent templates                                         |
+| `template info <template_id>`           | Show details of an agent template                                |
 | `use <template_id>`                     | Enter the template's context to configure and create a generator |
 | `info <generator_id>`                   | Show details of a generator                                      |
 | `start <generator_id>`                  | Start a generator to produce payloads                            |
@@ -62,8 +62,8 @@ as it is in every connected interpreter, covered in
 ## The typical workflow
 
 1. Enter the Generators interpreter with `generators`.
-2. Browse the available templates with `at-list`, and inspect one with
-   `at-info <template_id>`.
+2. Browse the available templates with `template list`, and inspect one with
+   `template info <template_id>`.
 3. Enter its context with `use <template_id>` to configure options and create a
    generator.
    See [Using Agent Templates](using-agent-templates.md).

@@ -23,7 +23,8 @@ locally until you run `create`.
 | `unset <option>`       | Clear an option's value                              |
 | `reset <option>`       | Reset an option back to its default value            |
 | `create`               | Create a listener from the current option values     |
-| `lt-info`              | Show details of the current template                 |
+| `template list`        | List all listener templates                          |
+| `template info`        | Show details of the current template                 |
 | `listeners`            | Return to the Listeners interpreter                  |
 
 Option names tab complete. Values are typed according to each option's expected value
@@ -46,7 +47,7 @@ create --no-start # create the listener without starting it
 
 ```text
 listeners                       # enter the Listeners interpreter
-lt-list                         # find the template you want
+template list                   # find the template you want
 use a1b2c3d4-...                # enter the template's context
 opt-list                        # review the configurable options
 set host 0.0.0.0                # configure options as needed
