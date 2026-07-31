@@ -1,5 +1,6 @@
 import random
 import string
+import sys
 import traceback
 
 from prompt_toolkit import PromptSession
@@ -11,6 +12,30 @@ from prompt_toolkit.styles import Style
 from rich.pretty import pprint
 
 from consortium.framework.plugins import BasePlugin
+from consortium.framework.signal_exceptions import PluginStartError
+
+
+# The debug console drives an interactive prompt_toolkit session, which requires a real
+# terminal on both stdin and stdout. When the server is run detached, under a service
+# manager or with its streams redirected/closed, those streams are either absent or not
+# TTYs and prompt_toolkit would fail deep inside the running hook instead of at start.
+def _return_non_tty_streams() -> list[str]:
+    non_tty_streams = []
+    for stream_name in ("stdin", "stdout"):
+        stream = getattr(sys, stream_name, None)
+        if stream is None:
+            non_tty_streams.append(f"{stream_name} (not available)")
+            continue
+        try:
+            is_a_tty = stream.isatty()
+        # A closed or otherwise unusable stream raises rather than reporting itself as
+        # a non TTY.
+        except ValueError, OSError:
+            non_tty_streams.append(f"{stream_name} (unusable)")
+            continue
+        if not is_a_tty:
+            non_tty_streams.append(stream_name)
+    return non_tty_streams
 
 
 class _ServicesMethodsCompleter(Completer):
@@ -140,12 +165,21 @@ class Plugin(BasePlugin):
     autostart = True
 
     async def on_started(self) -> None:
+        non_tty_streams = _return_non_tty_streams()
+        if non_tty_streams:
+            raise PluginStartError(
+                "The debug console requires an interactive terminal but the following "
+                f"streams are not attached to a TTY: {', '.join(non_tty_streams)}. "
+                "Start the server in an interactive terminal to use this plugin.",
+            )
+
         self.event_logger.info(
             "Debug interpreter is now running. All framework services are available in "
             "the current environment. You can tab complete services along with their "
             "API methods.",
         )
 
+        # Patch any sinks going to stdout to make them play nice with the plugin's REPL
         sinks = self.services.logging_service.get_all_sinks()
         for sink in sinks:
             if sink.is_server_default and sink.label == "stdout":
@@ -153,24 +187,6 @@ class Plugin(BasePlugin):
                     label=sink.label,
                     sink=StdoutProxy(raw=True),
                 )
-
-        # # FIXME: Consider providing a dedicated logger service to interact with logging,
-        # #  might be useful to send logs remotely or do custom things with them. Log
-        # #  index 2 is always stdout due to how server_logging sets up the loggers.
-        # #  This is brittle. fix it.
-        # # Remove the current stdout logger and patch it with `StdoutProxy` to prevent
-        # # loguru from messing with prompt_toolkit's stdout handling. Retain the current
-        # # log configuration.
-        # logger.remove(2)
-        # # FIXME: Weird bug: logger.remove(2) removes the stdout logger so when logger.add
-        # #  errors out we see no output.
-        # logging_config = self.services.logging_service.logging_config
-        # logger.add(
-        #     StdoutProxy(raw=True),
-        #     format=log_formatter,
-        #     level=logging_config.level,
-        #     colorize=logging_config.colorize,
-        # )
 
     async def on_running(self) -> None:
         # Construct completions dict. The keys are the symbols of every service in
