@@ -5,7 +5,6 @@ from prompt_toolkit import ANSI
 from consortium.client.client_websockets_events_api import EventHandler
 from consortium.client.commands.agents_interpreter_commands import (
     AGENTS_INTERPRETER_COMMANDS,
-    AgentListCommand,
 )
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
@@ -16,6 +15,7 @@ from consortium.client.repl_interface.autocompletes import (
 from consortium.client.repl_interface.base_interpreter import (
     BaseConnectedInterpreter,
 )
+from consortium.client.utils.agent_command_utils import display_all_agents
 from consortium.client.utils.formatter_utils import format_rich_text_as_ansi
 from consortium.client.utils.printer_utils import print_success
 
@@ -136,7 +136,7 @@ class AgentsInterpreter(BaseConnectedInterpreter):
         all_agents = await self.client_session.rest_api.get_all_agents()
         await self._initialize_autocompleter(all_agents=all_agents)
         await self._setup_event_handlers()
-        AgentListCommand._list_all_agents(all_agents=all_agents)
+        display_all_agents(all_agents=all_agents)
 
     async def on_exit(self) -> None:
         # The exit command when executed will disconnect the websocket connection but

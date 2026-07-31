@@ -53,6 +53,27 @@ def describe_client_session(
     )
 
 
+# Client sessions are held client side by the client sessions service rather than
+# fetched from a server, so they are sourced here rather than passed in, matching every
+# other client session util.
+def display_all_client_sessions() -> None:
+    table = Table(title="Client Sessions", highlight=True)
+    table.add_column("Client Session ID")
+    table.add_column("Name")
+    table.add_column("Username")
+    table.add_column("Remote Host")
+    table.add_column("Remote Port")
+    for client_session in client_sessions_service.get_all_client_sessions():
+        table.add_row(
+            str(client_session.client_session_id),
+            str(client_session.name),
+            str(client_session.username),
+            str(client_session.remote_host),
+            str(client_session.remote_port),
+        )
+    console.print(table, "")
+
+
 async def display_client_session_info(
     client_session_id: str | uuid.UUID,
     show_password: bool,

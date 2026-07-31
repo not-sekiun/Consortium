@@ -2,7 +2,6 @@ import json
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 
 import jsonschema
-from rich.table import Table
 
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_config import CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH
@@ -25,12 +24,12 @@ from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.utils.client_session_command_utils import (
     describe_client_session,
     disconnect_client_session,
+    display_all_client_sessions,
     display_client_session_info,
     rename_client_session,
 )
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import (
-    console,
     print_error,
     print_info,
     print_success,
@@ -302,26 +301,6 @@ class SessionCommand(BaseCommand[AnyContext]):
             return parsed_args.client_session_id
         return str(context.client_session.client_session_id)
 
-    @staticmethod
-    def _list_all_client_sessions(
-        all_client_sessions: list[ClientSession],
-    ) -> None:
-        table = Table(title="Client Sessions", highlight=True)
-        table.add_column("Client Session ID")
-        table.add_column("Name")
-        table.add_column("Username")
-        table.add_column("Remote Host")
-        table.add_column("Remote Port")
-        for client_session in all_client_sessions:
-            table.add_row(
-                str(client_session.client_session_id),
-                str(client_session.name),
-                str(client_session.username),
-                str(client_session.remote_host),
-                str(client_session.remote_port),
-            )
-        console.print(table, "")
-
     @with_spinner()
     async def _connect(
         self, username: str, password: str, remote_host: str, remote_port: int
@@ -494,9 +473,7 @@ class SessionCommand(BaseCommand[AnyContext]):
         return SwitchClientSessionSignal(client_session=client_session)
 
     async def _handle_list_sub_command(self) -> InterpreterSignal:
-        self._list_all_client_sessions(
-            all_client_sessions=client_sessions_service.get_all_client_sessions(),
-        )
+        display_all_client_sessions()
 
         return ContinueSignal()
 

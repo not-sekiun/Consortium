@@ -47,6 +47,30 @@ async def rename_agent(
     print_success(f"Renamed agent '{agent['name']}' ({agent['agent_id']}) to '{name}'")
 
 
+def display_all_agents(all_agents: list[dict[str, Any]]) -> None:
+    table = Table(title="Agents", highlight=True)
+    table.add_column("Agent ID")
+    table.add_column("Agent Type")
+    table.add_column("Name")
+    table.add_column("Endpoint")
+    table.add_column("Last Checked In")
+    table.add_column("Status")
+    for agent in all_agents:
+        table.add_row(
+            str(agent["agent_id"]),
+            str(agent["agent_type"]["name"]),
+            str(agent["name"]),
+            str(agent["endpoint"]),
+            format_datetime_as_human_readable_str(
+                agent["datetime_last_checked_in"], include_elapsed_time=True
+            ),
+            format_agent_status_string_with_color(
+                status_str=agent["status"],
+            ),
+        )
+    console.print(table, "")
+
+
 def display_agent_info(
     agent: dict[str, Any],
     verbose: bool,
