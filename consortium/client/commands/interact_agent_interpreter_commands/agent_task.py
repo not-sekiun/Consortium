@@ -46,9 +46,8 @@ class TaskCommand(TaskAgentsInterpreterCommand):
     # Only the listing differs from the agents interpreter's task command: with no agent
     # ID it lists the tasks of the agent being interacted with rather than those of
     # every agent.
-    @classmethod
     async def _handle_list_sub_command(
-        cls,
+        self,
         parsed_args: Namespace,
         context: ConnectedContext,
     ) -> InterpreterSignal:
@@ -61,7 +60,7 @@ class TaskCommand(TaskAgentsInterpreterCommand):
         else:
             agent = context.interpreter_context.agent
 
-        agent_tasks = await cls._get_tasks_to_list(
+        agent_tasks = await self._get_tasks_to_list(
             rest_api=rest_api,
             agent_id=agent["agent_id"],
             display_queued=parsed_args.queued,
@@ -69,11 +68,11 @@ class TaskCommand(TaskAgentsInterpreterCommand):
             display_completed=parsed_args.completed,
         )
         commands_to_required_arguments_map = (
-            await cls._compute_agent_commands_to_required_arguments_map(
+            await self._compute_agent_commands_to_required_arguments_map(
                 agent=agent,
             )
         )
-        cls._list_tasks(
+        self._list_tasks(
             agent_id=agent["agent_id"],
             agent_name=agent["name"],
             agent_tasks=agent_tasks,

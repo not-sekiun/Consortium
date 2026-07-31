@@ -24,7 +24,9 @@ class HelpCommand(BaseCommand[AnyContext]):
     epilog = format_argparse_epilog(
         """
         Examples:
-          help  # Displays the help menu listing all available commands if no command name is specified.
+          help  # Displays the help menu listing all available commands.
+          help  -v  # Displays the help menu listing all available commands and sub command summary.
+          help  -vv  # Displays the help menu listing all available commands and an expanded sub command help menu.
           help banner
         """,
     )
@@ -36,6 +38,7 @@ class HelpCommand(BaseCommand[AnyContext]):
             nargs="?",
             help="Name of the command to display the help summary for.",
         )
+        parser.add_argument("-v", "--verbose", action="count", default=0)
 
     @staticmethod
     def _print_summarized_help_menu(commands_info: dict[str, CommandInfo]) -> None:

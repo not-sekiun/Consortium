@@ -377,9 +377,8 @@ class TaskCommand(BaseConnectedCommand):
 
         return display, task["status"]["state"]
 
-    @classmethod
     async def _handle_list_sub_command(
-        cls,
+        self,
         parsed_args: Namespace,
         context: ConnectedContext,
     ) -> InterpreterSignal:
@@ -389,7 +388,7 @@ class TaskCommand(BaseConnectedCommand):
             all_agents = await rest_api.get_all_agents()
             agents_with_no_tasks = []
             for agent in all_agents:
-                agent_tasks = await cls._get_tasks_to_list(
+                agent_tasks = await self._get_tasks_to_list(
                     rest_api=rest_api,
                     agent_id=agent["agent_id"],
                     display_queued=parsed_args.queued,
@@ -397,7 +396,7 @@ class TaskCommand(BaseConnectedCommand):
                     display_completed=parsed_args.completed,
                 )
                 commands_to_required_arguments_map = (
-                    await cls._compute_agent_commands_to_required_arguments_map(
+                    await self._compute_agent_commands_to_required_arguments_map(
                         agent=agent,
                     )
                 )
@@ -406,7 +405,7 @@ class TaskCommand(BaseConnectedCommand):
                         f"'{agent['name']}' ({agent['agent_id']})"
                     )
                 else:
-                    cls._list_tasks(
+                    self._list_tasks(
                         agent_id=agent["agent_id"],
                         agent_name=agent["name"],
                         agent_tasks=agent_tasks,
@@ -428,18 +427,18 @@ class TaskCommand(BaseConnectedCommand):
         else:
             agent = await rest_api.get_agent_by_agent_id(agent_id=parsed_args.agent_id)
             commands_to_required_arguments_map = (
-                await cls._compute_agent_commands_to_required_arguments_map(
+                await self._compute_agent_commands_to_required_arguments_map(
                     agent=agent,
                 )
             )
-            agent_tasks = await cls._get_tasks_to_list(
+            agent_tasks = await self._get_tasks_to_list(
                 rest_api=rest_api,
                 agent_id=agent["agent_id"],
                 display_queued=parsed_args.queued,
                 display_running=parsed_args.running,
                 display_completed=parsed_args.completed,
             )
-            cls._list_tasks(
+            self._list_tasks(
                 agent_id=agent["agent_id"],
                 agent_name=agent["name"],
                 agent_tasks=agent_tasks,
@@ -448,13 +447,12 @@ class TaskCommand(BaseConnectedCommand):
 
         return ContinueSignal()
 
-    @classmethod
     async def _handle_info_sub_command(
-        cls,
+        self,
         parsed_args: Namespace,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        await cls._display_task_info(
+        await self._display_task_info(
             rest_api=context.client_session.rest_api,
             task_id=parsed_args.task_id,
             limit=parsed_args.limit,
@@ -464,9 +462,8 @@ class TaskCommand(BaseConnectedCommand):
 
         return ContinueSignal()
 
-    @classmethod
     async def _handle_watch_sub_command(
-        cls,
+        self,
         parsed_args: Namespace,
         context: ConnectedContext,
     ) -> InterpreterSignal:
@@ -500,7 +497,7 @@ class TaskCommand(BaseConnectedCommand):
 
         try:
             # Initial fetch
-            display, status = await cls._fetch_and_build_display(
+            display, status = await self._fetch_and_build_display(
                 rest_api=rest_api,
                 task_id=task_id,
                 limit=limit,
@@ -525,7 +522,7 @@ class TaskCommand(BaseConnectedCommand):
 
                         await asyncio.sleep(interval)
 
-                        display, status = await cls._fetch_and_build_display(
+                        display, status = await self._fetch_and_build_display(
                             rest_api=rest_api,
                             task_id=task_id,
                             limit=limit,
@@ -537,9 +534,8 @@ class TaskCommand(BaseConnectedCommand):
 
         return ContinueSignal()
 
-    @classmethod
+    @staticmethod
     async def _handle_delete_sub_command(
-        cls,
         parsed_args: Namespace,
         context: ConnectedContext,
     ) -> InterpreterSignal:

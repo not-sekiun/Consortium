@@ -9,6 +9,7 @@ from consortium.client.commands.core_commands.help import HelpCommand
 from consortium.client.commands.core_commands.home import HomeCommand
 from consortium.client.commands.core_commands.listeners import ListenersCommand
 from consortium.client.commands.core_commands.rc import RcCommand
+from consortium.client.commands.home_interpreter_commands import SESSION_COMMAND
 
 CORE_COMMANDS = [
     AliasCommand(),
@@ -22,4 +23,9 @@ CORE_COMMANDS = [
     HomeCommand(),
     BannerCommand(),
     RcCommand(),
+    # Client sessions are managed from anywhere in the client rather than from the home
+    # interpreter alone, so the session command is a core command. Interpreters with no
+    # client session of their own replace it with their own implementation (see
+    # `DisconnectedInterpreter`).
+    SESSION_COMMAND,
 ]

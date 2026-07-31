@@ -216,9 +216,16 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
 
     # The values this interpreter's commands declare their autocompletes against.
     # Overridden by interpreters that hold runtime data, calling `super()` first when
-    # they extend another interpreter's resolutions.
+    # they extend another interpreter's resolutions. The client session IDs are resolved
+    # here rather than by the individual interpreters because the session command every
+    # interpreter registers as a core command declares them.
     def get_autocomplete_resolutions(self) -> AutocompleteResolutions:
-        return {}
+        return {
+            Autocomplete.CLIENT_SESSION_ID: [
+                str(client_session.client_session_id)
+                for client_session in _client_sessions_service.get_all_client_sessions()
+            ],
+        }
 
     # Called by interpreters whenever the data behind their sentinels changes
     def refresh_autocomplete(self) -> None:
@@ -234,12 +241,19 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
 
     async def on_exit(self) -> None: ...
 
-    # Wrappers around the `on_enter` and `on_exit` hooks the interpreters implement, so
-    # that setup and teardown shared by a whole family of interpreters (see
-    # `BaseConnectedInterpreter`) can be run around them without every interpreter
-    # having to remember to call `super()`.
+    # Wrappers around the `on_enter`, `on_loop` and `on_exit` hooks the interpreters
+    # implement, so that setup, teardown and per prompt work shared by a whole family of
+    # interpreters (see `BaseConnectedInterpreter`) can be run around them without every
+    # interpreter having to remember to call `super()`.
     async def _enter(self) -> None:
         await self.on_enter()
+
+    async def _loop(self) -> None:
+        # Client sessions can be created and removed from anywhere in the client, so the
+        # completions of the session command every interpreter registers as a core
+        # command are rebuilt on every prompt rather than off the back of an event.
+        self.refresh_autocomplete()
+        await self.on_loop()
 
     async def _exit(self) -> None:
         await self.on_exit()
@@ -250,7 +264,7 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
 
             while True:
                 try:
-                    await self.on_loop()
+                    await self._loop()
 
                     input_string = await self._get_complete_input()
                     if not input_string:
