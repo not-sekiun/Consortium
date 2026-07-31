@@ -28,7 +28,6 @@ from consortium.client.utils.formatter_utils import (
 )
 from consortium.client.utils.printer_utils import (
     console,
-    print_error,
     print_info,
     print_success,
     print_warning,
@@ -547,19 +546,8 @@ class TaskCommand(BaseConnectedCommand):
         rest_api = context.client_session.rest_api
         task_id = parsed_args.task_id
 
-        task = await rest_api.get_agent_task_by_task_id(task_id=task_id)
-        state = task["status"]["state"]
-        if state == "QUEUED":
-            await rest_api.delete_queued_agent_task_by_task_id(task_id=task_id)
-            print_success(f"Deleted queued task '{task_id}'")
-        elif state in {"SUCCEEDED", "FAILED", "ERRORED"}:
-            await rest_api.delete_terminal_agent_task_by_task_id(task_id=task_id)
-            print_success(f"Deleted terminal task '{task_id}'")
-        else:
-            print_error(
-                f"Task '{task['command']}' ('{task_id}') is in status {state}, so it "
-                "cannot be deleted."
-            )
+        await rest_api.delete_task_by_task_id(task_id=task_id)
+        print_success(f"Deleted task '{task_id}'")
 
         return ContinueSignal()
 

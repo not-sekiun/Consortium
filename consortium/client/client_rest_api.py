@@ -477,23 +477,13 @@ class RestAPI:
         ]
 
     @_requires_authentication
-    async def delete_queued_agent_task_by_task_id(
+    async def delete_task_by_task_id(
         self,
         task_id: str,
     ) -> None:
         return await self._make_api_request(
             method="DELETE",
-            url=f"{self._api_base_url}/tasks/queued/{task_id}",
-        )
-
-    @_requires_authentication
-    async def delete_terminal_agent_task_by_task_id(
-        self,
-        task_id: str,
-    ) -> None:
-        return await self._make_api_request(
-            method="DELETE",
-            url=f"{self._api_base_url}/tasks/terminal/{task_id}",
+            url=f"{self._api_base_url}/tasks/{task_id}",
         )
 
     @_requires_authentication

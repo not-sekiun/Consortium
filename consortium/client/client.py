@@ -76,26 +76,45 @@ class Client:
     def _load_aliases_from_aliases_json_file() -> dict[str, Alias]:
         aliases = {}
         with open(client_config_module.CONSORTIUM_ALIASES_JSON_FILE_PATH) as file:
-            alias_json = json.load(file)
-            jsonschema.validate(
-                alias_json,
-                {
-                    "type": "object",
-                    "additionalProperties": {
+            try:
+                alias_json = json.load(file)
+                jsonschema.validate(
+                    alias_json,
+                    {
                         "type": "object",
-                        "properties": {
-                            "command": {"type": "string"},
-                            "is_global": {"type": "boolean"},
+                        "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                                "command": {"type": "string"},
+                                "is_global": {"type": "boolean"},
+                            },
+                            "required": ["command", "is_global"],
+                            "additionalProperties": False,
                         },
-                        "required": ["command", "is_global"],
-                        "additionalProperties": False,
                     },
-                },
-            )
+                )
+            except json.JSONDecodeError:
+                print_error(
+                    "Failed to load client aliases from "
+                    f"{client_config_module.CONSORTIUM_ALIASES_JSON_FILE_PATH}. The "
+                    "client alias file was not valid JSON."
+                )
+                return aliases
+            except jsonschema.ValidationError:
+                print_error(
+                    "Failed to load client aliases from "
+                    f"{client_config_module.CONSORTIUM_ALIASES_JSON_FILE_PATH}. The "
+                    "client alias file was invalidly formatted. Hint: An entry should "
+                    "be formatted as: "
+                    "{<alias>: {'command': '<command>', 'is_global': <boolean>}}"
+                )
+                return aliases
+
             for alias_name, alias in alias_json.items():
                 aliases[alias_name] = Alias(
                     command=alias["command"], is_global=alias["is_global"]
                 )
+
         return aliases
 
     @with_spinner()
