@@ -47,7 +47,7 @@ class UseAgentTemplateInterpreter(GeneratorsInterpreter):
                 [
                     command
                     for command in COMBINED_GENERATORS_INTERPRETER_CORE_COMMANDS
-                    if command.name not in ("info_agent_template", "use_agent_template")
+                    if command.name not in ("template", "use")
                 ]
                 + USE_AGENT_TEMPLATE_INTERPRETER_COMMANDS
                 # Add back in the generators command since it's removed in the

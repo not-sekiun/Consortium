@@ -47,7 +47,7 @@ class UseListenerTemplateInterpreter(ListenersInterpreter):
                 [
                     command
                     for command in COMBINED_LISTENERS_INTERPRETER_CORE_COMMANDS
-                    if command.name not in ("lt-info", "use")
+                    if command.name not in ("template", "use")
                 ]
                 + USE_LISTENER_TEMPLATE_INTERPRETER_COMMANDS
                 # Add back in the listeners command since it's removed in the

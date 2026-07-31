@@ -6,8 +6,6 @@ from consortium.client.client_websockets_events_api import EventHandler
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.listeners_interpreter_commands import (
     LISTENERS_INTERPRETER_COMMANDS,
-    ListenerListCommand,
-    ListenerTemplateListCommand,
 )
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
 from consortium.client.repl_interface.autocompletes import (
@@ -17,6 +15,10 @@ from consortium.client.repl_interface.autocompletes import (
 from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.repl_interface.base_interpreter import (
     BaseConnectedInterpreter,
+)
+from consortium.client.utils.listener_command_utils import display_all_listeners
+from consortium.client.utils.listener_template_command_utils import (
+    display_all_listener_templates,
 )
 
 if TYPE_CHECKING:
@@ -93,10 +95,10 @@ class ListenersInterpreter(BaseConnectedInterpreter):
         all_listeners: list[dict[str, Any]],
         all_listener_templates: list[dict[str, Any]],
     ) -> None:
-        ListenerListCommand._list_all_listeners(
+        display_all_listeners(
             all_listeners=all_listeners,
         )
-        ListenerTemplateListCommand._list_all_listener_templates(
+        display_all_listener_templates(
             all_listener_templates=all_listener_templates,
         )
 

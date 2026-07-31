@@ -22,11 +22,8 @@ from consortium.client.commands.listeners_interpreter_commands.listener_start im
 from consortium.client.commands.listeners_interpreter_commands.listener_stop import (
     ListenerStopCommand,
 )
-from consortium.client.commands.listeners_interpreter_commands.listener_template_info import (
-    ListenerTemplateInfoCommand,
-)
-from consortium.client.commands.listeners_interpreter_commands.listener_template_list import (
-    ListenerTemplateListCommand,
+from consortium.client.commands.listeners_interpreter_commands.listener_template import (
+    ListenerTemplateCommand,
 )
 from consortium.client.commands.listeners_interpreter_commands.listener_template_use import (
     ListenerTemplateUseCommand,
@@ -39,8 +36,7 @@ LISTENERS_INTERPRETER_COMMANDS = [
     ListenerCancelCommand(),
     ListenerDeleteCommand(),
     ListenerInfoCommand(),
-    ListenerTemplateInfoCommand(),
-    ListenerTemplateListCommand(),
+    ListenerTemplateCommand(),
     ListenerListCommand(),
     ListenerDescribeCommand(),
     ListenerRenameCommand(),

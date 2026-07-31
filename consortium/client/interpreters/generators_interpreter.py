@@ -6,8 +6,6 @@ from consortium.client.client_websockets_events_api import EventHandler
 from consortium.client.commands.core_commands import CORE_COMMANDS
 from consortium.client.commands.generators_interpreter_commands import (
     GENERATORS_INTERPRETER_COMMANDS,
-    AgentTemplateListCommand,
-    GeneratorListCommand,
 )
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
 from consortium.client.repl_interface.autocompletes import (
@@ -17,6 +15,12 @@ from consortium.client.repl_interface.autocompletes import (
 from consortium.client.repl_interface.base_command import BaseCommand
 from consortium.client.repl_interface.base_interpreter import (
     BaseConnectedInterpreter,
+)
+from consortium.client.utils.agent_generator_command_utils import (
+    display_all_agent_generators,
+)
+from consortium.client.utils.agent_template_command_utils import (
+    display_all_agent_templates,
 )
 
 if TYPE_CHECKING:
@@ -140,10 +144,10 @@ class GeneratorsInterpreter(BaseConnectedInterpreter):
         all_agent_generators: list[dict[str, Any]],
         all_agent_templates: list[dict[str, Any]],
     ) -> None:
-        GeneratorListCommand._list_all_agent_generators(
+        display_all_agent_generators(
             all_agent_generators=all_agent_generators,
         )
-        AgentTemplateListCommand._list_all_agent_templates(
+        display_all_agent_templates(
             all_agent_templates=all_agent_templates,
         )
 
