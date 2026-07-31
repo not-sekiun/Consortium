@@ -19,8 +19,8 @@ run `create`.
 
 | Command                | Description                                              |
 |------------------------|----------------------------------------------------------|
-| `opt-list`             | List the template's options and their current values     |
-| `opt-info <option>`    | Show details of a single option                          |
+| `option list`          | List the template's options and their current values     |
+| `option info <option>` | Show details of a single option                          |
 | `set <option> <value>` | Set an option's value                                    |
 | `unset <option>`       | Clear an option's value                                  |
 | `reset <option>`       | Reset an option back to its default value                |
@@ -30,8 +30,11 @@ run `create`.
 | `generators`           | Return to the Generators interpreter                     |
 
 Option names tab complete. Values are typed according to each option's expected value
-type: use `opt-info <option>` to see the type and any examples, and `help set` for the
-value type specification.
+type: use `option info <option>` to see the type and any examples, and `help set` for
+the value type specification.
+
+The `option` and `template` commands group their sub-commands, and each sub-command
+carries its own help, for example `option info --help`.
 
 ## Compatible listeners
 
@@ -58,7 +61,7 @@ create --no-start # create the generator without starting it
 generators                      # enter the Generators interpreter
 template list                   # find the template you want
 use a1b2c3d4-...                # enter the template's context
-opt-list                        # review the configurable options
+option list                     # review the configurable options
 set callback_host 10.0.0.5      # configure options as needed
 set callback_port 8443
 create                          # create and start the generator
