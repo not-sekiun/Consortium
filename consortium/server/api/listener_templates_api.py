@@ -136,5 +136,11 @@ async def create_listener_through_listener_template_by_listener_template_id(
         raise api_excs.MissingRequiredListenerTemplateOptionError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
+    except (
+        listener_templates_framework_exceptions.ListenerTemplateValidatingFunctionError
+    ) as exc:
+        raise api_excs.ListenerTemplateValidatingFunctionError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
     return ListenerModel(**listener.to_json())

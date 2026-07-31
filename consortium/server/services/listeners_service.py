@@ -120,6 +120,18 @@ class ListenersService:
         Raises:
             ListenerTemplateIDNotFoundError: If no listener template with the given ID
                 exists.
+            MissingRequiredListenerTemplateOptionError: If a required template option is
+                absent from parameters.
+            ListenerTemplateOptionNotFoundError: If parameters contains an option name
+                the template does not declare.
+            ListenerTemplateOptionValueValidationError: If a parameter value fails type
+                or constraint validation.
+            ListenerTemplateValidatingFunctionError: If the template's validating
+                function rejects the resolved option set.
+
+        Note that every option validation error above is raised by the template before
+        the listener is instantiated, so nothing is registered and no
+        `LISTENER_CREATED` event is emitted when one occurs.
         """
         listener_template = self._listener_templates_service.get_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,

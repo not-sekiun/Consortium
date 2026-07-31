@@ -125,10 +125,18 @@ class AgentGeneratorsService:
 
         Raises:
             AgentTemplateIDNotFoundError: If no agent template with the given ID is found.
-            InvalidAgentGeneratorParameterNameError: If a parameter name is not valid for
-                the agent template.
-            InvalidAgentGeneratorParameterValueError: If a parameter value fails
-                validation against the agent template.
+            MissingRequiredAgentTemplateOptionError: If a required template option is
+                absent from parameters.
+            AgentTemplateOptionNotFoundError: If parameters contains an option name the
+                template does not declare.
+            AgentTemplateOptionValueValidationError: If a parameter value fails type or
+                constraint validation.
+            AgentTemplateValidatingFunctionError: If the template's validating function
+                rejects the resolved option set.
+
+        Note that every option validation error above is raised by the template before
+        the agent generator is instantiated, so nothing is registered and no
+        `AGENT_GENERATOR_CREATED` event is emitted when one occurs.
         """
         agent_template = (
             self._agent_templates_service.get_agent_template_by_agent_template_id(

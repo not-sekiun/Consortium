@@ -125,6 +125,27 @@ class ListenerTemplateOptionError(ListenerTemplatesFrameworkError):
     code = "LISTENER_TEMPLATE_OPTION_ERROR"
 
 
+class ListenerTemplateValidatingFunctionError(ListenerTemplateOptionError):
+    """Raised when a listener template rejects its resolved options."""
+
+    code = "LISTENER_TEMPLATE_VALIDATING_FUNCTION_ERROR"
+
+    def __init__(
+        self,
+        listener_template_str: str,
+        error_message: str,
+        detail: dict[str, Any] | None = None,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to create the listener from the Listener template "
+                f"{listener_template_str}. The listener template's validating function "
+                f"failed to validate its options. {error_message}"
+            ),
+            detail=detail,
+        )
+
+
 class ListenerTemplateOptionNotFoundError(ListenerTemplateOptionError):
     """Raised when a provided option name is not found in the listener template when
     attempting to create a listener from the listener template.

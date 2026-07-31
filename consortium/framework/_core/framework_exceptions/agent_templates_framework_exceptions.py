@@ -125,6 +125,27 @@ class AgentTemplateOptionError(AgentTemplatesFrameworkError):
     code = "AGENT_TEMPLATE_OPTION_ERROR"
 
 
+class AgentTemplateValidatingFunctionError(AgentTemplateOptionError):
+    """Raised when an agent template rejects its resolved options."""
+
+    code = "AGENT_TEMPLATE_VALIDATING_FUNCTION_ERROR"
+
+    def __init__(
+        self,
+        agent_template_str: str,
+        error_message: str,
+        detail: dict[str, Any] | None = None,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to create the agent generator from the agent template "
+                f"{agent_template_str}. The agent template's validating function "
+                f"failed to validate its options. {error_message}"
+            ),
+            detail=detail,
+        )
+
+
 class AgentTemplateOptionNotFoundError(AgentTemplateOptionError):
     """Raised when a provided option name is not found in the agent template when
     attempting to create an agent generator from the agent template.

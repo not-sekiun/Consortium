@@ -16,6 +16,7 @@ from consortium.framework._core.components import (
 from consortium.framework._core.framework_exceptions.agent_templates_framework_exceptions import (
     AgentTemplateOptionNotFoundError,
     AgentTemplateOptionValueValidationError,
+    AgentTemplateValidatingFunctionError,
     DuplicateAgentTemplateOptionNameError,
     EmptyAgentTemplateLabelError,
     InvalidAgentTemplateConfigurationParameterTypeError,
@@ -26,7 +27,7 @@ from consortium.framework._core.framework_exceptions.agent_templates_framework_e
     MissingRequiredAgentTemplateOptionError,
 )
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
-    OptionValueValidationError,
+    OptionValueValidationError as OptionValueValidationFrameworkError,
 )
 from consortium.framework._core.utils import (
     format_docstring_to_single_line,
@@ -44,6 +45,9 @@ from consortium.framework.options import (
     ListValueOption,
     SingleValueOption,
     ToggleableChoicesValueOption,
+)
+from consortium.framework.signal_exceptions.options_signal_exceptions import (
+    OptionValueValidationError as OptionValueValidationSignalError,
 )
 from consortium.server.utils import construct_services_dataclass
 
@@ -220,6 +224,8 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             AgentTemplateOptionNotFoundError: If parameters contains an unknown option name.
             AgentTemplateOptionValueValidationError: If an option value fails type or
                 constraint validation.
+            AgentTemplateValidatingFunctionError: If the template validating function
+                rejects the resolved options.
         """
         if parameters is None:
             parameters = {}
@@ -254,7 +260,7 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
                 if value is None and not option.required:
                     continue
                 option.validate_value(value)
-            except OptionValueValidationError as exc:
+            except OptionValueValidationFrameworkError as exc:
                 raise AgentTemplateOptionValueValidationError(
                     option_name=option_name,
                     option_value=value,
@@ -264,7 +270,14 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
 
         # Run validation function on the entire set of parameters if one was provided.
         if self.validating_function:
-            self.validating_function(parameters)
+            try:
+                self.validating_function(parameters)
+            except OptionValueValidationSignalError as exc:
+                raise AgentTemplateValidatingFunctionError(
+                    agent_template_str=str(self),
+                    error_message=exc.message,
+                    detail=exc.detail,
+                ) from None
 
         # Create agent generator instance. Resolving the name from the parameters only if one
         # was not provided.

@@ -92,6 +92,12 @@ async def create_agent_generator_through_agent_template_by_agent_template_id(
         raise api_excs.MissingRequiredAgentTemplateOptionError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
+    except (
+        agent_templates_framework_exceptions.AgentTemplateValidatingFunctionError
+    ) as exc:
+        raise api_excs.AgentTemplateValidatingFunctionError.from_consortium_exception(
+            consortium_exception=exc,
+        ) from None
 
     return AgentGeneratorModel(**agent_generator.to_json())
 

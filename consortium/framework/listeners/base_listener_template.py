@@ -3,7 +3,6 @@ import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from inspect import signature
-from types import NotImplementedType
 from typing import get_type_hints
 
 from pydantic import ConfigDict, JsonValue
@@ -23,11 +22,12 @@ from consortium.framework._core.framework_exceptions.listener_templates_framewor
     InvalidListenerTemplateVersionError,
     ListenerTemplateOptionNotFoundError,
     ListenerTemplateOptionValueValidationError,
+    ListenerTemplateValidatingFunctionError,
     MissingListenerTemplateConfigurationParameterError,
     MissingRequiredListenerTemplateOptionError,
 )
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
-    OptionValueValidationError,
+    OptionValueValidationError as OptionValueValidationFrameworkError,
 )
 from consortium.framework._core.utils import (
     format_docstring_to_single_line,
@@ -45,6 +45,9 @@ from consortium.framework.options import (
     ListValueOption,
     SingleValueOption,
     ToggleableChoicesValueOption,
+)
+from consortium.framework.signal_exceptions.options_signal_exceptions import (
+    OptionValueValidationError as OptionValueValidationSignalError,
 )
 from consortium.server.utils import construct_services_dataclass
 
@@ -208,22 +211,22 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
     # TODO: Implement being able to create agents from a particular listener but only if
     #   this method exists and is overriden otherwise it should be treated as not
     #   possible
-    def resolve_agent_parameters_from_listener_parameters(
-        self,
-        agent_type: str,
-        parameters: dict[str, Primitive | PrimitiveCollection],
-    ) -> dict[str, Primitive | PrimitiveCollection] | NotImplementedType:
-        """Resolve agent parameters from listener parameters.
-
-        Args:
-            agent_type: The type of agent for which to resolve parameters.
-            parameters: The resolved option values provided at listener creation time,
-                keyed by option name.
-
-        Returns:
-            A dictionary of agent parameters keyed by parameter name.
-        """
-        return NotImplemented
+    # def resolve_agent_parameters_from_listener_parameters(
+    #     self,
+    #     agent_type: str,
+    #     parameters: dict[str, Primitive | PrimitiveCollection],
+    # ) -> dict[str, Primitive | PrimitiveCollection] | NotImplementedType:
+    #     """Resolve agent parameters from listener parameters.
+    #
+    #     Args:
+    #         agent_type: The type of agent for which to resolve parameters.
+    #         parameters: The resolved option values provided at listener creation time,
+    #             keyed by option name.
+    #
+    #     Returns:
+    #         A dictionary of agent parameters keyed by parameter name.
+    #     """
+    #     return NotImplemented
 
     def create_listener(
         self,
@@ -255,6 +258,8 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
             ListenerTemplateOptionNotFoundError: If parameters contains an unknown option name.
             ListenerTemplateOptionValueValidationError: If an option value fails type or
                 constraint validation.
+            ListenerTemplateValidatingFunctionError: If the template validating function
+                rejects the resolved options.
         """
         if parameters is None:
             parameters = {}
@@ -289,7 +294,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
                 if value is None and not option.required:
                     continue
                 option.validate_value(value)
-            except OptionValueValidationError as exc:
+            except OptionValueValidationFrameworkError as exc:
                 raise ListenerTemplateOptionValueValidationError(
                     option_name=option_name,
                     option_value=value,
@@ -299,7 +304,14 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
 
         # Run validation function on the entire set of parameters if one was provided.
         if self.validating_function:
-            self.validating_function(parameters)
+            try:
+                self.validating_function(parameters)
+            except OptionValueValidationSignalError as exc:
+                raise ListenerTemplateValidatingFunctionError(
+                    listener_template_str=str(self),
+                    error_message=exc.message,
+                    detail=exc.detail,
+                ) from None
 
         # Create listener instance. Resolving the name from the parameters only if one
         # was not provided.

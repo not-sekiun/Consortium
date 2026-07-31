@@ -8,6 +8,8 @@
     could not be found.
     - ListenerTemplateOptionValueError: The provided listener template option
     value failed option value validation.
+    - ListenerTemplateValidatingFunctionError: The provided set of listener template
+    options was rejected by the listener template's validating function.
 """
 
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
@@ -31,3 +33,6 @@ class ListenerTemplateOptionValueValidationError(UnprocessableEntityError): ...
 
 
 class MissingRequiredListenerTemplateOptionError(UnprocessableEntityError): ...
+
+
+class ListenerTemplateValidatingFunctionError(UnprocessableEntityError): ...
