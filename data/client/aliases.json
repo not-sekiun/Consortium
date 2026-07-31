@@ -1,10 +1,7 @@
 {
-    "?": {
-        "command": "help",
-        "is_global": false
+    "local_aliases": {
+        "?": "help",
+        "!": "exec"
     },
-    "!": {
-        "command": "exec",
-        "is_global": false
-    }
+    "global_aliases": {}
 }

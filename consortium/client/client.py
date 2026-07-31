@@ -82,15 +82,18 @@ class Client:
                     alias_json,
                     {
                         "type": "object",
-                        "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                                "command": {"type": "string"},
-                                "is_global": {"type": "boolean"},
+                        "properties": {
+                            "local_aliases": {
+                                "type": "object",
+                                "additionalProperties": {"type": "string"},
                             },
-                            "required": ["command", "is_global"],
-                            "additionalProperties": False,
+                            "global_aliases": {
+                                "type": "object",
+                                "additionalProperties": {"type": "string"},
+                            },
                         },
+                        "additionalProperties": False,
+                        "required": ["local_aliases", "global_aliases"],
                     },
                 )
             except json.JSONDecodeError:
@@ -106,14 +109,14 @@ class Client:
                     f"{client_config_module.CONSORTIUM_ALIASES_JSON_FILE_PATH}. The "
                     "client alias file was invalidly formatted. Hint: An entry should "
                     "be formatted as: "
-                    "{<alias>: {'command': '<command>', 'is_global': <boolean>}}"
+                    "{'local_aliases'/'global_aliases': {<alias_1>: <command_1>, <alias_2>: <command_2>}}"
                 )
                 return aliases
 
-            for alias_name, alias in alias_json.items():
-                aliases[alias_name] = Alias(
-                    command=alias["command"], is_global=alias["is_global"]
-                )
+            for alias, command in alias_json["local_aliases"].items():
+                aliases[alias] = Alias(command=command, is_global=False)
+            for alias, command in alias_json["global_aliases"].items():
+                aliases[alias] = Alias(command=command, is_global=True)
 
         return aliases
 
