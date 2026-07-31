@@ -1,1 +1,10 @@
-{}
+{
+    "?": {
+        "command": "help",
+        "is_global": false
+    },
+    "!": {
+        "command": "exec",
+        "is_global": false
+    }
+}
