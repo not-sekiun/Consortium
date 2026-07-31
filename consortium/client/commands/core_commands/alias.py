@@ -1,6 +1,6 @@
 import argparse
+import json
 
-from pydantic import TypeAdapter
 from rich.table import Table
 
 import consortium.client.client_config as client_config
@@ -44,9 +44,20 @@ class AliasCommand(BaseCommand[AnyContext]):
 
     @staticmethod
     def _write_aliases_to_alias_file(aliases: dict[str, Alias]) -> None:
+        aliases = {
+            "local_aliases": {
+                alias: alias_obj.command
+                for alias, alias_obj in aliases.items()
+                if not alias_obj.is_global
+            },
+            "global_aliases": {
+                alias: alias_obj.command
+                for alias, alias_obj in aliases.items()
+                if alias_obj.is_global
+            },
+        }
         with open(client_config.CONSORTIUM_ALIASES_JSON_FILE_PATH, "w") as file:
-            ta = TypeAdapter(dict[str, Alias])
-            file.write(ta.dump_json(aliases, indent=4).decode("utf-8"))
+            file.write(json.dumps(aliases, indent=4))
 
     @staticmethod
     def _handle_list_sub_command(aliases: dict[str, Alias]) -> InterpreterSignal:
