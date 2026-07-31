@@ -48,7 +48,10 @@ from consortium.server.server_middleware import (
     check_if_server_is_shutting_down,
     log_rest_api_requests_and_responses,
 )
-from consortium.server.utils import use_route_name_as_operation_id
+from consortium.server.utils import (
+    get_container_networking_warnings,
+    use_route_name_as_operation_id,
+)
 
 
 class Server:
@@ -245,6 +248,16 @@ class Server:
             f"released {server_release.datetime_released}) at "
             f"{self.server_config.local_host}:{self.server_config.local_port}...",
         )
+
+        # Report container networking misconfigurations up front. The server would
+        # otherwise start, pass its health check, and be silently unreachable from
+        # outside its own container.
+        for warning in await get_container_networking_warnings(
+            local_host=self.server_config.local_host,
+            local_port=self.server_config.local_port,
+        ):
+            self._logger.warning(warning)
+
         self.status = ServerStatus.RUNNING
 
         # Setup all services and emit startup event.

@@ -1,8 +1,12 @@
 import asyncio
 import functools
 import inspect
+import ipaddress
+import json
 import operator
+import os
 import random
+import socket
 import types
 import uuid
 from collections.abc import Callable, Coroutine
@@ -15,6 +19,7 @@ from pydantic import BaseModel, RootModel, create_model
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
     BaseFrameworkError,
 )
+from consortium.framework.utils.shell_utils import run_command
 from consortium.server.exceptions.object_exceptions.base_object_exception import (
     BaseObjectError,
 )
@@ -212,6 +217,42 @@ def construct_services_dataclass(
     )
 
 
+MAX_EVENT_LOG_LIMIT = 1000
+
+
+# Hard server-side ceiling on how many event log entries a single request may return.
+# Event logs are held in memory, so this bounds response size and memory use regardless
+# of what a client asks for. Requests above this value are clamped down to it rather than
+# rejected, so callers that pass a large number to mean "everything" still succeed.
+def clamp_event_log_limit(limit: int) -> int:
+    # Callers still validate the lower bound (gt=0) at the query layer; this only caps
+    # the upper bound before the value reaches the event log.
+    return min(limit, MAX_EVENT_LOG_LIMIT)
+
+
+_background_tasks = set()
+
+
+# Running fire and forget background tasks safely. The _coroutine set is needed since
+# tasks are only held onto by a weak reference and may be GCed at any time.
+def run_async_background_task(coroutine: Coroutine) -> None:
+    task = asyncio.create_task(coroutine)
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+
+
+def wrap_function_with_exception_reraising(
+    func: Callable, catch_exc: Exception, reraise_exc: Exception
+):
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except catch_exc:
+            raise reraise_exc from None
+
+    return wrapper
+
+
 def generate_random_human_readable_name():
     colors = [
         "AMBER",
@@ -320,25 +361,92 @@ def generate_random_human_readable_name():
     return f"{random.choice(colors).upper()} {random.choice(celestials).upper()}"
 
 
-MAX_EVENT_LOG_LIMIT = 1000
+# Set on the image so the server can tell that it is running inside a container. There
+# is no portable way to detect this from inside, and the checks below only make sense
+# when it is true.
+RUNNING_IN_DOCKER_ENVIRONMENT_VARIABLE = "RUNNING_IN_DOCKER"
+_FALSE_ENVIRONMENT_VARIABLE_VALUES = frozenset({"", "0", "false", "no", "off"})
 
 
-# Hard server-side ceiling on how many event log entries a single request may return.
-# Event logs are held in memory, so this bounds response size and memory use regardless
-# of what a client asks for. Requests above this value are clamped down to it rather than
-# rejected, so callers that pass a large number to mean "everything" still succeed.
-def clamp_event_log_limit(limit: int) -> int:
-    # Callers still validate the lower bound (gt=0) at the query layer; this only caps
-    # the upper bound before the value reaches the event log.
-    return min(limit, MAX_EVENT_LOG_LIMIT)
+def is_running_in_docker() -> bool:
+    value = os.environ.get(RUNNING_IN_DOCKER_ENVIRONMENT_VARIABLE, "")
+    return value.strip().lower() not in _FALSE_ENVIRONMENT_VARIABLE_VALUES
 
 
-_background_tasks = set()
+def _is_loopback_address(host: str) -> bool:
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return host.strip().lower() == "localhost"
 
 
-# Running fire and forget background tasks safely. The _coroutine set is needed since
-# tasks are only held onto by a weak reference and may be GCed at any time.
-def run_async_background_task(coroutine: Coroutine) -> None:
-    task = asyncio.create_task(coroutine)
-    _background_tasks.add(task)
-    task.add_done_callback(_background_tasks.discard)
+async def _get_own_container_host_config() -> dict[str, Any] | None:
+    # A container's hostname defaults to its own short id, which is what `docker
+    # inspect` needs to look itself up. This only works when a docker client and a
+    # reachable engine are present, which is not guaranteed: the socket mount is
+    # optional. Failing to determine the configuration is not itself a problem worth
+    # reporting, so every failure path returns None and the caller stays quiet.
+    output = await run_command(
+        "docker",
+        "inspect",
+        "--format",
+        "{{json .HostConfig}}",
+        socket.gethostname(),
+    )
+    if output.return_code != 0:
+        return None
+
+    try:
+        host_config = json.loads(output.stdout)
+    except json.JSONDecodeError:
+        return None
+
+    return host_config if isinstance(host_config, dict) else None
+
+
+def _is_port_published(host_config: dict[str, Any], local_port: int) -> bool:
+    port_bindings = host_config.get("PortBindings") or {}
+    for port_specification, bindings in port_bindings.items():
+        # Keys are of the form "9999/tcp". A published range is expanded by the engine
+        # into one key per port, so an exact match covers ranges as well.
+        if port_specification.split("/")[0] == str(local_port) and bindings:
+            return True
+    return False
+
+
+async def get_container_networking_warnings(
+    local_host: str,
+    local_port: int,
+) -> list[str]:
+    if not is_running_in_docker():
+        return []
+
+    warnings = []
+
+    if _is_loopback_address(local_host):
+        warnings.append(
+            f"The server is bound to the loopback address '{local_host}' inside its "
+            f"container, so it is unreachable from the host and from any other "
+            f"container no matter which ports are published. Hint: set 'local_host' to "
+            f"'0.0.0.0' in the server configuration file and restart the server."
+        )
+
+    host_config = await _get_own_container_host_config()
+    if host_config is None:
+        return warnings
+
+    # Host networking shares the host's interfaces outright, so ports are reachable
+    # without being published and there is nothing to check.
+    if host_config.get("NetworkMode") == "host":
+        return warnings
+
+    if not _is_port_published(host_config, local_port):
+        warnings.append(
+            f"The server's port {local_port} is not published by its container, so the "
+            f"REST API and the websockets events API are only reachable from inside "
+            f'it. Hint: add "{local_port}:{local_port}" to the server service\'s '
+            f"'ports' in docker-compose.yml, then recreate the container with "
+            f"'docker compose up -d'."
+        )
+
+    return warnings
