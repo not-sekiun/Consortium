@@ -2,6 +2,13 @@ from consortium.framework.utils.collection_utils import (
     chunked,
     dedupe_preserving_order,
 )
+from consortium.framework.utils.container_utils import (
+    ContainerBuildError,
+    ContainerRuntimeUnavailableError,
+    build_artifact_in_container,
+    build_container_image,
+    ensure_container_runtime_available,
+)
 from consortium.framework.utils.network_utils import (
     find_available_port,
     get_local_ip,
@@ -16,8 +23,13 @@ from consortium.framework.utils.random_utils import random_string
 from consortium.framework.utils.string_utils import replace_all
 
 __all__ = [
+    "ContainerBuildError",
+    "ContainerRuntimeUnavailableError",
+    "build_artifact_in_container",
+    "build_container_image",
     "chunked",
     "dedupe_preserving_order",
+    "ensure_container_runtime_available",
     "ensure_within_root",
     "find_available_port",
     "get_local_ip",

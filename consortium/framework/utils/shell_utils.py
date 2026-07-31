@@ -1,5 +1,4 @@
 import asyncio
-import os
 import pathlib
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
@@ -26,27 +25,26 @@ class AsyncProcess:
         """Run the process and return its buffered standard output and error streams.
 
         Args:
-            working_dir: Directory in which to execute the process. When provided, the
-                process-wide current working directory is restored after execution.
+            working_dir: Directory in which to execute the process. Applied to the
+                spawned process alone, leaving the caller's working directory untouched.
 
         Returns:
             A tuple containing stripped standard output and standard error text.
         """
-        previous_working_dir = pathlib.Path.cwd()
-        if working_dir is not None:
-            os.chdir(working_dir)
-
+        # The working directory is handed to the child process rather than applied
+        # with `os.chdir`. The interpreter has a single working directory shared by
+        # every coroutine, so changing it here would leak into any concurrently
+        # running task and be restored out from under processes that are still
+        # spawning.
         process = await asyncio.create_subprocess_exec(
             *self.args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            cwd=working_dir,
             **self.kwargs,
         )
         stdout, stderr = await process.communicate()
         self.return_code = await process.wait()
-
-        if working_dir is not None:
-            os.chdir(previous_working_dir)
 
         return stdout.decode().rstrip(), stderr.decode().rstrip()
 
@@ -56,20 +54,19 @@ class AsyncProcess:
         """Run the process and yield combined standard output and error lines.
 
         Args:
-            working_dir: Directory in which to execute the process. When provided, the
-                process-wide current working directory is restored after execution.
+            working_dir: Directory in which to execute the process. Applied to the
+                spawned process alone, leaving the caller's working directory untouched.
 
         Yields:
             Each output line with trailing newline characters removed.
         """
-        previous_working_dir = pathlib.Path.cwd()
-        if working_dir is not None:
-            os.chdir(working_dir)
-
+        # See `execute` for why the working directory is passed to the child process
+        # instead of being applied with `os.chdir`.
         process = await asyncio.create_subprocess_exec(
             *self.args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,  # Redirect stderr into stdout so we stream both together
+            cwd=working_dir,
             **self.kwargs,
         )
 
@@ -87,9 +84,6 @@ class AsyncProcess:
 
         # Wait for the process to fully exit and get the return code
         self.return_code = await process.wait()
-
-        if working_dir is not None:
-            os.chdir(previous_working_dir)
 
 
 @dataclass(frozen=True)
