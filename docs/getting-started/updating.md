@@ -1,15 +1,34 @@
 ## Updating Consortium
 
 To update Consortium, pull any new changes from the GitHub repository and install the
-updated Python dependencies using `uv`.
+updated dependencies.
 
- ```shell
- cd path/to/Consortium
- git pull
- uv sync --all-packages
- ```
+=== "Manual install"
+
+    ```shell
+    cd path/to/Consortium
+    git pull
+    uv sync --all-packages
+    ```
+
+=== "Docker install"
+
+    ```shell
+    cd path/to/Consortium
+    git pull
+    docker compose up -d --build
+    ```
+
+    Rebuilding installs the updated dependencies into a new image and recreates the
+    server from it. Everything under `data/` is bind mounted from the host and is left
+    untouched by the rebuild.
 
 ## Enabling Auto-updating for Consortium
+
+!!! note
+    Auto-updating applies to a manual install. It updates the server from its Git
+    checkout, which a Docker install's image does not contain. Update a Docker install by
+    rebuilding it, as shown above.
 
 If you want the Consortium server to perform its own automatic checking/installation of
 updates from the GitHub repository, you can enable the `auto_updater` plugin that is

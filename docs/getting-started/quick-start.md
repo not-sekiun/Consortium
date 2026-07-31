@@ -7,9 +7,20 @@ For anything beyond the defaults, follow the links to the relevant sections.
 
 From the project root, start the server:
 
-```shell
-uv run consortium.py server
-```
+=== "Manual install"
+
+    ```shell
+    uv run consortium.py server
+    ```
+
+=== "Docker install"
+
+    ```shell
+    docker compose up -d
+    ```
+
+    The server runs in the background. Check that it is ready with `docker compose ps`
+    and follow its output with `docker compose logs -f server`.
 
 This binds the server to the default socket address `0.0.0.0:9999`. The server ships with
 three default user accounts (`admin`, `operator`, and `spectator`), each using its own name
@@ -26,9 +37,20 @@ To change the bind address, user accounts, roles, or logging, see the
 
 With the server running, start the client from the project root in a separate terminal:
 
-```shell
-uv run consortium.py client
-```
+=== "Manual install"
+
+    ```shell
+    uv run consortium.py client
+    ```
+
+=== "Docker install"
+
+    ```shell
+    docker compose run --rm client
+    ```
+
+    `docker compose up` never starts the client: it needs an interactive terminal, which
+    only `docker compose run` provides.
 
 The client reads `data/client/client_config.json` and connects to `127.0.0.1:9999` as
 `admin` by default. Once connected, you land in the **Home** interpreter and can begin

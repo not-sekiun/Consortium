@@ -59,19 +59,35 @@ rapidly develop their own highly customized listeners and agents.
 
 ## Getting Started
 
-### Prerequisites
+Consortium can be installed manually on the host, or run in Docker. Pick one of the two
+paths below. Both read their configuration from the same `data/` directory.
+
+| | Manual install | Docker install |
+| --- | --- | --- |
+| Requires | Python 3.14+, uv, Git, Docker | Docker, Git |
+| Best for | Developing the framework or writing components | Running a server without provisioning Python |
+
+Full instructions for both are in the
+[installation documentation](https://not-sekiun.github.io/Consortium/getting-started/installation/).
+
+### Manual Installation
 
 Consortium requires Python 3.14+ and uses the uv package manager to handle its
-dependencies. Git is recommended for installing and updating the framework.
+dependencies. Git is recommended for installing and updating the framework. Docker is
+required by bundled agent generators that compile their payloads inside a container.
 
 1. [Install Python 3.14+](https://www.python.org/downloads)
 2. [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
 3. [Install Git](https://www.git-scm.com)
+4. [Install Docker](https://docs.docker.com/get-started/get-docker/)
 
 > [!IMPORTANT]
-> Make sure your installed tools are visible on your system PATH.
+> Make sure your installed tools are visible on your system PATH, and that the Docker
+> engine is running before starting an agent generator that needs it.
 
-### Installation
+> [!NOTE]
+> Docker is only needed for agent generators that compile in a container. The server,
+> client, listeners, plugins, event hooks, and every other agent run without it.
 
 Clone the repository and install dependencies.
 
@@ -80,8 +96,6 @@ git clone https://github.com/not-sekiun/Consortium.git
 cd Consortium
 uv sync --all-packages
 ```
-
-### Quick Start
 
 The Consortium C2 framework runs on a client-server model. Start the server _first_
 before starting any compatible client to connect to the server.
@@ -98,13 +112,49 @@ Afterwards, start the Consortium client. By default, it connects to `127.0.0.1:9
 uv run consortium.py client
 ```
 
-### Updating
-
-Pull the latest changes from the repository and update/install any new dependencies.
+To update, pull the latest changes and install any new dependencies.
 
 ```shell
 git pull
 uv sync --all-packages
+```
+
+### Docker Installation
+
+Requires [Docker](https://docs.docker.com/get-started/get-docker/) (Docker Engine on
+Linux, or Docker Desktop on Windows and macOS) and Git. Python and uv are not needed on
+the host.
+
+Clone the repository, then build the image and start the server. The API is published on
+port `9999`.
+
+```bash
+git clone https://github.com/not-sekiun/Consortium.git
+cd Consortium
+docker compose up -d --build
+```
+
+Once the server reports `healthy` under `docker compose ps`, connect with the client,
+which runs from the same image.
+
+```bash
+docker compose run --rm client
+```
+
+> [!NOTE]
+> `docker compose up` starts the server only. The client is declared under a Compose
+> profile because it needs an interactive terminal, which `docker compose run` provides.
+
+The `data/` directory is mounted from the host, so configuration, payloads, agents, and
+logs are shared with a manual install and survive `docker compose down`. Listeners bind
+their ports after the container has started, so publish the range you intend to use by
+uncommenting the port range in `docker-compose.yml`.
+
+To update, pull the latest changes and rebuild.
+
+```shell
+git pull
+docker compose up -d --build
 ```
 
 ## Documentation

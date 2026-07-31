@@ -1,42 +1,62 @@
 services:
-  # PostgreSQL Database
-  db:
-    image: postgres:16-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=mysecretpassword
-      - POSTGRES_DB=mydb
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 3s
-      timeout: 3s
-      retries: 5
-
-  # Consortium Server
   server:
     build: .
-    image: my-app-image # Builds and tags the image once
-    command: ["uv", "run", "consortium.py", "server"] # Explicitly overrides entrypoint to start server
+    image: consortium:local
+    command: ["server"]
+    restart: unless-stopped
+    volumes:
+      - ./data:/consortium/data
+      # Lets agent generators that compile inside a container drive the host's
+      # Docker engine. Without it they fail on start with "Docker is not
+      # installed or not found on the system path". Remove this line (and the
+      # group_add below) if you never build those agents: it grants the container
+      # control of the host engine, which is root equivalent on the host.
+      - /var/run/docker.sock:/var/run/docker.sock
+    # The container runs as non-root, so it needs a supplementary group that can
+    # open the mounted socket. Under Docker Desktop the socket is root owned and
+    # gid 0 is correct. On a Linux host, pass the host docker group id instead:
+    #   DOCKER_GID=$(getent group docker | cut -d: -f3) docker compose up -d
+    group_add:
+      - "${DOCKER_GID:-0}"
+    # environment:
+    #   Point agent builds at a separate engine (a docker:dind sidecar, a remote
+    #   builder) instead of the mounted socket. The generator inherits the
+    #   server's environment, so nothing else needs to change.
+    #   - DOCKER_HOST=tcp://dind:2375
     ports:
-      - "8000:8000" # Expose your server port to your host machine if needed
-    volumes:
-      - ./data/server/server_config.json:/data/server/server_config.json # Mounts your dynamic host config file
-      - ./data/server/role_permissions.json:/data/server/role_permissions.json # Mounts your dynamic host config file
-    environment:
-      - DATABASE_URL=postgresql://postgres:mysecretpassword@db:5432/mydb
-    depends_on:
-      db:
-        condition: service_healthy
+      - "9999:9999"
+      # Listeners bind their own ports inside the container at runtime. Publish
+      # the range you intend to create listeners on, otherwise they are only
+      # reachable from inside the container.
+      # - "8080-8090:8080-8090"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import socket; socket.create_connection(('127.0.0.1', 9999), 2).close()"
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      # The server runs a uv based component dependency sync before it binds, so
+      # give it room to finish before failed probes start counting.
+      start_period: 30s
 
-  # 3. Consortium Client
+  # Not started by `docker compose up`. Run it on demand with:
+  #   docker compose run --rm client
   client:
-    image: my-app-image # Reuses the exact same image built by the server service
+    build: .
+    image: consortium:local
+    profiles: ["client"]
+    command: ["client"]
     volumes:
-      - ./host_config.yaml:/app/config.yaml # Shares the exact same dynamic host config file
-    environment:
-      - DATABASE_URL=postgresql://postgres:mysecretpassword@db:5432/mydb
-      - SERVER_URL=http://server:8000 # Allows your client to target the server container over the network
+      - ./data:/consortium/data
+    # Share the server's network namespace so the client reaches the API on
+    # 127.0.0.1, matching the remote_host/remote_port in the shared
+    # data/client/client_config.json that a host run client would also use.
+    network_mode: "service:server"
+    stdin_open: true
+    tty: true
     depends_on:
-      - server
+      server:
+        condition: service_healthy
