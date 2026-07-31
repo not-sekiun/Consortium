@@ -26,8 +26,8 @@ automatically.
 | `info <agent_id>`     | Show details of an agent                     |
 | `interact <agent_id>` | Enter the agent's context to task it         |
 | `task`                | Manage agent tasks (see below)               |
-| `rename <agent_id>`   | Rename an agent                              |
-| `describe <agent_id>` | Attach a description to an agent             |
+| `rename <agent_id> <name>`               | Rename an agent                              |
+| `describe <agent_id> <description>`       | Attach a description to an agent             |
 | `delete <agent_id>`   | Delete an agent                              |
 
 Agent IDs and task IDs tab complete. The `asset`, `artifact`, and `payload` commands are
@@ -44,7 +44,7 @@ Everything to do with an agent's tasks is a sub-command of `task`:
 | `task list [agent_id]`   | List tasks                                   |
 | `task info <task_id>`    | Show details of a task                       |
 | `task watch <task_id>`   | Continuously watch a task until it completes |
-| `task delete <task_id>`  | Delete a queued task                         |
+| `task delete <task_id>`  | Delete a queued or terminal task             |
 
 Sub-command names, agent IDs, and task IDs all tab complete, and each sub-command
 carries its own help:
@@ -58,9 +58,9 @@ task info --help     # show the arguments and examples for one sub-command
 it to one. Inside the interact context it defaults to the agent you are interacting
 with. The `-q/--queued`, `-r/--running`, and `-c/--completed` filters can be combined.
 
-`task delete <task_id>` removes a task that is still **QUEUED**. Once an agent has
-picked a task up there is nothing left to remove from its queue, so deleting a task in
-any other state is refused and the task's current status is reported instead.
+`task delete <task_id>` removes a task that is **QUEUED** or in a terminal
+**SUCCEEDED**, **FAILED**, or **ERRORED** state. A **RUNNING** task cannot be deleted,
+and its current status is reported instead.
 
 ## Interacting with a single agent
 

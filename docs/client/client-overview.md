@@ -129,6 +129,7 @@ Other core commands available across interpreters:
 | `banner`    | Reprint the startup banner                                   |
 | `alias`     | Create and manage command aliases                            |
 | `rc <file>` | Run commands from a resource file in the current interpreter |
+| `exec <command>` | Execute a command in the system shell                   |
 | `exit`      | Exit the current interpreter or the client                   |
 
 See [Aliases and Resource Files](aliases-and-resource-files.md) for automating repeated

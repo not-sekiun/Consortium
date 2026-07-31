@@ -55,6 +55,7 @@ to inspect an artifact before downloading it:
 ```text
 artifact download 123e4567-e89b-12d3-a456-42661417400                    # download to the current directory
 artifact download 123e4567-e89b-12d3-a456-42661417400 -o ./loot/out.bin  # download to a specific path
+artifact download 123e4567-e89b-12d3-a456-42661417400 -w                 # overwrite an existing file
 artifact download 123e4567-e89b-12d3-a456-42661417400 -d                 # decompress a downloaded artifact directory
 ```
 

@@ -44,8 +44,8 @@ Commands available here:
 | `stop <listener_id>`                   | Stop a running listener                                         |
 | `cancel <listener_id>`                 | Cancel a listener                                               |
 | `update <listener_id> <param> <value>` | Update a running listener's parameters                          |
-| `rename <listener_id>`                 | Rename a listener                                               |
-| `describe <listener_id>`               | Attach a description to a listener                              |
+| `rename <listener_id> <name>`          | Rename a listener                                               |
+| `describe <listener_id> <description>` | Attach a description to a listener                              |
 | `delete <listener_id>`                 | Delete a listener                                               |
 
 Listener IDs, template IDs, and (for `update`) parameter names all tab complete.

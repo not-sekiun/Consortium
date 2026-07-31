@@ -39,7 +39,7 @@ state so you can start it later from the Listeners interpreter.
 
 ```text
 create           # create the listener and start it
-create --no-start# create the listener without starting it
+create --no-start # create the listener without starting it
 ```
 
 ## End to end example

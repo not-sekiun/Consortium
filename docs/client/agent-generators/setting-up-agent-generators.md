@@ -50,8 +50,8 @@ Commands available here:
 | `stop <generator_id>`                   | Stop a running generator                                         |
 | `cancel <generator_id>`                 | Cancel a generator                                               |
 | `update <generator_id> <param> <value>` | Update a generator's parameters                                  |
-| `rename <generator_id>`                 | Rename a generator                                               |
-| `describe <generator_id>`               | Attach a description to a generator                              |
+| `rename <generator_id> <name>`          | Rename a generator                                               |
+| `describe <generator_id> <description>` | Attach a description to a generator                              |
 | `delete <generator_id>`                 | Delete a generator                                               |
 
 Generator IDs, template IDs, and (for `update`) parameter names all tab complete. The

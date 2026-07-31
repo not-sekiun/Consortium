@@ -25,10 +25,10 @@ session to begin operating against its server.
 | `list`                    | List all current client sessions                             |
 | `connect`                 | Connect to a server, creating a new client session           |
 | `interact <session_id>`   | Switch into a session and start operating against its server |
-| `info <session_id>`       | Show details of a session                                    |
-| `rename <session_id>`     | Give a session a friendly name                               |
-| `describe <session_id>`   | Attach a description to a session                            |
-| `disconnect <session_id>` | Disconnect and remove a session                              |
+| `info [session_id]`                    | Show details of the current or specified session             |
+| `rename [session_id] <name>`           | Give the current or specified session a friendly name        |
+| `describe [session_id] <description>`  | Describe the current or specified session                    |
+| `disconnect [session_id]`              | Disconnect and remove the current or specified session       |
 
 Session IDs tab complete, so you rarely need to type or paste a full UUID.
 
@@ -38,15 +38,14 @@ The `connect` command creates a new session. It accepts a configuration file or 
 connection details:
 
 ```text
-connect -c                                   # connect using the default client_config.json
+connect                                      # connect using the default client_config.json
 connect -c path/to/client_config.json        # connect using a custom configuration file
-connect -u admin -p admin -rh 127.0.0.1 -rp 9999  # connect with explicit details
+connect -c -u admin -p admin -rh 127.0.0.1 -rp 9999  # connect with explicit details
 ```
 
 When a configuration file is supplied, individual flags (`-u`, `-p`, `-rh`, `-rp`)
-override the matching field from the file. If no configuration file is given, all four
-of
-the connection details must be provided.
+override the matching field from the file. Pass `-c` without a path to connect without
+a configuration file; in that case, all four connection details must be provided.
 
 ## Disconnected mode
 
@@ -55,8 +54,18 @@ enters the Disconnected interpreter (prompt `Consortium`). This mode has no serv
 act
 against, so it only exposes session management commands: `connect`, `list`, `interact`,
 `info`, `rename`, `describe`, and `disconnect`, along with the core `help`, `alias`,
-`rc`,
+`rc`, `exec`,
 `clear`, `banner`, and `exit` commands.
+
+Unlike the Home interpreter, Disconnected mode has no current session. Commands that
+operate on an existing session therefore require its ID:
+
+```text
+info <session_id>
+rename <session_id> <name>
+describe <session_id> <description>
+disconnect <session_id>
+```
 
 From disconnected mode, use `connect` to establish a session and `interact` to switch
 into
@@ -82,8 +91,10 @@ By default sessions are identified only by their generated UUID. Use `rename` an
 `describe` to make a set of sessions easier to tell apart:
 
 ```text
-rename <session_id>      # set a short name for the session
-describe <session_id>    # set a longer description for the session
+rename "production"                          # rename the current session
+rename <session_id> "production"             # rename a specified session
+describe "primary production server"         # describe the current session
+describe <session_id> "primary production server"  # describe a specified session
 ```
 
 ## Ending a session

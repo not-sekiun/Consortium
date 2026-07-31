@@ -1,8 +1,8 @@
 # Using Agent Templates
 
 Running `use <template_id>` from the
-[Generators interpreter](setting-up-agent-generators.md) enters the **use agent template
-**
+[Generators interpreter](setting-up-agent-generators.md) enters the **use agent
+template**
 context. The prompt changes to show which template you are configuring, for example:
 
 ```text
@@ -48,7 +48,7 @@ interpreter.
 
 ```text
 create           # create the generator and start it
-create --no-start# create the generator without starting it
+create --no-start # create the generator without starting it
 ```
 
 ## End to end example

@@ -55,6 +55,7 @@ automatically decompress the downloaded payload directory:
 payload download a1b2c3d4-...               # download the payload
 payload download a1b2c3d4-... --decompress  # download and decompress a payload directory
 payload download a1b2c3d4-... -o ./out.exe  # download to a specific path
+payload download a1b2c3d4-... -w             # overwrite an existing file
 ```
 
 ## Where payloads come from
