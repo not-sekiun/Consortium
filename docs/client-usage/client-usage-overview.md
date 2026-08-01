@@ -1,4 +1,4 @@
-# Client Overview
+# Client Usage Overview
 
 The Consortium client is an interactive REPL (read, evaluate, print loop) that operators
 use to drive a running Consortium server. It authenticates against the server's REST

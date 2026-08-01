@@ -22,14 +22,14 @@ nav = [
         "getting-started/quick-start.md"
     ] },
     { "Server Usage" = [
-        "server-usage/server-overview.md",
+        "server-usage/server-usage-overview.md",
         "server-usage/server-configuration.md",
         "server-usage/user-accounts.md",
         "server-usage/roles-and-permissions.md",
         "server-usage/logging.md"
     ] },
     { "Client Usage" = [
-        "client-usage/client-overview.md",
+        "client-usage/client-usage-overview.md",
         "client-usage/running-the-client-in-docker.md",
         { "Client Sessions" = [
             "client-usage/client-sessions/managing-client-sessions.md"
@@ -65,7 +65,7 @@ nav = [
         ] }
     ] },
     { "Framework API" = [
-        "framework-api/framework-overview.md",
+        "framework-api/framework-api-overview.md",
         { "Listeners" = [
             "framework-api/listeners/listeners-overview.md",
             { "Building a Listener Profile" = [
@@ -122,7 +122,7 @@ nav = [
         ] }
     ] },
     { "Framework Reference" = [
-        "framework-reference/reference-overview.md",
+        "framework-reference/framework-reference-overview.md",
         { "Framework" = [
             "framework-reference/framework/agents-reference.md",
             "framework-reference/framework/event-hooks-reference.md",

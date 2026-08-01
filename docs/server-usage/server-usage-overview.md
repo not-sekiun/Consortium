@@ -1,8 +1,8 @@
-# Server Overview
+# Server Usage Overview
 
 The Consortium server is the core of the framework. It hosts the services that operate on
 the framework primitives and exposes them to clients over a REST API and an Events
-WebSockets API. Operators drive the server through the [client](../client-usage/client-overview.md).
+WebSockets API. Operators drive the server through the [client](../client-usage/client-usage-overview.md).
 
 ## Launching the server
 
@@ -31,12 +31,12 @@ governs a different aspect of the server and has its own page in this section:
 The server configuration and logging configuration files can be overridden at startup
 with command line flags:
 
-| Flag                        | Description                                              |
-|-----------------------------|----------------------------------------------------------|
-| `-s`, `--server-config`     | Path to a custom server configuration file.              |
-| `-l`, `--logging-config`    | Path to a custom logging configuration file.             |
-| `--debug`                   | Raise the log level to `DEBUG` for this run.             |
-| `--reload`                  | Restart the server automatically when files in the framework component directories change.|
+| Flag                     | Description                                                                                |
+|--------------------------|--------------------------------------------------------------------------------------------|
+| `-s`, `--server-config`  | Path to a custom server configuration file.                                                |
+| `-l`, `--logging-config` | Path to a custom logging configuration file.                                               |
+| `--debug`                | Raise the log level to `DEBUG` for this run.                                               |
+| `--reload`               | Restart the server automatically when files in the framework component directories change. |
 
 ```shell
 uv run consortium.py server -s path/to/server_config.json -l path/to/logging_config.json

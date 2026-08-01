@@ -31,7 +31,7 @@ as the password.
     access. See [User Accounts](../server-usage/user-accounts.md).
 
 To change the bind address, user accounts, roles, or logging, see the
-[Server Usage](../server-usage/server-overview.md) section.
+[Server Usage](../server-usage/server-usage-overview.md) section.
 
 ## Start the client
 
@@ -71,11 +71,11 @@ you can connect manually with the `session connect` command. See
 [Managing Client Sessions](../client-usage/client-sessions/managing-client-sessions.md).
 
 To point the client at a different server or user account, see the
-[Client Usage](../client-usage/client-overview.md) section.
+[Client Usage](../client-usage/client-usage-overview.md) section.
 
 ## Where to go next
 
-- [Server Usage](../server-usage/server-overview.md): configure the server's address, accounts, roles,
+- [Server Usage](../server-usage/server-usage-overview.md): configure the server's address, accounts, roles,
   and logging.
-- [Client Usage](../client-usage/client-overview.md): learn the interpreters, commands, and workflow
+- [Client Usage](../client-usage/client-usage-overview.md): learn the interpreters, commands, and workflow
   for operating against a server.

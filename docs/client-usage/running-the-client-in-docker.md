@@ -3,7 +3,7 @@
 On a [Docker install](../getting-started/installation.md#docker-install) the client runs
 in a container of its own, started on demand from the same image as the server.
 
-Everything in the rest of the [Client Usage](client-overview.md) section applies unchanged: the
+Everything in the rest of the [Client Usage](client-usage-overview.md) section applies unchanged: the
 same interpreters, the same commands, the same configuration file. What differs is that
 the client's **filesystem**, its **shell**, and its **network** belong to the container
 rather than to your host. Every nuance on this page follows from that.
@@ -190,5 +190,5 @@ Reaching servers elsewhere on the network works normally. See
   files between the client and the server.
 - [Installation](../getting-started/installation.md#docker-install): the rest of the
   Docker install, including listener ports and containerized agent builds.
-- [Client Overview](client-overview.md): the interpreters and commands themselves, which
+- [Client Overview](client-usage-overview.md): the interpreters and commands themselves, which
   are identical in both installs.

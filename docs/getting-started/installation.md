@@ -83,7 +83,7 @@ For more information about component dependencies and how to install them, see t
 [Installing Component Dependencies](#installing-component-dependencies) section.
 
 For more information on how to configure the server and client, see the
-[Server Usage](../server-usage/server-overview.md) and [Client Usage](../client-usage/client-overview.md)
+[Server Usage](../server-usage/server-usage-overview.md) and [Client Usage](../client-usage/client-usage-overview.md)
 sections.
 
 ## Docker install
