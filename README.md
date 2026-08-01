@@ -10,7 +10,7 @@
 
 <br>
 
-<p align="center"><b>A modern C2 framework with a focus on extensibility</b></p>
+<p align="center"><b>Modern C2 framework built for extensibility</b></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.14%2B-306998?logo=python&logoColor=FFD43B" alt="Python Version">
@@ -54,10 +54,10 @@ their own highly customized listeners and agents.
 > _alpha phase_ of development. As such it should be noted that:
 >
 > 1. Backwards incompatible/breaking changes may be made at any time.
-> 2. The framework is currently not considered to be feature-complete.
-> 3. Documentation will be lacking and incomplete.
+> 2. The framework is currently not feature-complete.
+> 3. Documentation may be lacking and incomplete in some areas.
 >
-> Feel free to raise any problems, feature requests, or bug reports in the GitHub
+> Feel free to raise any problems, feature requests, or bug reports via the GitHub
 > issues section.
 
 ## Features
