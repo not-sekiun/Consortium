@@ -12,7 +12,7 @@ primitives located at `consortium/framework`. These are the base classes, option
 types that user created components (listeners, agents, plugins, and event hooks) are
 built on top of. If you are extending Consortium by writing your own component, this is
 the API you compose against. For a guided walkthrough of building components, see the
-[Framework](../framework/listeners/listeners-overview.md) manual.
+[Framework API](../framework-api/listeners/listeners-overview.md) section.
 
 ## Services
 

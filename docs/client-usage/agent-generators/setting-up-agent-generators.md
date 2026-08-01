@@ -14,7 +14,7 @@ Three concepts are involved:
 - An **agent template** is a reusable definition describing a kind of agent and the
   options needed to configure one. Templates are loaded on the server from agent
   profiles. See the
-  framework [Agents Overview](../../framework/agents/agents-overview.md).
+  framework [Agents Overview](../../framework-api/agents/agents-overview.md).
 - An **agent generator** is created from a template with a specific set of option
   values. Starting a generator produces payloads.
 - A **payload** is the concrete artifact a generator produces, which can be downloaded

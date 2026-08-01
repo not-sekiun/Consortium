@@ -48,4 +48,4 @@ Now, whenever the server starts, it will check for updates from the GitHub repos
 and attempt to install them.
 
 For more information about plugins and plugin development, refer to the
-[Plugins](../framework/plugins/plugins-overview.md) section.
+[Plugins](../framework-api/plugins/plugins-overview.md) section.

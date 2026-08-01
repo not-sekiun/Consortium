@@ -2,7 +2,7 @@
 
 The Consortium server is the core of the framework. It hosts the services that operate on
 the framework primitives and exposes them to clients over a REST API and an Events
-WebSockets API. Operators drive the server through the [client](../client/client-overview.md).
+WebSockets API. Operators drive the server through the [client](../client-usage/client-overview.md).
 
 ## Launching the server
 

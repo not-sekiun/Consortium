@@ -28,10 +28,10 @@ as the password.
 
 !!! warning
     Change the default user accounts before deploying the server to prevent unauthorized
-    access. See [User Accounts](../server/user-accounts.md).
+    access. See [User Accounts](../server-usage/user-accounts.md).
 
 To change the bind address, user accounts, roles, or logging, see the
-[Server](../server/server-overview.md) section.
+[Server Usage](../server-usage/server-overview.md) section.
 
 ## Start the client
 
@@ -56,7 +56,7 @@ With the server running, start the client from the project root in a separate te
         A containerized client only sees the directories mounted into it. Downloads
         without `-o` and relative upload paths use `workspace/` on the host, and files
         written anywhere else in the container are lost when the client exits. See
-        [Running the Client in Docker](../client/running-the-client-in-docker.md).
+        [Running the Client in Docker](../client-usage/running-the-client-in-docker.md).
 
 The client reads `data/client/client_config.json` and connects to `127.0.0.1:9999` as
 `admin` by default. Once connected, you land in the **Home** interpreter and can begin
@@ -68,14 +68,14 @@ operating against the server.
 
 If the client cannot reach the server at startup, it opens in **disconnected mode**, where
 you can connect manually with the `session connect` command. See
-[Managing Client Sessions](../client/client-sessions/managing-client-sessions.md).
+[Managing Client Sessions](../client-usage/client-sessions/managing-client-sessions.md).
 
 To point the client at a different server or user account, see the
-[Client](../client/client-overview.md) section.
+[Client Usage](../client-usage/client-overview.md) section.
 
 ## Where to go next
 
-- [Server](../server/server-overview.md): configure the server's address, accounts, roles,
+- [Server Usage](../server-usage/server-overview.md): configure the server's address, accounts, roles,
   and logging.
-- [Client](../client/client-overview.md): learn the interpreters, commands, and workflow
+- [Client Usage](../client-usage/client-overview.md): learn the interpreters, commands, and workflow
   for operating against a server.

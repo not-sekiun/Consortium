@@ -45,7 +45,7 @@ By default the client reads its connection details from
 
 !!! important
     The `username` and `password` must correspond to an existing user account in the
-    server's [`user_accounts.json`](../server/user-accounts.md) file.
+    server's [`user_accounts.json`](../server-usage/user-accounts.md) file.
 
 To use a configuration file from a different location, pass `-c/--client-config`:
 

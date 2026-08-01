@@ -118,7 +118,7 @@ tool shows the exact folder to be removed and asks for a confirmation that defau
 
 The manager produces a starting point; the building guides explain each type in depth:
 
-- [Building a Plugin](../framework/plugins/building-a-plugin/project-setup.md)
-- [Building an Event Hook](../framework/event-hooks/building-an-event-hook/project-setup.md)
-- [Building a Listener Profile](../framework/listeners/building-a-listener-profile/project-setup.md)
-- [Building an Agent Profile](../framework/agents/agents-overview.md)
+- [Building a Plugin](../framework-api/plugins/building-a-plugin/project-setup.md)
+- [Building an Event Hook](../framework-api/event-hooks/building-an-event-hook/project-setup.md)
+- [Building a Listener Profile](../framework-api/listeners/building-a-listener-profile/project-setup.md)
+- [Building an Agent Profile](../framework-api/agents/agents-overview.md)

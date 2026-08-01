@@ -2,13 +2,13 @@
 
 Consortium can be installed in one of two ways.
 
-| | [Manual install](#manual-install) | [Docker install](#docker-install) |
-|---|---|---|
-| Runs | Directly on the host | Server in a container, client on demand |
-| Requires | Python 3.14+, uv, Git, Docker | Docker, Git |
-| Component dependencies | Installed into the local environment | Bundled ones built into the image, added ones synced on start |
-| Framework reloading (`-r`) | Supported | Not supported |
-| Listener ports | Bound directly on the host | Published from the container |
+|                            | [Manual install](#manual-install)    | [Docker install](#docker-install)                             |
+|----------------------------|--------------------------------------|---------------------------------------------------------------|
+| Runs                       | Directly on the host                 | Server in a container, client on demand                       |
+| Requires                   | Python 3.14+, uv, Git, Docker        | Docker, Git                                                   |
+| Component dependencies     | Installed into the local environment | Bundled ones built into the image, added ones synced on start |
+| Framework reloading (`-r`) | Supported                            | Not supported                                                 |
+| Listener ports             | Bound directly on the host           | Published from the container                                  |
 
 The manual install is the better fit for developing the framework itself, because source
 changes take effect immediately and framework reloading works. Writing components suits
@@ -83,7 +83,7 @@ For more information about component dependencies and how to install them, see t
 [Installing Component Dependencies](#installing-component-dependencies) section.
 
 For more information on how to configure the server and client, see the
-[Server](../server/server-overview.md) and [Client](../client/client-overview.md)
+[Server Usage](../server-usage/server-overview.md) and [Client Usage](../client-usage/client-overview.md)
 sections.
 
 ## Docker install
@@ -134,7 +134,7 @@ It needs an interactive terminal, which `docker compose run` provides and
     - Paths the client prints are container paths, and `exec` runs in the container's
       shell rather than your host's.
 
-    See [Running the Client in Docker](../client/running-the-client-in-docker.md) for the
+    See [Running the Client in Docker](../client-usage/running-the-client-in-docker.md) for the
     full set of differences, including how to mount a different host directory for a
     single run.
 
@@ -161,7 +161,7 @@ docker compose down             # stop the stack, leaving data/ intact
 - **The client exchanges files through `workspace/`.** It is bind mounted into the client
   container and is the client's working directory, so an upload or a download with no
   explicit path reads from and writes to `workspace/` on the host. See
-  [Running the Client in Docker](../client/running-the-client-in-docker.md).
+  [Running the Client in Docker](../client-usage/running-the-client-in-docker.md).
 - **The client shares the server's network.** This means `data/client/client_config.json`
   can point at `127.0.0.1` and work both in a container and on the host, so one
   configuration file serves both installs.

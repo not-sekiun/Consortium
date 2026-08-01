@@ -21,36 +21,36 @@ nav = [
         "getting-started/updating.md",
         "getting-started/quick-start.md"
     ] },
-    { "Server" = [
-        "server/server-overview.md",
-        "server/server-configuration.md",
-        "server/user-accounts.md",
-        "server/roles-and-permissions.md",
-        "server/logging.md"
+    { "Server Usage" = [
+        "server-usage/server-overview.md",
+        "server-usage/server-configuration.md",
+        "server-usage/user-accounts.md",
+        "server-usage/roles-and-permissions.md",
+        "server-usage/logging.md"
     ] },
-    { "Client" = [
-        "client/client-overview.md",
-        "client/running-the-client-in-docker.md",
+    { "Client Usage" = [
+        "client-usage/client-overview.md",
+        "client-usage/running-the-client-in-docker.md",
         { "Client Sessions" = [
-            "client/client-sessions/managing-client-sessions.md"
+            "client-usage/client-sessions/managing-client-sessions.md"
         ] },
         { "Listeners" = [
-            "client/listeners/setting-up-listeners.md",
-            "client/listeners/using-listener-templates.md"
+            "client-usage/listeners/setting-up-listeners.md",
+            "client-usage/listeners/using-listener-templates.md"
         ] },
         { "Agent Generators" = [
-            "client/agent-generators/setting-up-agent-generators.md",
-            "client/agent-generators/using-agent-templates.md"
+            "client-usage/agent-generators/setting-up-agent-generators.md",
+            "client-usage/agent-generators/using-agent-templates.md"
         ] },
         { "Agents" = [
-            "client/agents/tasking-agents.md"
+            "client-usage/agents/tasking-agents.md"
         ] },
         { "Resource Management" = [
-            "client/resource-management/managing-assets.md",
-            "client/resource-management/managing-artifacts.md",
-            "client/resource-management/managing-payloads.md"
+            "client-usage/resource-management/managing-assets.md",
+            "client-usage/resource-management/managing-artifacts.md",
+            "client-usage/resource-management/managing-payloads.md"
         ] },
-        "client/aliases-and-resource-files.md"
+        "client-usage/aliases-and-resource-files.md"
     ] },
     { "Server API" = [
         "server-api/server-api-overview.md",
@@ -64,61 +64,139 @@ nav = [
             "server-api/events-websockets-api/server-messages.md"
         ] }
     ] },
-    { "Framework" = [
-        "framework/framework-overview.md",
+    { "Framework API" = [
+        "framework-api/framework-overview.md",
         { "Listeners" = [
-            "framework/listeners/listeners-overview.md",
+            "framework-api/listeners/listeners-overview.md",
             { "Building a Listener Profile" = [
-                "framework/listeners/building-a-listener-profile/project-setup.md",
-                "framework/listeners/building-a-listener-profile/listener-type.md",
-                "framework/listeners/building-a-listener-profile/listener-template.md",
-                "framework/listeners/building-a-listener-profile/listener-protocol.md",
-                "framework/listeners/building-a-listener-profile/task-message-muxing.md",
-                "framework/listeners/building-a-listener-profile/listener-startup.md",
-                "framework/listeners/building-a-listener-profile/listener-running-loop.md",
-                "framework/listeners/building-a-listener-profile/listener-shutdown.md",
-                "framework/listeners/building-a-listener-profile/listener-error-handling.md",
-                "framework/listeners/building-a-listener-profile/listener-conventions.md",
-                "framework/listeners/building-a-listener-profile/complete-listener-profile.md"
+                "framework-api/listeners/building-a-listener-profile/project-setup.md",
+                "framework-api/listeners/building-a-listener-profile/listener-type.md",
+                "framework-api/listeners/building-a-listener-profile/listener-template.md",
+                "framework-api/listeners/building-a-listener-profile/listener-protocol.md",
+                "framework-api/listeners/building-a-listener-profile/task-message-muxing.md",
+                "framework-api/listeners/building-a-listener-profile/listener-startup.md",
+                "framework-api/listeners/building-a-listener-profile/listener-running-loop.md",
+                "framework-api/listeners/building-a-listener-profile/listener-shutdown.md",
+                "framework-api/listeners/building-a-listener-profile/listener-error-handling.md",
+                "framework-api/listeners/building-a-listener-profile/listener-conventions.md",
+                "framework-api/listeners/building-a-listener-profile/complete-listener-profile.md"
             ] }
         ] },
         { "Agents" = [
-            "framework/agents/agents-overview.md",
+            "framework-api/agents/agents-overview.md",
             { "Building an Agent Profile" = [
-                "framework/agents/building-an-agent-profile/agent-capabilities.md",
-                "framework/agents/building-an-agent-profile/agent-type.md",
-                "framework/agents/building-an-agent-profile/agent-template.md",
-                "framework/agents/building-an-agent-profile/agent-generator.md",
-                "framework/agents/building-an-agent-profile/complete-agent-profile.md"
+                "framework-api/agents/building-an-agent-profile/agent-capabilities.md",
+                "framework-api/agents/building-an-agent-profile/agent-type.md",
+                "framework-api/agents/building-an-agent-profile/agent-template.md",
+                "framework-api/agents/building-an-agent-profile/agent-generator.md",
+                "framework-api/agents/building-an-agent-profile/complete-agent-profile.md"
             ] },
-            "framework/agents/common-agent-capability-patterns.md",
-            "framework/agents/agent-protocol.md"
+            "framework-api/agents/common-agent-capability-patterns.md",
+            "framework-api/agents/agent-protocol.md"
         ] },
         { "Plugins" = [
-            "framework/plugins/plugins-overview.md",
+            "framework-api/plugins/plugins-overview.md",
             { "Building a Plugin" = [
-                "framework/plugins/building-a-plugin/project-setup.md",
-                "framework/plugins/building-a-plugin/plugin-metadata.md",
-                "framework/plugins/building-a-plugin/plugin-startup.md",
-                "framework/plugins/building-a-plugin/plugin-running-loop.md",
-                "framework/plugins/building-a-plugin/plugin-shutdown.md",
-                "framework/plugins/building-a-plugin/plugin-error-handling.md",
-                "framework/plugins/building-a-plugin/plugin-conventions.md",
-                "framework/plugins/building-a-plugin/complete-plugin-example.md"
+                "framework-api/plugins/building-a-plugin/project-setup.md",
+                "framework-api/plugins/building-a-plugin/plugin-metadata.md",
+                "framework-api/plugins/building-a-plugin/plugin-startup.md",
+                "framework-api/plugins/building-a-plugin/plugin-running-loop.md",
+                "framework-api/plugins/building-a-plugin/plugin-shutdown.md",
+                "framework-api/plugins/building-a-plugin/plugin-error-handling.md",
+                "framework-api/plugins/building-a-plugin/plugin-conventions.md",
+                "framework-api/plugins/building-a-plugin/complete-plugin-example.md"
             ] }
         ] },
         { "Event Hooks" = [
-            "framework/event-hooks/event-hooks-overview.md",
+            "framework-api/event-hooks/event-hooks-overview.md",
             { "Building an Event Hook" = [
-                "framework/event-hooks/building-an-event-hook/project-setup.md",
-                "framework/event-hooks/building-an-event-hook/event-hook-metadata.md",
-                "framework/event-hooks/building-an-event-hook/event-hook-setup.md",
-                "framework/event-hooks/building-an-event-hook/event-hook-triggering.md",
-                "framework/event-hooks/building-an-event-hook/event-hook-teardown.md",
-                "framework/event-hooks/building-an-event-hook/event-hook-conventions.md",
-                "framework/event-hooks/building-an-event-hook/complete-event-hook-example.md"
+                "framework-api/event-hooks/building-an-event-hook/project-setup.md",
+                "framework-api/event-hooks/building-an-event-hook/event-hook-metadata.md",
+                "framework-api/event-hooks/building-an-event-hook/event-hook-setup.md",
+                "framework-api/event-hooks/building-an-event-hook/event-hook-triggering.md",
+                "framework-api/event-hooks/building-an-event-hook/event-hook-teardown.md",
+                "framework-api/event-hooks/building-an-event-hook/event-hook-conventions.md",
+                "framework-api/event-hooks/building-an-event-hook/complete-event-hook-example.md"
             ] },
-            "framework/event-hooks/event-types.md"
+            "framework-api/event-hooks/event-types.md"
+        ] }
+    ] },
+    { "Framework Reference" = [
+        "framework-reference/reference-overview.md",
+        { "Framework" = [
+            "framework-reference/framework/agents-reference.md",
+            "framework-reference/framework/event-hooks-reference.md",
+            "framework-reference/framework/event-logger-reference.md",
+            "framework-reference/framework/framework-types-reference.md",
+            "framework-reference/framework/listeners-reference.md",
+            "framework-reference/framework/options-reference.md",
+            "framework-reference/framework/plugins-reference.md",
+            "framework-reference/framework/utilities-reference.md",
+        ] },
+        { "Services" = [
+            "framework-reference/services/agent-file-manager-service-reference.md",
+            "framework-reference/services/agent-generators-service-reference.md",
+            "framework-reference/services/agent-profiles-service-reference.md",
+            "framework-reference/services/agent-templates-payloads-service-reference.md",
+            "framework-reference/services/agent-templates-service-reference.md",
+            "framework-reference/services/agents-service-reference.md",
+            "framework-reference/services/artifacts-service-reference.md",
+            "framework-reference/services/assets-service-reference.md",
+            "framework-reference/services/authorization-service-reference.md",
+            "framework-reference/services/c2-types-service-reference.md",
+            "framework-reference/services/connected-agents-service-reference.md",
+            "framework-reference/services/event-hooks-service-reference.md",
+            "framework-reference/services/events-service-reference.md",
+            "framework-reference/services/listener-profiles-service-reference.md",
+            "framework-reference/services/listener-templates-service-reference.md",
+            "framework-reference/services/listeners-service-reference.md",
+            "framework-reference/services/logging-service-reference.md",
+            "framework-reference/services/paths-service-reference.md",
+            "framework-reference/services/payloads-service-reference.md",
+            "framework-reference/services/plugins-service-reference.md",
+            "framework-reference/services/release-service-reference.md",
+            "framework-reference/services/repository-service-reference.md",
+            "framework-reference/services/user-accounts-service-reference.md",
+            "framework-reference/services/users-service-reference.md"
+        ] },
+        { "Exceptions" = [
+            { "Object Exceptions" = [
+                "framework-reference/exceptions/object-exceptions/base-object-error.md",
+                "framework-reference/exceptions/object-exceptions/agent-object-errors.md",
+                "framework-reference/exceptions/object-exceptions/repository-object-errors.md",
+            ] },
+            { "Service Exceptions" = [
+                "framework-reference/exceptions/service-exceptions/base-service-error.md",
+                "framework-reference/exceptions/service-exceptions/agents-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/agent-generators-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/agent-profiles-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/agent-templates-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/authorization-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/c2-types-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/components-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/event-hooks-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/events-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/listener-profiles-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/listener-templates-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/listeners-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/plugins-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/repository-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/user-accounts-service-errors.md",
+                "framework-reference/exceptions/service-exceptions/users-service-errors.md",
+            ] },
+            { "Framework Exceptions" = [
+                "framework-reference/exceptions/framework-exceptions/base-framework-error.md",
+                "framework-reference/exceptions/framework-exceptions/agent-capabilities-framework-errors.md",
+                "framework-reference/exceptions/framework-exceptions/agent-generators-framework-errors.md",
+                "framework-reference/exceptions/framework-exceptions/agent-templates-framework-errors.md",
+                "framework-reference/exceptions/framework-exceptions/c2-types-framework-errors.md",
+                "framework-reference/exceptions/framework-exceptions/components-framework-errors.md",
+                "framework-reference/exceptions/framework-exceptions/event-hooks-framework-errors.md",
+                "framework-reference/exceptions/framework-exceptions/listeners-framework-errors.md",
+                "framework-reference/exceptions/framework-exceptions/listener-templates-framework-errors.md",
+                "framework-reference/exceptions/framework-exceptions/options-framework-errors.md",
+                "framework-reference/exceptions/framework-exceptions/plugins-framework-errors.md",
+            ] },
         ] }
     ] },
     { "Scripts" = [
@@ -127,84 +205,6 @@ nav = [
         "scripts/manage-repository.md",
         "scripts/generate-distilled-mitre-attack-data.md"
     ] },
-    { "Reference" = [
-        "reference/reference-overview.md",
-        { "Framework" = [
-            "reference/framework/agents-reference.md",
-            "reference/framework/event-hooks-reference.md",
-            "reference/framework/event-logger-reference.md",
-            "reference/framework/framework-types-reference.md",
-            "reference/framework/listeners-reference.md",
-            "reference/framework/options-reference.md",
-            "reference/framework/plugins-reference.md",
-            "reference/framework/utilities-reference.md",
-        ] },
-        { "Services" = [
-            "reference/services/agent-file-manager-service-reference.md",
-            "reference/services/agent-generators-service-reference.md",
-            "reference/services/agent-profiles-service-reference.md",
-            "reference/services/agent-templates-payloads-service-reference.md",
-            "reference/services/agent-templates-service-reference.md",
-            "reference/services/agents-service-reference.md",
-            "reference/services/artifacts-service-reference.md",
-            "reference/services/assets-service-reference.md",
-            "reference/services/authorization-service-reference.md",
-            "reference/services/c2-types-service-reference.md",
-            "reference/services/connected-agents-service-reference.md",
-            "reference/services/event-hooks-service-reference.md",
-            "reference/services/events-service-reference.md",
-            "reference/services/listener-profiles-service-reference.md",
-            "reference/services/listener-templates-service-reference.md",
-            "reference/services/listeners-service-reference.md",
-            "reference/services/logging-service-reference.md",
-            "reference/services/paths-service-reference.md",
-            "reference/services/payloads-service-reference.md",
-            "reference/services/plugins-service-reference.md",
-            "reference/services/release-service-reference.md",
-            "reference/services/repository-service-reference.md",
-            "reference/services/user-accounts-service-reference.md",
-            "reference/services/users-service-reference.md"
-        ] },
-        { "Exceptions" = [
-            { "Object Exceptions" = [
-                "reference/exceptions/object-exceptions/base-object-error.md",
-                "reference/exceptions/object-exceptions/agent-object-errors.md",
-                "reference/exceptions/object-exceptions/repository-object-errors.md",
-            ] },
-            { "Service Exceptions" = [
-                "reference/exceptions/service-exceptions/base-service-error.md",
-                "reference/exceptions/service-exceptions/agents-service-errors.md",
-                "reference/exceptions/service-exceptions/agent-generators-service-errors.md",
-                "reference/exceptions/service-exceptions/agent-profiles-service-errors.md",
-                "reference/exceptions/service-exceptions/agent-templates-service-errors.md",
-                "reference/exceptions/service-exceptions/authorization-service-errors.md",
-                "reference/exceptions/service-exceptions/c2-types-service-errors.md",
-                "reference/exceptions/service-exceptions/components-service-errors.md",
-                "reference/exceptions/service-exceptions/event-hooks-service-errors.md",
-                "reference/exceptions/service-exceptions/events-service-errors.md",
-                "reference/exceptions/service-exceptions/listener-profiles-service-errors.md",
-                "reference/exceptions/service-exceptions/listener-templates-service-errors.md",
-                "reference/exceptions/service-exceptions/listeners-service-errors.md",
-                "reference/exceptions/service-exceptions/plugins-service-errors.md",
-                "reference/exceptions/service-exceptions/repository-service-errors.md",
-                "reference/exceptions/service-exceptions/user-accounts-service-errors.md",
-                "reference/exceptions/service-exceptions/users-service-errors.md",
-            ] },
-            { "Framework Exceptions" = [
-                "reference/exceptions/framework-exceptions/base-framework-error.md",
-                "reference/exceptions/framework-exceptions/agent-capabilities-framework-errors.md",
-                "reference/exceptions/framework-exceptions/agent-generators-framework-errors.md",
-                "reference/exceptions/framework-exceptions/agent-templates-framework-errors.md",
-                "reference/exceptions/framework-exceptions/c2-types-framework-errors.md",
-                "reference/exceptions/framework-exceptions/components-framework-errors.md",
-                "reference/exceptions/framework-exceptions/event-hooks-framework-errors.md",
-                "reference/exceptions/framework-exceptions/listeners-framework-errors.md",
-                "reference/exceptions/framework-exceptions/listener-templates-framework-errors.md",
-                "reference/exceptions/framework-exceptions/options-framework-errors.md",
-                "reference/exceptions/framework-exceptions/plugins-framework-errors.md",
-            ] },
-        ] }
-    ] }
 ]
 
 extra_javascript = [

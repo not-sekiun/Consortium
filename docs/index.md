@@ -41,7 +41,7 @@ listeners and agents.
     - [Install Consortium](getting-started/installation.md) and get the framework
       [up and running](getting-started/quick-start.md) as quickly as possible.
     - Explore the high level usage of the framework through the
-      [Consortium client](client/client-overview.md).
+      [Consortium client](client-usage/client-overview.md).
 
 -   __Usage__
 
@@ -50,17 +50,17 @@ listeners and agents.
     - Look through the [Server REST API](server-api/rest-api/introduction.md) or
       [Server Events Websockets API](server-api/events-websockets-api/introduction.md)
       to script automations and write custom clients.
-    - Develop custom [listeners](framework/listeners/listeners-overview.md) and
-      [agents](framework/agents/agents-overview.md) for the framework.
+    - Develop custom [listeners](framework-api/listeners/listeners-overview.md) and
+      [agents](framework-api/agents/agents-overview.md) for the framework.
 
 -   __Advanced__
 
     ---
 
     - Extend the framework further through writing
-      [plugins](framework/plugins/plugins-overview.md)
-      or [event hooks](framework/event-hooks/event-hooks-overview.md)
-    - Look through the [API reference](reference/reference-overview.md) for more
+      [plugins](framework-api/plugins/plugins-overview.md)
+      or [event hooks](framework-api/event-hooks/event-hooks-overview.md)
+    - Look through the [API reference](framework-reference/reference-overview.md) for more
       information on working with framework components.
 
 </div>

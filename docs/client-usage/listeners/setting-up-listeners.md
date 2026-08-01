@@ -14,7 +14,7 @@ There are two related concepts:
 - A **listener template** is a reusable definition that describes a kind of listener and
   the options needed to configure one. Templates are loaded on the server from listener
   profiles. See the
-  framework [Listeners Overview](../../framework/listeners/listeners-overview.md)
+  framework [Listeners Overview](../../framework-api/listeners/listeners-overview.md)
   for how they are authored.
 - A **listener** is a concrete, running instance created from a template with a specific
   set of option values.
