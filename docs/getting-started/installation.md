@@ -6,12 +6,13 @@ Consortium can be installed in one of two ways.
 |---|---|---|
 | Runs | Directly on the host | Server in a container, client on demand |
 | Requires | Python 3.14+, uv, Git, Docker | Docker, Git |
-| Component dependencies | Installed into the local environment | Built into the image |
+| Component dependencies | Installed into the local environment | Bundled ones built into the image, added ones synced on start |
 | Framework reloading (`-r`) | Supported | Not supported |
 | Listener ports | Bound directly on the host | Published from the container |
 
-The manual install is the better fit for developing the framework or writing components,
-because source changes take effect immediately and framework reloading works. The Docker
+The manual install is the better fit for developing the framework itself, because source
+changes take effect immediately and framework reloading works. Writing components suits
+either: a Docker install picks up component changes on a server restart. The Docker
 install is the better fit for running a server without provisioning Python on the host.
 
 Both installs read their configuration from the same `data/` directory, so a server can
@@ -103,12 +104,14 @@ Python and uv are **not** required on the host. Both are provided inside the ima
     git clone https://github.com/not-sekiun/Consortium
     cd Consortium
     ```
-2. Build the image and start the server.
+2. Build the image and start the stack.
     ```shell
     docker compose up -d --build
     ```
-    Only the server starts. It is ready once its health check reports `healthy`, which
-    you can watch with `docker compose ps`.
+    This starts the server and the `dind` builder engine it compiles agents with (see
+    [Building agents that compile in containers](#building-agents-that-compile-in-containers)).
+    The client is not started. The server is ready once its health check reports
+    `healthy`, which you can watch with `docker compose ps`.
 3. Connect to the server with the CLI client, which runs in a container of its own from
    the same image.
     ```shell
@@ -118,6 +121,22 @@ Python and uv are **not** required on the host. Both are provided inside the ima
 The client is declared under a Compose profile, so `docker compose up` never starts it.
 It needs an interactive terminal, which `docker compose run` provides and
 `docker compose up` does not.
+
+!!! important "The containerized client only sees what is mounted into it"
+    The client runs in a container of its own, so file transfers behave differently than
+    on a manual install:
+
+    - Downloads with no `-o` path land in `/consortium/workspace`, which is the
+      `./workspace` directory on your host. Files written anywhere else in the container
+      are lost when the client exits.
+    - Uploads can only read files inside a mounted directory. Copy a file into
+      `./workspace` on the host first, then upload it by name.
+    - Paths the client prints are container paths, and `exec` runs in the container's
+      shell rather than your host's.
+
+    See [Running the Client in Docker](../client/running-the-client-in-docker.md) for the
+    full set of differences, including how to mount a different host directory for a
+    single run.
 
 Useful follow-up commands:
 
@@ -133,12 +152,22 @@ docker compose down             # stop the stack, leaving data/ intact
   container, so the server and client read the same configuration files a manual install
   uses, and agents, payloads, assets, artifacts, and logs written by the server persist
   across `docker compose down`.
+- **Components live on the host.** `consortium/components/` is bind mounted as well, so
+  components you add or edit take effect on the next server start without rebuilding the
+  image. See [Adding components](#adding-components).
 - **The API is published on port 9999.** The server binds `0.0.0.0:9999` inside the
   container and Compose publishes that port to the host, so the REST API and the
   websockets events API are reachable at `127.0.0.1:9999`.
+- **The client exchanges files through `workspace/`.** It is bind mounted into the client
+  container and is the client's working directory, so an upload or a download with no
+  explicit path reads from and writes to `workspace/` on the host. See
+  [Running the Client in Docker](../client/running-the-client-in-docker.md).
 - **The client shares the server's network.** This means `data/client/client_config.json`
   can point at `127.0.0.1` and work both in a container and on the host, so one
   configuration file serves both installs.
+- **Agent builds run on their own Docker engine.** The `dind` service provides it, and
+  the server drives it over the internal Compose network. The host's Docker engine is
+  never involved.
 
 !!! important
     `local_host` in `data/server/server_config.json` must be `0.0.0.0` for the published
@@ -166,30 +195,73 @@ directly.
 ### Building agents that compile in containers
 
 Some bundled agent generators compile their payloads inside a container. For these to
-work from a containerized server, the server needs
-access to a Docker engine. The Compose file mounts the host's Docker socket into the
-server container for this purpose, and builds then run on the host's engine.
+work from a containerized server, the server needs access to a Docker engine.
+
+The Compose stack runs one for this purpose in the `dind` service, and points the server
+at it with `DOCKER_HOST=tcp://dind:2375`. The server image contains only the Docker
+*client*, so builds run entirely on that engine and the host's engine is never involved.
+
+No extra setup is required. `docker compose up -d` starts the builder alongside the
+server, and the same command works identically on Linux, Windows, and macOS.
+
+!!! note
+    The builder's image cache lives in the `builder-cache` volume, so the first agent
+    build on a fresh install downloads its base image before compiling. Later builds
+    reuse it. The volume survives `docker compose down` and is removed only by
+    `docker compose down -v`.
 
 !!! warning
-    Mounting the Docker socket grants the container control of the host's Docker engine,
-    which is equivalent to root access on the host. Remove the `/var/run/docker.sock`
-    mount and the `group_add` entry from `docker-compose.yml` if you do not intend to
-    build these agents.
+    The `dind` service runs privileged, which it requires in order to run an engine of
+    its own. A privileged container is not fully isolated from the host, but unlike a
+    mounted Docker socket it grants no control over the host's engine. Switching its
+    image to `docker:dind-rootless` narrows this further, at the cost of a slower storage
+    driver.
 
-On Linux, the socket is owned by the `docker` group, so pass that group's id when
-starting the stack:
+If you do not intend to build these agents, delete the `dind` service from
+`docker-compose.yml` along with the server's `DOCKER_HOST` entry and its `depends_on`
+block.
 
-```shell
-DOCKER_GID=$(getent group docker | cut -d: -f3) docker compose up -d
+#### Building on a different engine
+
+The generators shell out to the Docker client, which reads `DOCKER_HOST` from the
+server's environment. Repointing it is all that is needed to build somewhere else, such
+as a shared build server:
+
+```yaml title="docker-compose.yml"
+    environment:
+      - DOCKER_HOST=tcp://builder.internal:2375
 ```
 
-On Docker Desktop the default is correct and no extra step is needed.
+Mounting the host's Docker socket into the server works too, but grants the container
+control of the host's Docker engine, which is equivalent to root access on the host. The
+`dind` service exists so that this is not necessary.
+
+### Adding components
+
+`consortium/components/` is bind mounted, so adding a component is the same as on a
+manual install: drop its directory into the right component type folder on the host and
+restart the server.
+
+```shell
+docker compose restart server
+```
+
+The server runs its component dependency sync on every start, so a component that
+declares its own third-party packages has them registered and installed as part of that
+restart. No image rebuild is involved.
+
+!!! note
+    Editing a component's source, its manifest, or the Dockerfile a containerized agent
+    generator builds with only needs this restart too, since all of it sits inside the
+    mount. Changes to the framework or server code are still baked into the image and
+    need `docker compose up -d --build server`.
 
 ## Installing Component Dependencies
 
 !!! note
-    This section applies to the manual install. A Docker install already has every
-    bundled component's dependencies built into the image.
+    This section applies to the manual install. In a Docker install, every bundled
+    component's dependencies are already built into the image, and components you add
+    later are synced automatically when the server starts.
 
 Consortium ships with a set of default components that extend the framework. These are
 the components bundled with the server out of the box and live in
@@ -234,11 +306,12 @@ uv sync --package <component-package-name>
 
 You can pass multiple `--package` flags to sync several individual packages at once.
 
-Components you add to a **Docker install** are built into the image, so rebuild the
-image after adding one:
+On a **Docker install** none of this is done by hand. `consortium/components/` is bind
+mounted into the container, and the server syncs component dependencies itself on every
+start, so adding a component only needs a restart:
 
 ```shell
-docker compose up -d --build
+docker compose restart server
 ```
 
 ## Installing Consortium for Development

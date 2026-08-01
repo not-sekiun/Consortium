@@ -2,11 +2,17 @@
 __pycache__/
 *.pyc
 
-data/server/artifacts/
-data/server/assets/
-data/server/payloads/
-data/server/logs/
-data/client/logs/
+# Host side file drop for the containerized client. The directory itself is tracked
+# (via .gitkeep) because compose bind mounts it, but nothing transferred through it is.
+workspace/*
+!workspace/.gitkeep
+
+data/server/artifacts/**
+data/server/assets/**
+data/server/payloads/**
+data/server/logs/**
+data/client/logs/**
+!data/**/.gitkeep
 
 consortium/components/plugins/persistent_agent_generators/persistent_agent_generators.json
 consortium/components/plugins/persistent_listeners/persistent_listeners.json

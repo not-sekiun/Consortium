@@ -375,7 +375,10 @@ class PayloadCommand(BaseConnectedCommand):
         )
         # If user supplies an output path that takes precedence, else use the payload
         # name directly for payload files or append ".zip" for payload directories
-        # because all payload directories are returned as zip files.
+        # because all payload directories are returned as zip files. Resolved so that
+        # every message below names the exact location written to: a bare relative name
+        # reads as if the file landed next to the user, which is misleading when the
+        # client runs in a container and the working directory is a container path.
         output_file_path = pathlib.Path(
             parsed_args.output
             if parsed_args.output
@@ -384,7 +387,7 @@ class PayloadCommand(BaseConnectedCommand):
                 if not payload["is_directory"]
                 else payload["name"] + ".zip"
             ),
-        )
+        ).resolve()
 
         if output_file_path.exists():
             # Refuse to overwrite a directory regardless of the overwrite flag as

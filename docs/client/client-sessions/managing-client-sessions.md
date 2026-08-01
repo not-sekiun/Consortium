@@ -7,40 +7,42 @@ hold several sessions at once, letting a single operator work across multiple se
 and
 switch between them without restarting.
 
-Client sessions are managed from the **Home** interpreter (prompt `Consortium (Home)`)
-and
-from the limited **Disconnected** interpreter that the client falls back to when no
-session
-is connected.
+Client sessions are managed through the `session` command. It is a **core command**, so
+sessions can be managed from anywhere in the client: the **Home** interpreter (prompt
+`Consortium (Home)`) that the client opens in, the limited **Disconnected** interpreter
+it falls back to when no session is connected, and every interpreter in between.
 
-## The home interpreter
+## The session command
 
-When the client connects successfully on startup it opens directly in the Home
-interpreter. This is the top level context for managing sessions. From here you can list
-existing sessions, connect new ones, inspect them, and interact with (switch into) a
-session to begin operating against its server.
+Every session operation is a sub-command of `session`:
 
-| Command                   | Description                                                  |
-|---------------------------|--------------------------------------------------------------|
-| `list`                    | List all current client sessions                             |
-| `connect`                 | Connect to a server, creating a new client session           |
-| `interact <session_id>`   | Switch into a session and start operating against its server |
-| `info [session_id]`                    | Show details of the current or specified session             |
-| `rename [session_id] <name>`           | Give the current or specified session a friendly name        |
-| `describe [session_id] <description>`  | Describe the current or specified session                    |
-| `disconnect [session_id]`              | Disconnect and remove the current or specified session       |
+| Command                                        | Description                                                  |
+|------------------------------------------------|--------------------------------------------------------------|
+| `session list`                                 | List all current client sessions                             |
+| `session connect`                              | Connect to a server, creating a new client session           |
+| `session interact <session_id>`                | Switch into a session and start operating against its server |
+| `session info [session_id]`                    | Show details of the current or specified session             |
+| `session rename [session_id] <name>`           | Give the current or specified session a friendly name        |
+| `session describe [session_id] <description>`  | Describe the current or specified session                    |
+| `session disconnect [session_id]`              | Disconnect and remove the current or specified session       |
 
-Session IDs tab complete, so you rarely need to type or paste a full UUID.
+Sub-command names and session IDs tab complete, so you rarely need to type or paste a
+full UUID. Each sub-command carries its own help:
+
+```text
+session --help           # list the available sub-commands
+session connect --help   # show the arguments and examples for one sub-command
+```
 
 ## Connecting to a server
 
-The `connect` command creates a new session. It accepts a configuration file or manual
+`session connect` creates a new session. It accepts a configuration file or manual
 connection details:
 
 ```text
-connect                                      # connect using the default client_config.json
-connect -c path/to/client_config.json        # connect using a custom configuration file
-connect -c -u admin -p admin -rh 127.0.0.1 -rp 9999  # connect with explicit details
+session connect                                      # connect using the default client_config.json
+session connect -c path/to/client_config.json        # connect using a custom configuration file
+session connect -c -u admin -p admin -rh 127.0.0.1 -rp 9999  # connect with explicit details
 ```
 
 When a configuration file is supplied, individual flags (`-u`, `-p`, `-rh`, `-rp`)
@@ -52,24 +54,23 @@ a configuration file; in that case, all four connection details must be provided
 If the client cannot connect at startup, or once every session has been disconnected, it
 enters the Disconnected interpreter (prompt `Consortium`). This mode has no server to
 act
-against, so it only exposes session management commands: `connect`, `list`, `interact`,
-`info`, `rename`, `describe`, and `disconnect`, along with the core `help`, `alias`,
-`rc`, `exec`,
-`clear`, `banner`, and `exit` commands.
+against, so it exposes the `session` command along with the core `help`, `alias`, `rc`,
+`exec`, `clear`, `banner`, and `exit` commands. The commands that switch interpreters
+(`home`, `listeners`, `generators`, and `agents`) are not available.
 
-Unlike the Home interpreter, Disconnected mode has no current session. Commands that
-operate on an existing session therefore require its ID:
+Unlike the Home interpreter, Disconnected mode has no current session. Sub-commands that
+operate on an existing session therefore require its ID rather than defaulting to the
+current one:
 
 ```text
-info <session_id>
-rename <session_id> <name>
-describe <session_id> <description>
-disconnect <session_id>
+session info <session_id>
+session rename <session_id> <name>
+session describe <session_id> <description>
+session disconnect <session_id>
 ```
 
-From disconnected mode, use `connect` to establish a session and `interact` to switch
-into
-it, which lands you in that session's Home interpreter.
+From disconnected mode, use `session connect` to establish a session and
+`session interact` to switch into it, which lands you in that session's Home interpreter.
 
 <div
   data-asciinema-cast="demos/disconnected_interpreter_demo.cast"
@@ -78,28 +79,28 @@ it, which lands you in that session's Home interpreter.
 
 ## Switching between sessions
 
-`interact <session_id>` switches the active session. This is the mechanism behind
+`session interact <session_id>` switches the active session. This is the mechanism behind
 holding
-multiple servers open at once: connect several sessions, then `interact` into whichever
-one
+multiple servers open at once: connect several sessions, then `session interact` into
+whichever one
 you want to operate against. All interpreter work (listeners, generators, agents) runs
 against the currently interacted session.
 
 ## Naming and describing sessions
 
-By default sessions are identified only by their generated UUID. Use `rename` and
-`describe` to make a set of sessions easier to tell apart:
+By default sessions are identified only by their generated UUID. Use `session rename` and
+`session describe` to make a set of sessions easier to tell apart:
 
 ```text
-rename "production"                          # rename the current session
-rename <session_id> "production"             # rename a specified session
-describe "primary production server"         # describe the current session
-describe <session_id> "primary production server"  # describe a specified session
+session rename "production"                          # rename the current session
+session rename <session_id> "production"             # rename a specified session
+session describe "primary production server"         # describe the current session
+session describe <session_id> "primary production server"  # describe a specified session
 ```
 
 ## Ending a session
 
-`disconnect <session_id>` cleanly tears down a session's REST and WebSockets connections
+`session disconnect <session_id>` cleanly tears down a session's REST and WebSockets connections
 and removes it from the client. When the last session is disconnected the client returns
 to
 disconnected mode. Use `exit` to leave the interpreter or close the client entirely.

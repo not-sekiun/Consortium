@@ -18,6 +18,12 @@ Start the client from the project root after the server is already running:
 uv run consortium.py client
 ```
 
+!!! note
+    On a Docker install the client runs in a container of its own, started with
+    `docker compose run --rm client`. The commands are identical, but file transfers,
+    `exec`, and loopback addresses behave differently. See
+    [Running the Client in Docker](running-the-client-in-docker.md).
+
 By default the client reads its connection details from
 `data/client/client_config.json` and attempts to connect on startup:
 
@@ -125,6 +131,7 @@ Other core commands available across interpreters:
 
 | Command     | Description                                                  |
 |-------------|--------------------------------------------------------------|
+| `session`   | Manage client sessions from any interpreter                  |
 | `clear`     | Clear the terminal screen                                    |
 | `banner`    | Reprint the startup banner                                   |
 | `alias`     | Create and manage command aliases                            |
@@ -162,6 +169,8 @@ server emits resource events. See
 
 ## Where to go next
 
+- [Running the Client in Docker](running-the-client-in-docker.md): the differences that
+  apply when the client runs in a container.
 - [Managing Client Sessions](client-sessions/managing-client-sessions.md): connect to
   servers and juggle multiple sessions.
 - [Setting Up Listeners](listeners/setting-up-listeners.md) and

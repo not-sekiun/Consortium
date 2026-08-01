@@ -14,6 +14,9 @@ from consortium.client.models.interpreter_signal_models import (
 )
 from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import BaseConnectedCommand
+from consortium.client.utils.environment_utils import (
+    print_containerized_missing_path_notice,
+)
 from consortium.client.utils.formatter_utils import (
     format_argparse_epilog,
     format_datetime_as_human_readable_str,
@@ -369,6 +372,7 @@ class AssetCommand(BaseConnectedCommand):
 
         if not asset_path.exists():
             print_error(f"Asset path not found: '{asset_path}'")
+            print_containerized_missing_path_notice(path=asset_path)
             return ContinueSignal()
 
         if asset_path.is_dir():
@@ -425,14 +429,17 @@ class AssetCommand(BaseConnectedCommand):
         )
         # If user supplies a name that takes precedence, else use the asset name
         # directly for asset files or for asset directories append the ".zip" to the
-        # name because all asset directories are returned as zip files.
+        # name because all asset directories are returned as zip files. Resolved so
+        # that every message below names the exact location written to: a bare relative
+        # name reads as if the file landed next to the user, which is misleading when
+        # the client runs in a container and the working directory is a container path.
         output_file_path = pathlib.Path(
             parsed_args.output
             if parsed_args.output
             else (
                 asset["name"] if not asset["is_directory"] else asset["name"] + ".zip"
             ),
-        )
+        ).resolve()
 
         if output_file_path.exists():
             # Refuse to overwrite a directory regardless of the overwrite flag as

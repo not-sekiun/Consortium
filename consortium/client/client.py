@@ -50,6 +50,9 @@ from consortium.client.models.interpreter_signal_models import (
     SwitchUseAgentTemplateInterpreterSignal,
     SwitchUseListenerTemplateInterpreterSignal,
 )
+from consortium.client.utils.environment_utils import (
+    print_containerized_working_directory_notice,
+)
 from consortium.client.utils.printer_utils import (
     print_error,
     print_info,
@@ -272,6 +275,7 @@ class Client:
     async def run(self) -> None:
         client_session = await self._connect()
         await self._display_startup_banner(client_session=client_session)
+        print_containerized_working_directory_notice()
 
         # Run the initial interpreter. Either we run a special disconnected interpreter
         # that can run independently of any client session in the case where a

@@ -28,7 +28,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
         # one builder image cross compiles for every target.
         self.environment.agent_binary_path = await build_artifact_in_container(
             image_tag=self.environment.builder_image_tag,
-            command=["go", "build", "-o", "agent", "."],
+            command=["garble", "build", "-o", "agent", "."],
             artifact_path="/agent_builder/agent",
             output_directory=self.root_directory / "agent_source",
             environment={"GOOS": parameters["os"], "GOARCH": parameters["arch"]},

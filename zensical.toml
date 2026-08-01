@@ -30,6 +30,7 @@ nav = [
     ] },
     { "Client" = [
         "client/client-overview.md",
+        "client/running-the-client-in-docker.md",
         { "Client Sessions" = [
             "client/client-sessions/managing-client-sessions.md"
         ] },

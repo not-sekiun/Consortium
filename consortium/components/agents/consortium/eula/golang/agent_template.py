@@ -183,9 +183,10 @@ class AgentTemplate(BaseAgentTemplate):
         ),
         SingleValueOption(
             name="file_name",
-            description=("Output filename of agent without extension."),
+            description="Output filename of agent without extension.",
             default_value="agent",
             validating_function=_check_filename_does_not_traverse_directories,
+            value_type=str,
             required=False,
         ),
         ChoiceValueOption(

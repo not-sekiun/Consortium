@@ -37,8 +37,8 @@ interpreter can use it. Both kinds are available in every interpreter. For examp
 local alias only replaces the command name at the beginning of the line:
 
 ```text
-alias set ll "list"
-ll agents              # Expands to: list agents
+alias set ll "session list"
+ll                     # Expands to: session list
 help ll                # Does not expand ll
 ```
 
@@ -47,8 +47,8 @@ line:
 
 ```text
 alias set -g server "-rh 127.0.0.1 -rp 9999"
-connect -u admin -p admin server
-# Expands to: connect -u admin -p admin -rh 127.0.0.1 -rp 9999
+session connect -u admin -p admin server
+# Expands to: session connect -u admin -p admin -rh 127.0.0.1 -rp 9999
 ```
 
 If you set an alias whose name already exists, the client asks before overwriting it.

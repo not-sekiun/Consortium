@@ -2,7 +2,7 @@
 
 `manage_repository.py` is an interactive tool for inspecting and maintaining the server's
 resource repositories: `assets`, `artifacts`, and `payloads` under `data/server/`. Each
-repository stores its files alongside a `.repository.json` metadata index (and a `.keep`
+repository stores its files alongside a `.repository.json` metadata index (and a `.gitkeep`
 placeholder that keeps the otherwise-empty directory tracked in git). The tool lets you
 browse a repository, view the metadata for any file, open or delete individual files, and
 clear or hard reset the whole repository, all without editing anything by hand.
@@ -64,9 +64,9 @@ final confirmation (defaulting to **No**) before deleting anything.
   entries are skipped and untracked files are left untouched. Afterwards the index is reset
   to an empty object (`{}`).
 - **Hard reset** removes every entry in the repository directory, including untracked
-  files, restoring the default state of just `.keep` and an empty `.repository.json`.
+  files, restoring the default state of just `.gitkeep` and an empty `.repository.json`.
 
-In both actions `.keep` and `.repository.json` are protected: `.keep` is preserved (and
+In both actions `.gitkeep` and `.repository.json` are protected: `.gitkeep` is preserved (and
 recreated if absent) and the index is reset in place rather than deleted. A missing or
 unparseable `.repository.json` is treated as an empty index (with a warning), so a broken
 repository can still be inspected or hard reset.

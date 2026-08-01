@@ -1,4 +1,38 @@
 services:
+  # Dedicated Docker engine used only to build agent payloads. Agent generators
+  # that compile inside a container drive this engine rather than the host's, so
+  # the server never needs the host's socket mounted into it. Remove this service
+  # (along with the server's DOCKER_HOST and depends_on entries below) if you
+  # never build containerized agents.
+  dind:
+    image: docker:dind
+    restart: unless-stopped
+    # The nested engine needs to manage its own storage driver, cgroups and
+    # network namespaces, which an unprivileged container cannot do. Swap the
+    # image for docker:dind-rootless to avoid this at the cost of a slower
+    # storage driver and some extra setup.
+    privileged: true
+    environment:
+      # The image generates TLS certificates and serves on 2376 by default, which
+      # would mean distributing those certificates to the server. Blanking the
+      # certificate directory switches it to plain TCP on 2375 instead. Nothing is
+      # published to the host, so the engine is only reachable by other services
+      # on this compose network.
+      - DOCKER_TLS_CERTDIR=
+    volumes:
+      # Persists the nested engine's image store. Without it, every `docker
+      # compose up` starts from an empty cache and the first agent build re-pulls
+      # its entire base image.
+      - builder-cache:/var/lib/docker
+    healthcheck:
+      # Run inside the sidecar with no DOCKER_HOST set, so this probes its own
+      # local socket and only passes once the nested engine is accepting work.
+      test: ["CMD", "docker", "info"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
   server:
     build: .
     image: consortium:local
@@ -6,29 +40,32 @@ services:
     restart: unless-stopped
     volumes:
       - ./data:/consortium/data
-      # Lets agent generators that compile inside a container drive the host's
-      # Docker engine. Without it they fail on start with "Docker is not
-      # installed or not found on the system path". Remove this line (and the
-      # group_add below) if you never build those agents: it grants the container
-      # control of the host engine, which is root equivalent on the host.
-      - /var/run/docker.sock:/var/run/docker.sock
-    # The container runs as non-root, so it needs a supplementary group that can
-    # open the mounted socket. Under Docker Desktop the socket is root owned and
-    # gid 0 is correct. On a Linux host, pass the host docker group id instead:
-    #   DOCKER_GID=$(getent group docker | cut -d: -f3) docker compose up -d
-    group_add:
-      - "${DOCKER_GID:-0}"
-    # environment:
-    #   Point agent builds at a separate engine (a docker:dind sidecar, a remote
-    #   builder) instead of the mounted socket. The generator inherits the
-    #   server's environment, so nothing else needs to change.
-    #   - DOCKER_HOST=tcp://dind:2375
+      # Components are user content, like data/, so they are mounted rather than
+      # left frozen in the image. Dropping a component in and restarting the
+      # server picks it up: the pre-flight dependency sync registers it as a
+      # workspace member on the next start and installs its dependencies, which
+      # matches how a manual install behaves. Without this, adding a component
+      # would mean rebuilding the image.
+      - ./consortium/components:/consortium/consortium/components
+    environment:
+      # Points the docker client bundled into the image at the sidecar. Agent
+      # generators shell out to that client as a subprocess and inherit this
+      # environment, so no code reads this variable directly. Repoint it at any
+      # other reachable engine (a remote builder, a shared CI engine) and builds
+      # follow, with nothing else to change.
+      - DOCKER_HOST=tcp://dind:2375
     ports:
       - "9999:9999"
       # Listeners bind their own ports inside the container at runtime. Publish
       # the range you intend to create listeners on, otherwise they are only
       # reachable from inside the container.
       # - "8080-8090:8080-8090"
+    depends_on:
+      # Agent generators that compile in a container check for a reachable engine
+      # in their start hook and refuse to start without one, so the engine has to
+      # be up before the server loads its components.
+      dind:
+        condition: service_healthy
     healthcheck:
       test:
         - CMD
@@ -49,8 +86,19 @@ services:
     image: consortium:local
     profiles: ["client"]
     command: ["client"]
+    # Uploads and downloads resolve relative paths against the working directory, so
+    # pointing it at the mounted workspace below is what makes `asset download <id>`
+    # land on the host instead of inside the container, where it would be lost as soon
+    # as the container exits.
+    working_dir: /consortium/workspace
     volumes:
       - ./data:/consortium/data
+      # File drop shared between the host and the client. Downloads written here show
+      # up in ./workspace on the host, and files placed there from the host can be
+      # uploaded. The directory is committed to the repository rather than left for
+      # compose to create: a missing bind mount source is created root owned, which the
+      # unprivileged container user cannot write to.
+      - ./workspace:/consortium/workspace
     # Share the server's network namespace so the client reaches the API on
     # 127.0.0.1, matching the remote_host/remote_port in the shared
     # data/client/client_config.json that a host run client would also use.
@@ -60,3 +108,6 @@ services:
     depends_on:
       server:
         condition: service_healthy
+
+volumes:
+  builder-cache:

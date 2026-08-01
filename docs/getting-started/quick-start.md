@@ -52,6 +52,12 @@ With the server running, start the client from the project root in a separate te
     `docker compose up` never starts the client: it needs an interactive terminal, which
     only `docker compose run` provides.
 
+    !!! important
+        A containerized client only sees the directories mounted into it. Uploads and
+        downloads without an explicit path use `workspace/` on the host, and files
+        written anywhere else in the container are lost when the client exits. See
+        [Running the Client in Docker](../client/running-the-client-in-docker.md).
+
 The client reads `data/client/client_config.json` and connects to `127.0.0.1:9999` as
 `admin` by default. Once connected, you land in the **Home** interpreter and can begin
 operating against the server.
@@ -61,7 +67,7 @@ operating against the server.
 ```
 
 If the client cannot reach the server at startup, it opens in **disconnected mode**, where
-you can connect manually with the `connect` command. See
+you can connect manually with the `session connect` command. See
 [Managing Client Sessions](../client/client-sessions/managing-client-sessions.md).
 
 To point the client at a different server or user account, see the

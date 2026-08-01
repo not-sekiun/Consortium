@@ -332,7 +332,10 @@ class ArtifactCommand(BaseConnectedCommand):
         )
         # If user supplies an output path that takes precedence, else use the artifact
         # name directly for artifact files or append ".zip" for artifact directories
-        # because all artifact directories are returned as zip files.
+        # because all artifact directories are returned as zip files. Resolved so that
+        # every message below names the exact location written to: a bare relative name
+        # reads as if the file landed next to the user, which is misleading when the
+        # client runs in a container and the working directory is a container path.
         output_file_path = pathlib.Path(
             parsed_args.output
             if parsed_args.output
@@ -341,7 +344,7 @@ class ArtifactCommand(BaseConnectedCommand):
                 if not artifact["is_directory"]
                 else artifact["name"] + ".zip"
             ),
-        )
+        ).resolve()
 
         if output_file_path.exists():
             # Refuse to overwrite a directory regardless of the overwrite flag as

@@ -16,3 +16,4 @@ tests/
 scripts/
 test_agents/
 data/**/logs/*.log
+workspace/

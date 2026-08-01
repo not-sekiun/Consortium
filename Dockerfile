@@ -33,10 +33,10 @@ COPY --from=builder /bin/uv /bin/uv
 
 # Agent generators that compile their payloads inside a container shell out to
 # `docker` and refuse to start when the binary is missing from PATH. Only the
-# client is installed: it drives whichever engine the mounted socket or
-# DOCKER_HOST points at, so builds run on an existing daemon rather than a nested
-# one. The cli-plugins directory carries buildx, which the client needs to build
-# against engines where the classic builder is unavailable.
+# client is installed, never an engine: it drives whatever DOCKER_HOST points at,
+# which under compose is a sidecar engine. The cli-plugins directory carries
+# buildx, which the client needs to build against engines where the classic
+# builder is unavailable.
 COPY --from=docker:cli /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=docker:cli /usr/local/libexec/docker/cli-plugins/ /usr/local/libexec/docker/cli-plugins/
 
@@ -55,6 +55,12 @@ COPY consortium.py ./
 # not invalidate them. Shadowed by the ./data bind mount under compose, this
 # copy only serves plain `docker run` invocations with no mount.
 COPY data/ data/
+
+# Default mount point for a host directory to exchange files with the client:
+# uploads and downloads resolve relative paths against the working directory, so
+# compose points the client's working directory here. Created in the image so that
+# the directory exists (and is writable) even when nothing is mounted over it.
+RUN mkdir -p /consortium/workspace
 
 # The pre-flight sync rewrites pyproject.toml/uv.lock and installs into .venv on
 # startup, so the runtime user has to own the project directory. UID 1000 is
@@ -77,5 +83,8 @@ ENV HOME=/home/consortium \
     UV_NO_DEV=1 \
     UV_PYTHON_DOWNLOADS=0
 
-ENTRYPOINT ["python", "consortium.py"]
+# Absolute so that the entrypoint keeps working when the working directory is
+# moved off the project root, which compose does for the client to put it in the
+# mounted workspace directory.
+ENTRYPOINT ["python", "/consortium/consortium.py"]
 CMD ["server"]
