@@ -13,8 +13,8 @@ from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server import Server
 
 
-# Relative logging paths are resolved against the project root rather than the current
-# working directory so that they land in the same place no matter where the server was
+# A relative log file path is resolved against the project root rather than the current
+# working directory so that logs land in the same place no matter where the server was
 # invoked from, including when it is started from a working directory outside of the
 # project root such as under Docker.
 def _resolve_from_consortium_root(filepath: str, consortium_root: pathlib.Path) -> str:
@@ -84,13 +84,11 @@ async def _start_server(arguments: argparse.Namespace) -> None:
 
     # Configure logging from configuration file.
     if arguments.logging_config is None:
-        logging_config_filepath = str(
+        logging_config_filepath = (
             consortium_root / "data" / "server" / "logging_config.json"
         )
     else:
-        logging_config_filepath = _resolve_from_consortium_root(
-            filepath=arguments.logging_config, consortium_root=consortium_root
-        )
+        logging_config_filepath = arguments.logging_config
 
     try:
         with open(logging_config_filepath) as file:

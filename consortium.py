@@ -51,10 +51,9 @@ def main():
         help=(
             "Filepath of the logging configuration file to use when starting the "
             "server. By default the configuration file from "
-            "`data/server/logging_config.json` is used. Relative paths, both this "
-            "one and the log file path set within the logging configuration file "
-            "itself, are resolved against the Consortium project root rather than "
-            "the current working directory."
+            "`data/server/logging_config.json` is used. A relative log file path "
+            "set within the logging configuration file is resolved against the "
+            "Consortium project root rather than the current working directory."
         ),
         nargs="?",
         default=None,
@@ -110,10 +109,9 @@ def main():
         help=(
             "Filepath of the logging configuration file to use when starting the "
             "client. By default the configuration file from "
-            "`data/client/logging_config.json` is used. Relative paths, both this "
-            "one and the log file path set within the logging configuration file "
-            "itself, are resolved against the Consortium project root rather than "
-            "the current working directory."
+            "`data/client/logging_config.json` is used. A relative log file path "
+            "set within the logging configuration file is resolved against the "
+            "Consortium project root rather than the current working directory."
         ),
         nargs="?",
         default=None,

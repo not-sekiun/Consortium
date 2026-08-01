@@ -18,8 +18,8 @@ from consortium.client.models.logging_models import LoggingConfigModel
 from consortium.client.utils.logging_utils import log_formatter
 
 
-# Relative logging paths are resolved against the project root rather than the current
-# working directory so that they land in the same place no matter where the client was
+# A relative log file path is resolved against the project root rather than the current
+# working directory so that logs land in the same place no matter where the client was
 # invoked from. Under Docker the client's working directory is the mounted workspace
 # directory, so a working directory relative log file would write logs there instead of
 # into `data/`.
@@ -69,9 +69,7 @@ async def _start_client(arguments: argparse.Namespace) -> None:
     if arguments.logging_config is None:
         logging_config_filepath = str(LOGGING_CONFIG_JSON_FILE)
     else:
-        logging_config_filepath = _resolve_from_consortium_root(
-            arguments.logging_config
-        )
+        logging_config_filepath = arguments.logging_config
 
     try:
         with open(logging_config_filepath) as file:
