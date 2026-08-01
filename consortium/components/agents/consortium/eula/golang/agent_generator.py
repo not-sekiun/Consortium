@@ -42,7 +42,7 @@ class ExportAgent(BaseAgentGeneratorBuildStep):
     async def build(self, parameters: dict) -> None:
         await self.agent_templates_payload_service.add_payload_file(
             path=self.environment.agent_binary_path,
-            name=parameters["file_name"]
+            name=parameters["filename"]
             + (".exe" if parameters["os"] == "windows" else ""),
             build_parameters=parameters,
         )  # Moves the file instead of copy so no cleanup is necessary afterwards

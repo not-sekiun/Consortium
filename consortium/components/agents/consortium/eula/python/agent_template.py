@@ -11,7 +11,6 @@ from consortium.framework.options import (
 from consortium.framework.signal_exceptions import (
     OptionValueValidationError,
 )
-from consortium.framework.utils.random_utils import random_name
 
 from ..agent_type import AgentType
 from .agent_generator import AgentGenerator
@@ -64,13 +63,6 @@ class AgentTemplate(BaseAgentTemplate):
     agent_generator = AgentGenerator
     agent_type = AgentType
     options = {
-        SingleValueOption(
-            name="name",
-            description="Name of the agent generator.",
-            required=False,
-            default_value="",
-            value_type=str,
-        ),
         SingleValueOption(
             name="remote_host",
             description="Remote listener host address for the agent to connect back to.",
@@ -151,7 +143,7 @@ class AgentTemplate(BaseAgentTemplate):
             required=False,
         ),
         SingleValueOption(
-            name="file_name",
+            name="filename",
             description=(
                 "Output filename of agent without extension. Extension is "
                 "automatically appended based on format."
@@ -193,7 +185,3 @@ class AgentTemplate(BaseAgentTemplate):
     }
     compatible_listener_types = {"http_consortium"}
     validating_function = _check_all_url_endpoints_unique
-
-    def resolve_agent_generator_name(self, parameters: JSONObject) -> str:
-        name = parameters.get("name", "")
-        return str(name) if name else random_name()

@@ -9,7 +9,6 @@ from consortium.framework.options import (
 from consortium.framework.signal_exceptions import (
     OptionValueValidationError,
 )
-from consortium.framework.utils.random_utils import random_name
 
 from .listener import Listener
 from .listener_type import ListenerType
@@ -50,13 +49,6 @@ class ListenerTemplate(BaseListenerTemplate):
     listener = Listener
     listener_type = ListenerType
     options = {
-        SingleValueOption(
-            name="name",
-            description="Name of the listener being created.",
-            required=True,
-            default_value="",
-            value_type=str,
-        ),
         SingleValueOption(
             name="local_host",
             description=(
@@ -112,10 +104,6 @@ class ListenerTemplate(BaseListenerTemplate):
         ),
     }
     validating_function = _validate_all_url_endpoints_unique
-
-    def resolve_listener_name(self, parameters: JSONObject) -> str:
-        name = parameters.get("name", "")
-        return str(name) if name else random_name()
 
     def resolve_listener_endpoint(self, parameters: JSONObject) -> str:
         return f"http://{parameters['local_host']}:{parameters['local_port']}"

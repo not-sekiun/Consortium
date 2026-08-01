@@ -58,7 +58,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
             await self.agent_templates_payload_service.create_payload_file(
                 build_parameters=parameters,
                 content=source_code,
-                name=f"{parameters['file_name']}.py",
+                name=f"{parameters['filename']}.py",
             )
         elif parameters["format"] == "executable":
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -77,7 +77,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                     "--specpath",
                     str(temp_path),
                     "--name",
-                    parameters["file_name"],
+                    parameters["filename"],
                     str(agent_source_path),
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -110,7 +110,7 @@ class BuildAgent(BaseAgentGeneratorBuildStep):
                 content='python -c "import base64; exec(base64.b64decode('
                 + repr(base64.b64encode(source_code.encode()).decode())
                 + '))"',
-                name=f"{parameters['file_name']}.txt",
+                name=f"{parameters['filename']}.txt",
             )
         else:
             raise AgentGeneratorBuildStepRuntimeError(
