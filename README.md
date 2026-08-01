@@ -24,6 +24,25 @@
   </a>
 </p>
 
+<p align="center">
+  <a href="https://not-sekiun.github.io/Consortium/">Home</a>
+  &nbsp;∥&nbsp;
+  <a href="https://not-sekiun.github.io/Consortium/getting-started/installation">Getting Started</a>
+  &nbsp;∥&nbsp;
+  <a href="https://not-sekiun.github.io/Consortium/server/server-overview/">Server</a>
+  &nbsp;∥&nbsp;
+  <a href="https://not-sekiun.github.io/Consortium/client/client-overview/">Client</a>
+  &nbsp;∥&nbsp;
+  <a href="https://not-sekiun.github.io/Consortium/server-api/server-api-overview/">Server API</a>
+  &nbsp;∥&nbsp;
+  <a href="https://not-sekiun.github.io/Consortium/framework/framework-overview/">Framework</a>
+  &nbsp;∥&nbsp;
+  <a href="https://not-sekiun.github.io/Consortium/scripts/scripts-overview/">Scripts</a>
+  &nbsp;∥&nbsp;
+  <a href="https://not-sekiun.github.io/Consortium/reference/reference-overview/">Reference</a>
+</p>
+
+
 Consortium is a <i>programming language agnostic</i>, and
 <i>networking protocol agnostic</i> command and control (C2) framework that is designed
 to be <i>collaborative</i>, <i>highly extensible</i>, and <i>modular</i>. The framework
