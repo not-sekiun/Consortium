@@ -55,7 +55,7 @@ SERVER_DATA_DIRECTORY = PROJECT_ROOT / "data" / "server"
 # resources: the index is reset in place and the placeholder keeps the empty
 # directory tracked in git.
 METADATA_FILENAME = ".repository.json"
-KEEP_FILENAME = ".keep"
+KEEP_FILENAME = ".gitkeep"
 PROTECTED_FILENAMES = {METADATA_FILENAME, KEEP_FILENAME}
 
 # Repositories share the exact same metadata schema; only the per-entry "data"
@@ -855,7 +855,7 @@ def clear_repository(key: str) -> None:
 
 def hard_reset_repository(key: str) -> None:
     # Remove every entry (tracked or not) and restore the default state of just
-    # .keep and an empty .repository.json.
+    # .gitkeep and an empty .repository.json.
     repository_path = SERVER_DATA_DIRECTORY / key
     display_name = REPOSITORIES[key]
     files = collect_all_files(repository_path)
@@ -871,7 +871,7 @@ def hard_reset_repository(key: str) -> None:
     summary.add_row("Repository", display_name)
     summary.add_row("Files to remove", str(len(files)))
     summary.add_row("Metadata", "Reset to {}")
-    summary.add_row("Restored", ".keep + empty .repository.json")
+    summary.add_row("Restored", ".gitkeep + empty .repository.json")
     console.print(Panel(summary, title="Review", border_style="cyan", expand=False))
 
     confirmed = confirm(
