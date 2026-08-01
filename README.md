@@ -26,19 +26,19 @@
 
 <p align="center">
   <a href="https://not-sekiun.github.io/Consortium/">Home</a>
-  &nbsp;∥&nbsp;
+  &nbsp;│&nbsp;
   <a href="https://not-sekiun.github.io/Consortium/getting-started/installation">Getting Started</a>
-  &nbsp;∥&nbsp;
+  &nbsp;│&nbsp;
   <a href="https://not-sekiun.github.io/Consortium/server/server-overview/">Server</a>
-  &nbsp;∥&nbsp;
+  &nbsp;│&nbsp;
   <a href="https://not-sekiun.github.io/Consortium/client/client-overview/">Client</a>
-  &nbsp;∥&nbsp;
+  &nbsp;│&nbsp;
   <a href="https://not-sekiun.github.io/Consortium/server-api/server-api-overview/">Server API</a>
-  &nbsp;∥&nbsp;
+  &nbsp;│&nbsp;
   <a href="https://not-sekiun.github.io/Consortium/framework/framework-overview/">Framework</a>
-  &nbsp;∥&nbsp;
+  &nbsp;│&nbsp;
   <a href="https://not-sekiun.github.io/Consortium/scripts/scripts-overview/">Scripts</a>
-  &nbsp;∥&nbsp;
+  &nbsp;│&nbsp;
   <a href="https://not-sekiun.github.io/Consortium/reference/reference-overview/">Reference</a>
 </p>
 
