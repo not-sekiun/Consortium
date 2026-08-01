@@ -84,7 +84,7 @@ A containerized client reports where relative paths resolve when it starts, so t
 working directory is never a guess:
 
 ```plaintext
-[*] Running in a container. Uploads and downloads without an explicit path use '/consortium/workspace', which is mounted from the host, so downloaded files are visible outside the container.
+[*] Running in a container. Downloads without '-o' and relative upload paths use '/consortium/workspace', which is mounted from the host, so downloaded files are visible outside the container.
 ```
 
 If the working directory is **not** mounted from the host, the same notice becomes a
@@ -109,8 +109,9 @@ To work against a host directory other than `./workspace` without editing
     docker compose run --rm -v "${PWD}:/work" -w /work client
     ```
 
-Uploads and downloads then resolve against whatever directory you launched from, which is
-the closest equivalent to how the client behaves on a manual install.
+Downloads without `-o` and relative upload paths then resolve against whatever directory
+you launched from, which is the closest equivalent to how the client behaves on a manual
+install.
 
 ## Paths in client output are container paths
 

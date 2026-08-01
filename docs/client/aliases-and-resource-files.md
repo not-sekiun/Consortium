@@ -20,8 +20,8 @@ The `alias` command creates named shortcuts for commands. Aliases are persisted 
 
 ```text
 alias list
-alias set ll "list"
-alias set -g admin_login "connect -u admin -p admin -rh 127.0.0.1 -rp 9999"
+alias set ll "session list"
+alias set -g admin_login "session connect -u admin -p admin -rh 127.0.0.1 -rp 9999"
 alias unset ll
 ```
 

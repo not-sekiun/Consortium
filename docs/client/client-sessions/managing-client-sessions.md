@@ -69,8 +69,9 @@ session describe <session_id> <description>
 session disconnect <session_id>
 ```
 
-From disconnected mode, use `session connect` to establish a session and
-`session interact` to switch into it, which lands you in that session's Home interpreter.
+From disconnected mode, use `session connect` to establish a session, `session list` to
+find its ID, and `session interact <session_id>` to switch into it, which lands you in
+that session's Home interpreter.
 
 <div
   data-asciinema-cast="demos/disconnected_interpreter_demo.cast"

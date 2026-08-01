@@ -53,8 +53,8 @@ With the server running, start the client from the project root in a separate te
     only `docker compose run` provides.
 
     !!! important
-        A containerized client only sees the directories mounted into it. Uploads and
-        downloads without an explicit path use `workspace/` on the host, and files
+        A containerized client only sees the directories mounted into it. Downloads
+        without `-o` and relative upload paths use `workspace/` on the host, and files
         written anywhere else in the container are lost when the client exits. See
         [Running the Client in Docker](../client/running-the-client-in-docker.md).
 

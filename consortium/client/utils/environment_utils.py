@@ -103,14 +103,14 @@ def print_containerized_working_directory_notice() -> None:
     match is_mounted_from_host:
         case True:
             print_info(
-                f"Running in a container. Uploads and downloads without an explicit "
-                f"path use '{working_directory}', which is mounted from the host, so "
+                f"Running in a container. Downloads without '-o' and relative upload "
+                f"paths use '{working_directory}', which is mounted from the host, so "
                 f"downloaded files are visible outside the container."
             )
         case False:
             print_warning(
-                f"Running in a container. Uploads and downloads without an explicit "
-                f"path use '{working_directory}', which is not mounted from the host, "
+                f"Running in a container. Downloads without '-o' and relative upload "
+                f"paths use '{working_directory}', which is not mounted from the host, "
                 f"so downloaded files are lost when the container exits. Mount a host "
                 f"directory and run the client with it as the working directory (the "
                 f"bundled docker-compose.yml does this with ./workspace), or download "
@@ -118,7 +118,7 @@ def print_containerized_working_directory_notice() -> None:
             )
         case None:
             print_info(
-                f"Running in a container. Uploads and downloads without an explicit "
-                f"path use '{working_directory}', which is a path inside the "
+                f"Running in a container. Downloads without '-o' and relative upload "
+                f"paths use '{working_directory}', which is a path inside the "
                 f"container, not on the host."
             )
