@@ -4,7 +4,7 @@ from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 import jsonschema
 
 import consortium.client.client_singletons as client_singletons
-from consortium.client.client_config import CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH
+from consortium.client.client_config import CLIENT_CONFIG_JSON_FILE
 from consortium.client.client_session import ClientSession
 from consortium.client.exceptions.client_session_exceptions import (
     BaseClientSessionError,
@@ -167,7 +167,7 @@ class SessionCommand(BaseCommand[AnyContext]):
                 "`data/client/client_config.json` is used."
             ),
             nargs="?",
-            default=str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH),
+            default=str(CLIENT_CONFIG_JSON_FILE),
         )
         self.connect_parser.add_argument(
             "-rh",

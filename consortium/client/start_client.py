@@ -2,18 +2,32 @@ import argparse
 import asyncio
 import json
 import sys
+from pathlib import Path
 
 from loguru import logger
 from pydantic import ValidationError
 
 from consortium.client.client import Client
 from consortium.client.client_config import (
-    CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH,
-    CONSORTIUM_LOGGING_CONFIG_JSON_FILE_PATH,
+    CLIENT_CONFIG_JSON_FILE,
+    CONSORTIUM_ROOT,
+    LOGGING_CONFIG_JSON_FILE,
 )
 from consortium.client.models.client_models import ClientConfig
 from consortium.client.models.logging_models import LoggingConfigModel
 from consortium.client.utils.logging_utils import log_formatter
+
+
+# Relative logging paths are resolved against the project root rather than the current
+# working directory so that they land in the same place no matter where the client was
+# invoked from. Under Docker the client's working directory is the mounted workspace
+# directory, so a working directory relative log file would write logs there instead of
+# into `data/`.
+def _resolve_from_consortium_root(filepath: str) -> str:
+    path = Path(filepath)
+    if path.is_absolute():
+        return str(path)
+    return str(CONSORTIUM_ROOT / path)
 
 
 async def _start_client(arguments: argparse.Namespace) -> None:
@@ -21,7 +35,7 @@ async def _start_client(arguments: argparse.Namespace) -> None:
     if arguments.client_config is None:
         # Use relative pathing from the module to allow directory independent
         # invocation.
-        client_config_filepath = str(CONSORTIUM_CLIENT_CONFIG_JSON_FILE_PATH)
+        client_config_filepath = str(CLIENT_CONFIG_JSON_FILE)
     else:
         client_config_filepath = arguments.client_config
 
@@ -53,9 +67,11 @@ async def _start_client(arguments: argparse.Namespace) -> None:
 
     # Configure logging from configuration file.
     if arguments.logging_config is None:
-        logging_config_filepath = CONSORTIUM_LOGGING_CONFIG_JSON_FILE_PATH
+        logging_config_filepath = str(LOGGING_CONFIG_JSON_FILE)
     else:
-        logging_config_filepath = arguments.logging_config
+        logging_config_filepath = _resolve_from_consortium_root(
+            arguments.logging_config
+        )
 
     try:
         with open(logging_config_filepath) as file:
@@ -86,6 +102,9 @@ async def _start_client(arguments: argparse.Namespace) -> None:
             f"configuration file JSON schema: {exc}",
         )
         return
+
+    if logging_config.log_file is not None:
+        logging_config.log_file = _resolve_from_consortium_root(logging_config.log_file)
 
     logger.remove()  # Remove all default loggers
 

@@ -78,7 +78,7 @@ class Client:
     @staticmethod
     def _load_aliases_from_aliases_json_file() -> dict[str, Alias]:
         aliases = {}
-        with open(client_config_module.CONSORTIUM_ALIASES_JSON_FILE_PATH) as file:
+        with open(client_config_module.ALIASES_JSON_FILE) as file:
             try:
                 alias_json = json.load(file)
                 jsonschema.validate(
@@ -102,14 +102,14 @@ class Client:
             except json.JSONDecodeError:
                 print_error(
                     "Failed to load client aliases from "
-                    f"{client_config_module.CONSORTIUM_ALIASES_JSON_FILE_PATH}. The "
+                    f"{client_config_module.ALIASES_JSON_FILE}. The "
                     "client alias file was not valid JSON."
                 )
                 return aliases
             except jsonschema.ValidationError:
                 print_error(
                     "Failed to load client aliases from "
-                    f"{client_config_module.CONSORTIUM_ALIASES_JSON_FILE_PATH}. The "
+                    f"{client_config_module.ALIASES_JSON_FILE}. The "
                     "client alias file was invalidly formatted. Hint: An entry should "
                     "be formatted as: "
                     "{'local_aliases'/'global_aliases': {<alias_1>: <command_1>, <alias_2>: <command_2>}}"

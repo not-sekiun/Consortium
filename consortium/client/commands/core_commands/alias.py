@@ -56,7 +56,7 @@ class AliasCommand(BaseCommand[AnyContext]):
                 if alias_obj.is_global
             },
         }
-        with open(client_config.CONSORTIUM_ALIASES_JSON_FILE_PATH, "w") as file:
+        with open(client_config.ALIASES_JSON_FILE, "w") as file:
             file.write(json.dumps(aliases, indent=4))
 
     @staticmethod
