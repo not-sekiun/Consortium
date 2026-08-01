@@ -13,17 +13,6 @@ from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server import Server
 
 
-# A relative log file path is resolved against the project root rather than the current
-# working directory so that logs land in the same place no matter where the server was
-# invoked from, including when it is started from a working directory outside of the
-# project root such as under Docker.
-def _resolve_from_consortium_root(filepath: str, consortium_root: pathlib.Path) -> str:
-    path = pathlib.Path(filepath)
-    if path.is_absolute():
-        return str(path)
-    return str(consortium_root / path)
-
-
 async def _start_server(arguments: argparse.Namespace) -> None:
     await server_component_dependency_syncer.main()
 
@@ -121,9 +110,9 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         return
 
     if logging_config.log_file is not None:
-        logging_config.log_file = _resolve_from_consortium_root(
-            filepath=logging_config.log_file, consortium_root=consortium_root
-        )
+        path = pathlib.Path(logging_config.log_file)
+        if not path.is_absolute():
+            logging_config.log_file = str(consortium_root / path)
 
     try:
         server_singletons.logging_service.configure_default_logging(

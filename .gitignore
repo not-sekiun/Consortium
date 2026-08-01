@@ -2,8 +2,6 @@
 __pycache__/
 *.pyc
 
-# Host side file drop for the containerized client. The directory itself is tracked
-# (via .gitkeep) because compose bind mounts it, but nothing transferred through it is.
 workspace/*
 !workspace/.gitkeep
 
@@ -29,7 +27,9 @@ CLAUDE.md
 AGENTS.md
 
 site/
+.cache/
 
+# Throwaway files: remove before merging back into the new repo
 /before_merging.txt
 /agent*
 test_agents/

@@ -1,8 +1,8 @@
 import argparse
 import asyncio
 import json
+import pathlib
 import sys
-from pathlib import Path
 
 from loguru import logger
 from pydantic import ValidationError
@@ -16,18 +16,6 @@ from consortium.client.client_config import (
 from consortium.client.models.client_models import ClientConfig
 from consortium.client.models.logging_models import LoggingConfigModel
 from consortium.client.utils.logging_utils import log_formatter
-
-
-# A relative log file path is resolved against the project root rather than the current
-# working directory so that logs land in the same place no matter where the client was
-# invoked from. Under Docker the client's working directory is the mounted workspace
-# directory, so a working directory relative log file would write logs there instead of
-# into `data/`.
-def _resolve_from_consortium_root(filepath: str) -> str:
-    path = Path(filepath)
-    if path.is_absolute():
-        return str(path)
-    return str(CONSORTIUM_ROOT / path)
 
 
 async def _start_client(arguments: argparse.Namespace) -> None:
@@ -102,7 +90,9 @@ async def _start_client(arguments: argparse.Namespace) -> None:
         return
 
     if logging_config.log_file is not None:
-        logging_config.log_file = _resolve_from_consortium_root(logging_config.log_file)
+        path = pathlib.Path(logging_config.log_file)
+        if not path.is_absolute():
+            logging_config.log_file = str(CONSORTIUM_ROOT / path)
 
     logger.remove()  # Remove all default loggers
 
