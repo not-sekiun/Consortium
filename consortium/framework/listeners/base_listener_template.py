@@ -173,24 +173,6 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         )
 
     @abstractmethod
-    def resolve_listener_name(
-        self,
-        parameters: dict[str, Primitive | PrimitiveCollection],
-    ) -> str:
-        """Resolve the display name for a newly created listener.
-
-        The name may be a hard-coded default, randomly generated, or derived from one
-        of the provided parameters (for example, a dedicated 'name' option).
-
-        Args:
-            parameters: The resolved option values provided at listener creation time,
-                keyed by option name.
-
-        Returns:
-            The display name to assign to the new listener instance.
-        """
-
-    @abstractmethod
     def resolve_listener_endpoint(
         self,
         parameters: dict[str, Primitive | PrimitiveCollection],
@@ -238,12 +220,13 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
 
         Validates all supplied parameters against the declared options, fills in defaults
         for omitted optional options, runs the optional validating_function, then
-        instantiates the listener. If name is not provided it is resolved via
-        resolve_listener_name.
+        instantiates the listener.
 
         Args:
-            name: Display name for the new listener. If None, the name is derived from
-                the parameters using resolve_listener_name.
+            name: Display name for the new listener. If None, a random human-readable
+                name is generated. A listener's name is display metadata only: it is
+                never derived from `parameters`, and updating parameters later never
+                changes it.
             description: Optional human-readable description for this listener instance.
             parameters: Option values that configure the listener, keyed by option name.
                 Missing required options raise an error; missing optional options are
@@ -313,12 +296,11 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
                     detail=exc.detail,
                 ) from None
 
-        # Create listener instance. Resolving the name from the parameters only if one
-        # was not provided.
+        # Create listener instance. The endpoint is always derived from the parameters,
+        # the name never is: it is passed straight through and the listener generates a
+        # random one when it is `None`.
         return self.listener(
-            name=self.resolve_listener_name(parameters=parameters)
-            if name is None
-            else name,
+            name=name,
             description=description,
             endpoint=self.resolve_listener_endpoint(parameters=parameters),
             parameters=parameters,

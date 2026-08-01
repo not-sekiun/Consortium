@@ -43,7 +43,11 @@ from consortium.framework.signal_exceptions import (
     _component_signal_exceptions as sig_excs,
 )
 from consortium.server.models.logging_models import LoggerType
-from consortium.server.utils import construct_services_dataclass, utc_now
+from consortium.server.utils import (
+    construct_services_dataclass,
+    generate_random_human_readable_name,
+    utc_now,
+)
 
 if TYPE_CHECKING:
     # This is used for type checking BaseAgentGeneratorBuildStep another runtime import
@@ -371,7 +375,9 @@ class BaseAgentGenerator(ComponentLifeCycle):
     Attributes:
         agent_generator_build_steps: Ordered sequence of build step classes. Declared
             at the class level and converted to instances in __init__.
-        name: Human-readable label for this generator run.
+        name: Human-readable label for this generator run. Either supplied explicitly
+            at creation time or randomly generated. It is display metadata only and is
+            never derived from, or kept in sync with, the generator's parameters.
         description: Optional description of the generator run.
         parameters: Configuration values forwarded to every build step.
         agent_generator_id: Unique identifier for this generator instance.
@@ -407,7 +413,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
 
     def __init__(
         self,
-        name: str = "",
+        name: str | None = None,
         description: str = "",
         parameters: dict[str, Any] | None = None,
     ) -> None:
@@ -415,7 +421,9 @@ class BaseAgentGenerator(ComponentLifeCycle):
 
         Args:
             name: Human-readable label for this generator run, used in log messages
-                and serialized output.
+                and serialized output. When `None` a random human-readable name is
+                generated. The name is display metadata that is independent of
+                `parameters`; it is never derived from them.
             description: Optional longer description of what this particular run produces.
             parameters: Key-value configuration values passed to each build step. Must
                 satisfy the options declared by the owning agent template.
@@ -428,6 +436,11 @@ class BaseAgentGenerator(ComponentLifeCycle):
 
         if parameters is None:
             parameters = {}
+        # An agent generator that was not given an explicit name gets a generated one.
+        # Names are never resolved from `parameters`, so an unnamed generator has
+        # nothing else to fall back on.
+        if name is None:
+            name = generate_random_human_readable_name()
         # Manually validate name first so we can reference the name in subsequent
         # validation errors
         if not isinstance(name, str):

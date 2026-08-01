@@ -1,6 +1,6 @@
 import pathlib
 import uuid
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Callable
 from inspect import signature
 from typing import get_type_hints
@@ -176,24 +176,6 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
             f")"
         )
 
-    @abstractmethod
-    def resolve_agent_generator_name(
-        self,
-        parameters: dict[str, Primitive | PrimitiveCollection],
-    ) -> str:
-        """Resolve the display name for a newly created agent generator.
-
-        The name may be a hard-coded default, randomly generated, or derived from one
-        of the provided parameters (for example, a dedicated 'name' option).
-
-        Args:
-            parameters: The resolved option values provided at generator creation time,
-                keyed by option name.
-
-        Returns:
-            The display name to assign to the new agent generator instance.
-        """
-
     def create_agent_generator(
         self,
         name: str | None = None,
@@ -204,12 +186,13 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
 
         Validates all supplied parameters against the declared options, fills in defaults
         for omitted optional options, runs the optional validating_function, then
-        instantiates the agent generator. If name is not provided it is resolved via
-        resolve_agent_generator_name.
+        instantiates the agent generator.
 
         Args:
-            name: Display name for the new generator. If None, the name is derived from
-                the parameters using resolve_agent_generator_name.
+            name: Display name for the new generator. If None, a random human-readable
+                name is generated. A generator's name is display metadata only: it is
+                never derived from `parameters`, and updating parameters later never
+                changes it.
             description: Optional human-readable description for this generator run.
             parameters: Option values that configure the generator, keyed by option name.
                 Missing required options raise an error; missing optional options are
@@ -279,12 +262,11 @@ class BaseAgentTemplate(ComponentMetadata, ABC):
                     detail=exc.detail,
                 ) from None
 
-        # Create agent generator instance. Resolving the name from the parameters only if one
-        # was not provided.
+        # Create agent generator instance. The name is passed straight through and the
+        # generator generates a random one when it is `None`; it is never resolved from
+        # the parameters.
         return self.agent_generator(
-            name=self.resolve_agent_generator_name(parameters=parameters)
-            if name is None
-            else name,
+            name=name,
             description=description,
             parameters=parameters,
         )

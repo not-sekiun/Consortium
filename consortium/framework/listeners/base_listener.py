@@ -26,7 +26,11 @@ from consortium.framework._core.framework_exceptions.listeners_framework_excepti
 from consortium.framework._core.utils import resolve_validation_error_parameter
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.connected_agents_service import ConnectedAgentsService
-from consortium.server.utils import construct_services_dataclass, utc_now
+from consortium.server.utils import (
+    construct_services_dataclass,
+    generate_random_human_readable_name,
+    utc_now,
+)
 
 if TYPE_CHECKING:
     from consortium.framework.listeners.base_listener_template import (
@@ -53,7 +57,10 @@ class BaseListener(ComponentLifeCycle):
     Attributes:
         listener_id: Unique framework-wide identifier for this listener instance,
             generated as a UUID4.
-        name: Human-readable name for identifying this listener instance.
+        name: Human-readable name for identifying this listener instance. Either
+            supplied explicitly at creation time or randomly generated. It is display
+            metadata only and is never derived from, or kept in sync with, the
+            listener's parameters.
         description: Brief description of the listener's purpose and functionality.
         endpoint: Network endpoint identifier, typically a socket address, that
             uniquely identifies where this listener can be reached.
@@ -91,7 +98,7 @@ class BaseListener(ComponentLifeCycle):
 
     def __init__(
         self,
-        name: str = "",
+        name: str | None = None,
         description: str = "",
         endpoint: str = "",
         parameters: dict[str, Any] | None = None,
@@ -103,7 +110,9 @@ class BaseListener(ComponentLifeCycle):
         proper validation of parameters and configuration before instantiation.
 
         Args:
-            name: Human-readable name for identifying this listener.
+            name: Human-readable name for identifying this listener. When `None` a
+                random human-readable name is generated. The name is display metadata
+                that is independent of `parameters`; it is never derived from them.
             description: Brief description of the listener's purpose.
             endpoint: Network endpoint identifier where the listener will be accessible,
                 typically a socket address like "http://0.0.0.0:8080".
@@ -117,6 +126,11 @@ class BaseListener(ComponentLifeCycle):
         """
         if parameters is None:
             parameters = {}
+        # A listener that was not given an explicit name gets a generated one. Names are
+        # never resolved from `parameters`, so an unnamed listener has nothing else to
+        # fall back on.
+        if name is None:
+            name = generate_random_human_readable_name()
         # Manually validate name first so we can reference the name in subsequent
         # validation errors
         if not isinstance(name, str):
