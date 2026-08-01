@@ -11,7 +11,7 @@ hide:
 ![Consortium Logo](assets/banner_dark_mode.png#only-dark){ width="75%" }
 { style="text-align: center;" }
 
-<p style="text-align: center;"><i>A modern C2 framework with a focus on extensibility</i></p>
+<p style="text-align: center;"><i>Modern C2 framework built for extensibility</i></p>
 
 ---
 
@@ -26,10 +26,10 @@ listeners and agents.
     _alpha phase_ of development. As such it should be noted that:
 
     1. Backwards incompatible/breaking changes may be made at any time.
-    2. The framework is currently not considered to be feature-complete.
-    3. Documentation will be lacking and incomplete.
+    2. The framework is currently not feature-complete.
+    3. Documentation may be lacking and incomplete in some areas.
 
-    Feel free to raise any problems, feature requests, or bug reports in the GitHub
+    Feel free to raise any problems, feature requests, or bug reports via the GitHub
     issues section.
 
 <div class="grid cards" markdown>
