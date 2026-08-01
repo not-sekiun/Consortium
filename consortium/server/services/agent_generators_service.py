@@ -117,7 +117,7 @@ class AgentGeneratorsService:
             parameters: Build parameters to pass to the agent template
                 when creating the agent generator.
             name: An optional display name for the new agent generator.
-                If omitted, the name is derived from the template.
+                If omitted, a random human-readable name is generated.
             description: An optional description for the new agent generator.
 
         Returns:
@@ -296,11 +296,10 @@ class AgentGeneratorsService:
         # is sent as part of the `AGENT_GENERATOR_UPDATED` event.
         updated = {}
 
-        # Update parameters first before updating name and description. This is because
-        # updating parameters may also update the name (if the name is derived from
-        # parameters). But if the name is provided explicitly, it will overwrite any
-        # name derived from parameters. Also, if parameter validation raises an error
-        # it prevents any other updates from being applied maintaining atomicity.
+        # Update parameters first before updating name and description so that if
+        # parameter validation raises an error it prevents any other updates from being
+        # applied, maintaining atomicity. A parameter update never touches the name: the
+        # name is display metadata set explicitly (or generated at creation).
         if parameters is not None:
             # Hold a list of fields that are being updated for logging purposes later
             # on. This makes a copy of the parameter keys being updated.
@@ -348,17 +347,18 @@ class AgentGeneratorsService:
                 # No parameter changes so skip updating.
                 pass
             else:
-                # Create a temporary agent generator whose attributes we copy over to the
-                # existing agent generator. This allows us to perform the `name`
-                # resolution required to update the attribute without
-                # inadvertently overwriting any existing status within the existing
-                # agent generator.
+                # Create a temporary agent generator to resolve the complete parameter
+                # set (defaults filled in) and to run the creating agent template's
+                # validating function over it, without inadvertently overwriting any
+                # existing status within the existing agent generator. The temporary
+                # generator's generated name is deliberately discarded: names are not
+                # derived from parameters, so an update must leave the existing agent
+                # generator's name alone.
                 temp_agent_generator = (
                     agent_generator.creating_agent_template.create_agent_generator(
                         parameters=parameters,
                     )
                 )
-                agent_generator.name = temp_agent_generator.name
                 old_parameters = copy.deepcopy(agent_generator.parameters)
                 agent_generator.parameters = copy.deepcopy(
                     temp_agent_generator.parameters

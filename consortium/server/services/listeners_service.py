@@ -111,7 +111,7 @@ class ListenersService:
             parameters: The parameters to pass to the listener
                 template when creating the listener.
             name: An optional display name for the new listener. If
-                omitted, the name is derived from the template.
+                omitted, a random human-readable name is generated.
             description: An optional description for the new listener.
 
         Returns:
@@ -254,11 +254,11 @@ class ListenersService:
         # Changed dictionary is used to track what attributes were updated. This data
         # is sent as part of the `LISTENER_UPDATED` event.
         updated = {}
-        # Update parameters first before updating name and description. This is because
-        # updating parameters may also update the name (if the name is derived from
-        # parameters). But if the name is provided explicitly, it will overwrite any
-        # name derived from parameters. Also, if parameter validation raises an error
-        # it prevents any other updates from being applied maintaining atomicity.
+        # Update parameters first before updating name and description so that if
+        # parameter validation raises an error it prevents any other updates from being
+        # applied, maintaining atomicity. A parameter update never touches the name: the
+        # name is display metadata set explicitly (or generated at creation), whereas the
+        # endpoint is always derived from the parameters and so is recomputed below.
         if parameters is not None:
             # Hold a list of fields that are being updated for logging purposes later
             # on. This makes a copy of the parameter keys being updated.
@@ -304,14 +304,15 @@ class ListenersService:
                 pass
             else:
                 # Create a temporary listener whose attributes we copy over to the
-                # existing listener. This allows us to perform the `name` and
-                # `endpoint` resolution required to update the attribute without
-                # inadvertently overwriting any existing state within the existing
-                # listener.
+                # existing listener. This allows us to perform the `endpoint`
+                # resolution required to update the attribute without inadvertently
+                # overwriting any existing state within the existing listener. The
+                # temporary listener's generated name is deliberately discarded: names
+                # are not derived from parameters, so an update must leave the existing
+                # listener's name alone.
                 temp_listener = listener.creating_listener_template.create_listener(
                     parameters=parameters,
                 )
-                listener.name = temp_listener.name
                 listener.endpoint = temp_listener.endpoint
                 old_parameters = copy.deepcopy(listener.parameters)
                 listener.parameters = copy.deepcopy(temp_listener.parameters)

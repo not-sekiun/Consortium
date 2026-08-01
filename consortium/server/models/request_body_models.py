@@ -15,6 +15,24 @@ class CreateUserAccountRequestBodyModel(BaseModel):
     role: str
 
 
+# Request bodies for the POST endpoints that create a listener or an agent generator
+# from a template. A created object's `name` and `description` are display metadata and
+# are therefore separate fields from `options`, which carries the creating template's
+# configuration option values. Templates remain free to declare their own option named
+# `name` or `description`: those live inside `options` and never collide with the
+# display metadata fields here.
+class CreateListenerRequestBodyModel(BaseModel):
+    options: dict[str, Any]
+    name: str | None = None
+    description: str = ""
+
+
+class CreateAgentGeneratorRequestBodyModel(BaseModel):
+    options: dict[str, Any]
+    name: str | None = None
+    description: str = ""
+
+
 class UpdateAgentRequestBodyModel(BaseModel):
     name: str | None = None
     description: str | None = None
