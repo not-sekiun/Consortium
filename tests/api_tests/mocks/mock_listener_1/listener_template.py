@@ -21,9 +21,12 @@ class ListenerTemplate(BaseListenerTemplate):
     listener = Listener
     listener_type = ListenerType
     options = {
+        # Deliberately named "name" to keep the tests honest: a template option called
+        # "name" is an ordinary option like any other and must never be conflated with
+        # the created listener's display name.
         SingleValueOption(
             name="name",
-            description="Name of the listener being created.",
+            description="Arbitrary label carried as a listener parameter.",
             required=True,
             default_value="",
             value_type=str,
@@ -84,8 +87,8 @@ class ListenerTemplate(BaseListenerTemplate):
         ),
     }
 
-    def resolve_listener_name(self, parameters):
-        return parameters["name"]
-
+    # Derived from a parameter rather than returned as a constant so that the tests can
+    # tell the two halves of the update path apart: the endpoint is expected to be
+    # re-derived whenever the parameters change, the name is expected never to be.
     def resolve_listener_endpoint(self, parameters):
-        return "mock://localhost"
+        return f"mock://localhost:{parameters['timeout']}"

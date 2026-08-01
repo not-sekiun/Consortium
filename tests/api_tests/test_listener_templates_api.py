@@ -5,6 +5,8 @@ from tests.api_tests.common_json_response_schemas import (
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
 from tests.api_tests.utils import (
+    build_create_request_body,
+    create_listener_from_template,
     get_all_listener_template_ids,
     validate_response,
 )
@@ -195,7 +197,7 @@ async def test_create_listener_through_listener_template(
             validate_response(
                 test_response=await client.post(
                     f"/api/listener-templates/{template_id}",
-                    json=options_payload,
+                    json=build_create_request_body(options=options_payload),
                 ),
                 expected_json_schema=LISTENER_JSON_SCHEMA,
                 expected_status_code=201,
@@ -204,7 +206,7 @@ async def test_create_listener_through_listener_template(
             validate_response(
                 test_response=await client.post(
                     f"/api/listener-templates/{template_id}",
-                    json=options_payload,
+                    json=build_create_request_body(options=options_payload),
                 ),
                 expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
                 expected_status_code=403,
@@ -217,7 +219,7 @@ async def test_create_listener_with_invalid_template_id(admin_client):
     validate_response(
         test_response=await admin_client.post(
             "/api/listener-templates/invalid-template-id",
-            json={},
+            json=build_create_request_body(options={}),
         ),
         expected_json_schema=INVALID_UUID_ERROR_JSON_SCHEMA,
         expected_status_code=422,
@@ -230,7 +232,7 @@ async def test_create_listener_with_nonexistent_template_id(admin_client):
     validate_response(
         test_response=await admin_client.post(
             "/api/listener-templates/00000000-0000-4000-8000-000000000062",
-            json={},
+            json=build_create_request_body(options={}),
         ),
         expected_json_schema=LISTENER_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
@@ -256,7 +258,7 @@ async def test_create_listener_with_missing_required_option(
             validate_response(
                 test_response=await admin_client.post(
                     f"/api/listener-templates/{template_id}",
-                    json=params,
+                    json=build_create_request_body(options=params),
                 ),
                 expected_json_schema=MISSING_REQUIRED_OPTION_ERROR_JSON_SCHEMA,
                 expected_status_code=422,
@@ -288,7 +290,7 @@ async def test_create_listener_with_invalid_option_value_type(
                 validate_response(
                     test_response=await admin_client.post(
                         f"/api/listener-templates/{template_id}",
-                        json=invalid_params,
+                        json=build_create_request_body(options=invalid_params),
                     ),
                     expected_json_schema=OPTION_VALUE_ERROR_JSON_SCHEMA,
                     expected_status_code=422,
@@ -312,8 +314,79 @@ async def test_create_listener_with_unknown_option_key_returns_422(
         validate_response(
             test_response=await admin_client.post(
                 f"/api/listener-templates/{template_id}",
-                json=params,
+                json=build_create_request_body(options=params),
             ),
             expected_json_schema=LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR_JSON_SCHEMA,
             expected_status_code=422,
         )
+
+
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_create_listener_with_explicit_name_and_description(
+    admin_client, mock_listener_template_ids
+):
+    """An explicitly supplied name and description are used verbatim."""
+    for template_id in mock_listener_template_ids:
+        response = await create_listener_from_template(
+            admin_client=admin_client,
+            listener_template_id=template_id,
+            name="explicitly-named-listener",
+            description="explicitly described listener",
+        )
+        assert response.status_code == 201, response.text
+        listener = response.json()
+        assert listener["name"] == "explicitly-named-listener"
+        assert listener["description"] == "explicitly described listener"
+
+
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_create_listener_without_a_name_generates_one(
+    admin_client, mock_listener_template_ids
+):
+    """Omitting the name leaves the server to generate a non-empty one."""
+    for template_id in mock_listener_template_ids:
+        response = await create_listener_from_template(
+            admin_client=admin_client,
+            listener_template_id=template_id,
+        )
+        assert response.status_code == 201, response.text
+        assert response.json()["name"], (
+            "A listener created without an explicit name should have been given a "
+            "generated one"
+        )
+
+
+@pytest.mark.usefixtures("delete_listeners_after_test")
+async def test_create_listener_name_option_is_not_the_listener_name(
+    admin_client, mock_listener_template_ids
+):
+    """A template option called "name" is an ordinary parameter, not the display name.
+
+    Both mock listener templates declare an option called "name". Its value has to land
+    in the listener's parameters and must never be picked up as the listener's name,
+    whether or not an explicit name was supplied alongside it.
+    """
+    for template_id in mock_listener_template_ids:
+        # No explicit name: the generated name must not come from the option
+        response = await create_listener_from_template(
+            admin_client=admin_client,
+            listener_template_id=template_id,
+            option_overrides={"name": "value-of-the-name-option"},
+        )
+        assert response.status_code == 201, response.text
+        listener = response.json()
+        assert listener["parameters"]["name"] == "value-of-the-name-option"
+        assert listener["name"] != "value-of-the-name-option"
+
+        # An explicit name alongside the option: the explicit name wins and the option
+        # is left untouched
+        response = await create_listener_from_template(
+            admin_client=admin_client,
+            listener_template_id=template_id,
+            option_overrides={"name": "value-of-the-name-option"},
+            name="the-explicit-name",
+        )
+        assert response.status_code == 201, response.text
+        listener = response.json()
+        assert listener["parameters"]["name"] == "value-of-the-name-option"
+        assert listener["name"] == "the-explicit-name"

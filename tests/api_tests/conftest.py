@@ -249,7 +249,11 @@ async def create_listeners_before_test(admin_client, load_mock_listener_profiles
         options = detail_response.json()["options"]
         await admin_client.post(
             f"/api/listener-templates/{template_id}",
-            json={name: opt["default_value"] for name, opt in options.items()},
+            json={
+                "options": {
+                    name: opt["default_value"] for name, opt in options.items()
+                },
+            },
         )
     yield
 
@@ -283,7 +287,9 @@ async def mock_agent(
     options = detail_response.json()["options"]
     create_response = await admin_client.post(
         f"/api/listener-templates/{template_id}",
-        json={name: opt["default_value"] for name, opt in options.items()},
+        json={
+            "options": {name: opt["default_value"] for name, opt in options.items()},
+        },
     )
     assert create_response.status_code == 201, (
         f"Failed to create mock listener: {create_response.text}"

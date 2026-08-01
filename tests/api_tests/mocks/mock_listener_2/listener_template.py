@@ -21,9 +21,12 @@ class ListenerTemplate(BaseListenerTemplate):
     listener = Listener
     listener_type = ListenerType
     options = {
+        # Deliberately named "name" to keep the tests honest: a template option called
+        # "name" is an ordinary option like any other and must never be conflated with
+        # the created listener's display name.
         SingleValueOption(
             name="name",
-            description="Name of the listener being created.",
+            description="Arbitrary label carried as a listener parameter.",
             required=True,
             default_value="",
             value_type=str,
@@ -92,8 +95,7 @@ class ListenerTemplate(BaseListenerTemplate):
         ),
     }
 
-    def resolve_listener_name(self, parameters):
-        return parameters["name"]
-
+    # Left as a constant so that the tests cover both a parameter-derived endpoint (see
+    # the mock_1 listener template) and one that ignores the parameters entirely.
     def resolve_listener_endpoint(self, parameters):
         return "mock2://localhost"

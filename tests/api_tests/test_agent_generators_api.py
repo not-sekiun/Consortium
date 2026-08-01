@@ -9,7 +9,11 @@ from tests.api_tests.common_json_response_schemas import (
 from tests.api_tests.framework_components_json_response_schemas import (
     AGENT_GENERATOR_JSON_SCHEMA,
 )
-from tests.api_tests.utils import validate_response
+from tests.api_tests.utils import (
+    build_create_request_body,
+    create_agent_generator_from_template,
+    validate_response,
+)
 
 pytestmark = pytest.mark.anyio
 
@@ -123,7 +127,7 @@ async def _create_one_agent_generator_per_template(
         }
         response = await admin_client.post(
             f"/api/agent-templates/{template_id}",
-            json=options_payload,
+            json=build_create_request_body(options=options_payload),
         )
         if response.status_code == 201:
             agent_generator_ids.append(response.json()["agent_generator_id"])
@@ -355,6 +359,135 @@ async def test_update_running_agent_generator_returns_409(
             f"Expected 200 when patching description on running agent generator, got {desc_response.status_code}"
         )
         await admin_client.post(f"/api/agent-generators/{ag_id}/stop")
+
+
+# Regression tests for the agent generator update path. An agent generator's name and
+# description are display metadata that are set explicitly and are never derived from, or
+# kept in sync with, its parameters. Updating one parameter therefore has to leave the
+# name, the description and every other parameter exactly as they were.
+@pytest.mark.usefixtures("delete_agent_generators_after_test")
+async def test_update_agent_generator_parameter_leaves_everything_else_alone(
+    admin_client, mock_agent_template_ids
+):
+    for template_id in mock_agent_template_ids:
+        create_response = await create_agent_generator_from_template(
+            admin_client=admin_client,
+            agent_template_id=template_id,
+            name="name-set-at-creation",
+            description="description set at creation",
+        )
+        assert create_response.status_code == 201, create_response.text
+        created_agent_generator = create_response.json()
+        ag_id = created_agent_generator["agent_generator_id"]
+        original_parameters = created_agent_generator["parameters"]
+
+        # retry_count is declared by both mock agent templates
+        update_response = await admin_client.patch(
+            f"/api/agent-generators/{ag_id}",
+            json={"parameters": {"retry_count": 9}},
+        )
+        assert update_response.status_code == 200, update_response.text
+        updated_agent_generator = update_response.json()
+
+        assert updated_agent_generator["name"] == "name-set-at-creation", (
+            "Updating a parameter must not change the agent generator's name"
+        )
+        assert (
+            updated_agent_generator["description"] == "description set at creation"
+        ), "Updating a parameter must not change the agent generator's description"
+        assert updated_agent_generator["parameters"]["retry_count"] == 9
+        untouched_parameters = {
+            parameter_name: value
+            for parameter_name, value in updated_agent_generator["parameters"].items()
+            if parameter_name != "retry_count"
+        }
+        assert untouched_parameters == {
+            parameter_name: value
+            for parameter_name, value in original_parameters.items()
+            if parameter_name != "retry_count"
+        }, "Updating one parameter must not change any of the others"
+
+        # A GET has to agree with what the PATCH returned
+        get_response = await admin_client.get(f"/api/agent-generators/{ag_id}")
+        assert get_response.json()["name"] == "name-set-at-creation"
+        assert get_response.json()["description"] == "description set at creation"
+        assert (
+            get_response.json()["parameters"] == updated_agent_generator["parameters"]
+        )
+
+
+@pytest.mark.usefixtures("delete_agent_generators_after_test")
+async def test_update_agent_generator_name_option_does_not_rename_the_generator(
+    admin_client, mock_agent_template_ids
+):
+    """Updating a parameter that happens to be called "name" is just a parameter update.
+
+    Both mock agent templates declare an option called "name". Updating it must move the
+    parameter and nothing else: the agent generator's own name is unrelated to it.
+    """
+    for template_id in mock_agent_template_ids:
+        create_response = await create_agent_generator_from_template(
+            admin_client=admin_client,
+            agent_template_id=template_id,
+            option_overrides={"name": "original-option-value"},
+            name="the-generators-actual-name",
+        )
+        assert create_response.status_code == 201, create_response.text
+        ag_id = create_response.json()["agent_generator_id"]
+
+        update_response = await admin_client.patch(
+            f"/api/agent-generators/{ag_id}",
+            json={"parameters": {"name": "updated-option-value"}},
+        )
+        assert update_response.status_code == 200, update_response.text
+        updated_agent_generator = update_response.json()
+
+        assert updated_agent_generator["parameters"]["name"] == "updated-option-value"
+        assert updated_agent_generator["name"] == "the-generators-actual-name", (
+            "Updating a parameter called 'name' must not rename the agent generator"
+        )
+
+
+@pytest.mark.usefixtures("delete_agent_generators_after_test")
+async def test_rename_agent_generator_then_update_parameter_keeps_the_new_name(
+    admin_client, mock_agent_template_ids
+):
+    """An explicit rename survives a later parameter update.
+
+    This is the original defect: the update path rebuilt the agent generator's name from
+    the creating template, silently discarding whatever it had been renamed to.
+    """
+    for template_id in mock_agent_template_ids:
+        create_response = await create_agent_generator_from_template(
+            admin_client=admin_client,
+            agent_template_id=template_id,
+        )
+        assert create_response.status_code == 201, create_response.text
+        ag_id = create_response.json()["agent_generator_id"]
+
+        rename_response = await admin_client.patch(
+            f"/api/agent-generators/{ag_id}",
+            json={"name": "renamed-after-creation"},
+        )
+        assert rename_response.status_code == 200, rename_response.text
+        assert rename_response.json()["name"] == "renamed-after-creation"
+
+        update_response = await admin_client.patch(
+            f"/api/agent-generators/{ag_id}",
+            json={"parameters": {"retry_count": 4}},
+        )
+        assert update_response.status_code == 200, update_response.text
+        assert update_response.json()["name"] == "renamed-after-creation", (
+            "A parameter update must not revert an explicit rename"
+        )
+
+        # And it stays renamed across any number of further parameter updates
+        for retry_count in (5, 6, 7):
+            update_response = await admin_client.patch(
+                f"/api/agent-generators/{ag_id}",
+                json={"parameters": {"retry_count": retry_count}},
+            )
+            assert update_response.json()["name"] == "renamed-after-creation"
 
 
 @pytest.mark.usefixtures("delete_agent_generators_after_test")

@@ -65,6 +65,69 @@ def validate_response(
     return test_response
 
 
+# The bodies of the two template creation endpoints. A created object's `name` and
+# `description` are display metadata and are therefore fields of their own, separate from
+# `options` which carries the creating template's option values. A template is free to
+# declare its own option called `name` or `description`: those belong in `options` and are
+# never conflated with the fields here. Omitting `name` leaves the server to generate one.
+def build_create_request_body(
+    options: dict,
+    name: str | None = None,
+    description: str = "",
+) -> dict:
+    return {"options": options, "name": name, "description": description}
+
+
+async def create_listener_from_template(
+    admin_client: httpx.AsyncClient,
+    listener_template_id: str,
+    option_overrides: dict | None = None,
+    name: str | None = None,
+    description: str = "",
+) -> httpx.Response:
+    template = (
+        await admin_client.get(f"/api/listener-templates/{listener_template_id}")
+    ).json()
+    options = {
+        option_name: option["default_value"]
+        for option_name, option in template["options"].items()
+    }
+    options.update(option_overrides or {})
+    return await admin_client.post(
+        f"/api/listener-templates/{listener_template_id}",
+        json=build_create_request_body(
+            options=options,
+            name=name,
+            description=description,
+        ),
+    )
+
+
+async def create_agent_generator_from_template(
+    admin_client: httpx.AsyncClient,
+    agent_template_id: str,
+    option_overrides: dict | None = None,
+    name: str | None = None,
+    description: str = "",
+) -> httpx.Response:
+    template = (
+        await admin_client.get(f"/api/agent-templates/{agent_template_id}")
+    ).json()
+    options = {
+        option_name: option["default_value"]
+        for option_name, option in template["options"].items()
+    }
+    options.update(option_overrides or {})
+    return await admin_client.post(
+        f"/api/agent-templates/{agent_template_id}",
+        json=build_create_request_body(
+            options=options,
+            name=name,
+            description=description,
+        ),
+    )
+
+
 async def get_all_listener_template_ids(admin_client: httpx.AsyncClient) -> list[str]:
     response = await admin_client.get("/api/listener-templates/all")
     return [lt["listener_template_id"] for lt in response.json()]

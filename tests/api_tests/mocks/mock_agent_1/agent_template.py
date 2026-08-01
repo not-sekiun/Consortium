@@ -24,9 +24,12 @@ class AgentTemplate(BaseAgentTemplate):
     agent_type = AgentType
     compatible_listener_types = set()
     options = {
+        # Deliberately named "name" to keep the tests honest: a template option called
+        # "name" is an ordinary option like any other and must never be conflated with
+        # the created agent generator's display name.
         SingleValueOption(
             name="name",
-            description="Name of the agent generator being created.",
+            description="Arbitrary label carried as an agent generator parameter.",
             required=False,
             default_value="",
             value_type=str,
@@ -85,6 +88,3 @@ class AgentTemplate(BaseAgentTemplate):
             value_type=str,
         ),
     }
-
-    def resolve_agent_generator_name(self, parameters):
-        return parameters["name"]
