@@ -79,39 +79,37 @@ options = {
         default_value="script",
         available_values={"script", "oneliner"},
     ),
-    SingleValueOption(
-        name="name",
-        description="Display name for the generator run.",
-        required=False,
-        default_value="",
-        value_type=str,
-    ),
 }
 ```
 
 Cross-field validation uses the same `validating_function` pattern as
 `ListenerTemplate`.
 
-## resolve_agent_generator_name
+Options configure the generator. They do **not** supply its display name or
+description: those are separate metadata arguments to `create_agent_generator()`,
+described below. A template may still declare an option called `name` or `description`
+if that is genuinely a parameter of the generator it builds, and the framework will
+treat it as an ordinary option with no special meaning.
 
-`resolve_agent_generator_name` is an abstract method that every template must implement.
-It derives the generator's display name from the resolved parameters. It is called when
-no explicit name is provided to `create_agent_generator()`:
+## Naming a generator
+
+A generator's name and description are display metadata and are **never** derived from
+its parameters. `create_agent_generator()` takes them as arguments in their own right,
+separately from `parameters`:
 
 ```python
-def resolve_agent_generator_name(self, parameters: dict) -> str:
-    requested_name = str(parameters.get("name", "")).strip()
-    if requested_name:
-        return requested_name
-    return (
-        f"{self.name} ({parameters['format']} -> "
-        f"{parameters['remote_host']}:{parameters['remote_port']})"
-    )
+generator = agent_template.create_agent_generator(
+    name="Recon dropper build",        # omit or pass None for a generated name
+    description="for the file server",
+    parameters={"remote_host": "10.0.0.5", "remote_port": 8443},
+)
 ```
 
-An explicit `name` passed to `create_agent_generator()` takes precedence over this
-method. Use `resolve_agent_generator_name()` to create a useful default when the caller
-does not provide one.
+When `name` is `None` the generator generates a random human-readable name for itself.
+There is no template hook for supplying a default: a name is either explicit or
+generated. Consequently, updating a generator's parameters later never changes its
+name, and two generators built from identical parameters are still told apart by their
+names.
 
 ## Complete template
 
@@ -162,21 +160,5 @@ class AgentTemplate(BaseAgentTemplate):
             default_value="script",
             available_values={"script", "oneliner"},
         ),
-        SingleValueOption(
-            name="name",
-            description="Display name for the generator run.",
-            required=False,
-            default_value="",
-            value_type=str,
-        ),
     }
-
-    def resolve_agent_generator_name(self, parameters: dict) -> str:
-        requested_name = str(parameters.get("name", "")).strip()
-        if requested_name:
-            return requested_name
-        return (
-            f"{self.name} ({parameters['format']} -> "
-            f"{parameters['remote_host']}:{parameters['remote_port']})"
-        )
 ```

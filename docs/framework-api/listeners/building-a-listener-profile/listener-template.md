@@ -2,7 +2,7 @@
 
 `ListenerTemplate` is the configuration schema and factory for `Listener` instances. It
 declares what parameters an operator must supply when creating a listener, validates
-them, and derives the listener's display name and network endpoint.
+them, and derives the listener's network endpoint.
 
 ## Required class attributes
 
@@ -57,19 +57,18 @@ options = {
         greater_than_or_equal_to=1,
         less_than_or_equal_to=65535,
     ),
-    SingleValueOption(
-        name="name",
-        description="Display name for this listener instance.",
-        required=True,
-        default_value="",
-        value_type=str,
-    ),
 }
 ```
 
 The framework converts the set into a name-keyed dict at class definition time. Options
 with `required=True` and no `default_value` must always be supplied by the caller.
 Options with a `default_value` are filled in automatically when missing.
+
+Options configure the listener. They do **not** supply its display name or description:
+those are separate metadata arguments to `create_listener()`, described in
+[Naming a listener](#naming-a-listener) below. A template may still declare an option
+called `name` or `description` if that is genuinely a parameter of the listener it
+builds, and the framework will treat it as an ordinary option with no special meaning.
 
 ### Available option types
 
@@ -107,22 +106,37 @@ class ListenerTemplate(BaseListenerTemplate):
 The function takes the full parameters dict and must raise `OptionValueValidationError`
 on failure. The framework converts it to a `@staticmethod` automatically.
 
-## Resolving name and endpoint
+## Resolving the endpoint
 
-`resolve_listener_name` and `resolve_listener_endpoint` are abstract methods that every
-template must implement:
+`resolve_listener_endpoint` is an abstract method that every template must implement:
 
 ```python
-def resolve_listener_name(self, parameters: dict) -> str:
-    return parameters["name"]
-
 def resolve_listener_endpoint(self, parameters: dict) -> str:
     return f"tcp://{parameters['local_host']}:{parameters['local_port']}"
 ```
 
-`resolve_listener_name` is called when no explicit name is provided to
-`create_listener()`. `resolve_listener_endpoint` is always called; the returned string
-becomes `self.endpoint` on the listener instance.
+It is always called when a listener is created, and the returned string becomes
+`self.endpoint` on the listener instance. An endpoint uniquely identifies the address
+the listener can be reached at, so deriving it from the parameters is the whole point.
+
+## Naming a listener
+
+A listener's name and description are display metadata and are **never** derived from
+its parameters. `create_listener()` takes them as arguments in their own right,
+separately from `parameters`:
+
+```python
+listener = listener_template.create_listener(
+    name="Edge TCP listener",          # omit or pass None for a generated name
+    description="external perimeter",
+    parameters={"local_host": "0.0.0.0", "local_port": 8443},
+)
+```
+
+When `name` is `None` the listener generates a random human-readable name for itself.
+There is no template hook for supplying a default: a name is either explicit or
+generated. Consequently, updating a listener's parameters later never changes its name,
+and two listeners built from identical parameters are still told apart by their names.
 
 The fully assembled `ListenerTemplate` is shown in
 [Complete Listener Profile](complete-listener-profile.md).

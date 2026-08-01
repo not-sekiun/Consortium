@@ -173,14 +173,14 @@ Reaching servers elsewhere on the network works normally. See
 
 ## What is lost when the client exits
 
-| Item                                | Persists |
-|-------------------------------------|----------|
-| Files in `/consortium/workspace`    | Yes, in `./workspace` |
-| Files in `/consortium/data`         | Yes, in `./data` |
-| Aliases (`data/client/aliases.json`)| Yes |
-| Client logs (`data/client/logs/`)   | Yes |
-| Files written anywhere else         | No |
-| Command history                     | No, and it is per session on a manual install too |
+| Item                                 | Persists                                          |
+|--------------------------------------|---------------------------------------------------|
+| Files in `/consortium/workspace`     | Yes, in `./workspace`                             |
+| Files in `/consortium/data`          | Yes, in `./data`                                  |
+| Aliases (`data/client/aliases.json`) | Yes                                               |
+| Client logs (`data/client/logs/`)    | Yes                                               |
+| Files written anywhere else          | No                                                |
+| Command history                      | No, and it is per session on a manual install too |
 
 ## Where to go next
 

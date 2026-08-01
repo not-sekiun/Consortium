@@ -21,13 +21,13 @@ should bind to.
 }
 ```
 
-| Field                   | Description                                                                                            | Default Value |
-|-------------------------|-------------------------------------------------------------------------------------------------------|---------------|
-| `local_host`            | The local host IP address that the server will bind to.                                               | `"0.0.0.0"`   |
-| `local_port`            | The local host port that the server will bind to.                                                     | `9999`        |
-| `remote_host_whitelist` | A list of remote IP addresses that are allowed to connect to the server.                              | `[]`          |
-| `remote_host_blacklist` | A list of remote IP addresses that are not allowed to connect to the server.                          | `[]`          |
-| `server_header`         | The value sent in the HTTP header `Server` whenever the server responds to a request.                 | `null`        |
+| Field                   | Description                                                                           | Default Value |
+|-------------------------|---------------------------------------------------------------------------------------|---------------|
+| `local_host`            | The local host IP address that the server will bind to.                               | `"0.0.0.0"`   |
+| `local_port`            | The local host port that the server will bind to.                                     | `9999`        |
+| `remote_host_whitelist` | A list of remote IP addresses that are allowed to connect to the server.              | `[]`          |
+| `remote_host_blacklist` | A list of remote IP addresses that are not allowed to connect to the server.          | `[]`          |
+| `server_header`         | The value sent in the HTTP header `Server` whenever the server responds to a request. | `null`        |
 
 To load a server configuration file from a different location, use the `-s/--server-config`
 flag when starting the server.

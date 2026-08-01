@@ -73,11 +73,11 @@ component folder can sit at any depth (for example
 Every component carries three distinct kinds of identifier, and they are easy to confuse.
 They exist for different reasons and are set at different times.
 
-| Identifier   | Example                          | Set by            | Stable?                         | Purpose                                                         |
-|--------------|----------------------------------|-------------------|---------------------------------|-----------------------------------------------------------------|
-| **Label**    | `consortium.plugins.agent_report`| Component author  | Yes (fixed for the component)   | Globally unique reference used for persistence and dependencies |
-| **Name**     | `Agent Report Plugin`            | Author / operator | No (freely editable)            | Human-readable display text                                     |
-| **ID**       | `f47ac10b-...` (`uuid.UUID`)     | Framework         | No (new one every run)          | Identifies one running instance for the duration of the server  |
+| Identifier | Example                           | Set by            | Stable?                       | Purpose                                                         |
+|------------|-----------------------------------|-------------------|-------------------------------|-----------------------------------------------------------------|
+| **Label**  | `consortium.plugins.agent_report` | Component author  | Yes (fixed for the component) | Globally unique reference used for persistence and dependencies |
+| **Name**   | `Agent Report Plugin`             | Author / operator | No (freely editable)          | Human-readable display text                                     |
+| **ID**     | `f47ac10b-...` (`uuid.UUID`)      | Framework         | No (new one every run)        | Identifies one running instance for the duration of the server  |
 
 ### Label
 
@@ -161,14 +161,14 @@ Alongside `label` and `name`, every component entry class declares the same core
 metadata. It is all validated at class-definition time, so malformed values fail at
 import rather than surfacing later at runtime.
 
-| Attribute                      | Type       | Default    | Description                                                        |
-|--------------------------------|------------|------------|--------------------------------------------------------------------|
-| `label`                        | `str`      | (required) | Stable reverse-DNS identifier (see above)                          |
-| `name`                         | `str`      | `label`    | Human-readable display name                                        |
-| `description`                  | `str`      | `""`       | Short description of what the component does                       |
-| `version`                      | `str`      | `None`     | The component's own version, a PEP 440 version                     |
+| Attribute                      | Type       | Default    | Description                                                          |
+|--------------------------------|------------|------------|----------------------------------------------------------------------|
+| `label`                        | `str`      | (required) | Stable reverse-DNS identifier (see above)                            |
+| `name`                         | `str`      | `label`    | Human-readable display name                                          |
+| `description`                  | `str`      | `""`       | Short description of what the component does                         |
+| `version`                      | `str`      | `None`     | The component's own version, a PEP 440 version                       |
 | `compatible_framework_version` | `str`      | `None`     | PEP 440 specifier for the framework versions this component supports |
-| `authors`                      | `set[str]` | `set()`    | Author names                                                       |
+| `authors`                      | `set[str]` | `set()`    | Author names                                                         |
 
 `version` is the component's own version string (for example `"0.1.0"`), parsed as a
 [PEP 440 version](https://peps.python.org/pep-0440/). It is what other components match

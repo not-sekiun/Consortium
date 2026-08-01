@@ -15,13 +15,13 @@ rotation, and retention of the server's logs.
 }
 ```
 
-| Field       | Description                                                                                                                                                                   | Default Value                   |
-|-------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
-| `level`     | The minimum logging level for messages to be logged. One of: `TRACE`, `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`, or `SUCCESS`.                                          | `"INFO"`                        |
-| `log_file`  | The file path where log files will be written. Supports dynamic placeholders like `{time}` for timestamps.                                                                    | `"data/server/logs/{time}.log"` |
-| `rotation`  | The condition for rotating log files. A file size (e.g. `"10 MB"`), a time period (e.g. `"1 day"`), a specific time (e.g. `"00:00"`), or `null` to disable rotation.          | `null`                          |
-| `retention` | The number of log files to retain before deletion, or a time period (e.g. `"1 week"`). An integer or string, or `null` to keep all logs indefinitely.                        | `1`                             |
-| `colorize`  | Whether to enable colorized output in the terminal/console. `true` to enable colored log messages in stdout, or `false` to disable.                                          | `true`                          |
+| Field       | Description                                                                                                                                                          | Default Value                   |
+|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
+| `level`     | The minimum logging level for messages to be logged. One of: `TRACE`, `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`, or `SUCCESS`.                                 | `"INFO"`                        |
+| `log_file`  | The file path where log files will be written. Supports dynamic placeholders like `{time}` for timestamps.                                                           | `"data/server/logs/{time}.log"` |
+| `rotation`  | The condition for rotating log files. A file size (e.g. `"10 MB"`), a time period (e.g. `"1 day"`), a specific time (e.g. `"00:00"`), or `null` to disable rotation. | `null`                          |
+| `retention` | The number of log files to retain before deletion, or a time period (e.g. `"1 week"`). An integer or string, or `null` to keep all logs indefinitely.                | `1`                             |
+| `colorize`  | Whether to enable colorized output in the terminal/console. `true` to enable colored log messages in stdout, or `false` to disable.                                  | `true`                          |
 
 To load a logging configuration file from a different location, use the `-l/--logging-config`
 flag when starting the server. Passing `--debug` at startup overrides `level` and raises it

@@ -64,17 +64,7 @@ class ListenerTemplate(BaseListenerTemplate):
             greater_than_or_equal_to=1,
             less_than_or_equal_to=65535,
         ),
-        SingleValueOption(
-            name="name",
-            description="Display name for this listener instance.",
-            required=True,
-            default_value="",
-            value_type=str,
-        ),
     }
-
-    def resolve_listener_name(self, parameters: dict) -> str:
-        return parameters["name"]
 
     def resolve_listener_endpoint(self, parameters: dict) -> str:
         return f"tcp://{parameters['local_host']}:{parameters['local_port']}"

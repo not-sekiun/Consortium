@@ -146,17 +146,7 @@ class AgentTemplate(BaseAgentTemplate):
             greater_than_or_equal_to=1,
             less_than_or_equal_to=65535,
         ),
-        SingleValueOption(
-            name="name",
-            description="Display name for the generator run.",
-            required=False,
-            default_value="",
-            value_type=str,
-        ),
     }
-
-    def resolve_agent_generator_name(self, parameters: dict) -> str:
-        return parameters["name"]
 ```
 
 ## Further examples

@@ -47,9 +47,15 @@ Commands available here:
 | `stop <generator_id>`                                 | Stop a running generator                                         |
 | `cancel <generator_id>`                               | Cancel a generator                                               |
 | `update <generator_id> <param> <value> [<value> ...]` | Update a non-running generator's parameters                      |
-| `rename <generator_id> <name>`                        | Rename a generator                                               |
-| `describe <generator_id> <description>`               | Attach a description to a generator                              |
+| `rename <generator_id> <name>`                        | Rename an existing generator                                     |
+| `redescribe <generator_id> <description>`             | Change an existing generator's description                       |
 | `delete <generator_id>`                               | Delete a non-running generator                                   |
+
+`rename` and `redescribe` act on a generator that already exists, which is why both are
+named for changing something already set. To choose the name and description a generator
+is *born* with, use the `name` and `describe` commands inside the template's context
+before running `create`. See
+[Using Agent Templates](using-agent-templates.md#naming-the-generator).
 
 Generator IDs, template IDs, and (for `update`) parameter names all tab complete. The
 `payload` command used to work with the payloads a generator produces is available here

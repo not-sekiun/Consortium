@@ -20,15 +20,15 @@ and
 `AGENT_TASKED` events, so new check ins are announced live and tab completion updates
 automatically.
 
-| Command               | Description                                  |
-|-----------------------|----------------------------------------------|
-| `list`                | List all agents                              |
-| `info <agent_id>`     | Show details of an agent                     |
-| `interact <agent_id>` | Enter the agent's context to task it         |
-| `task`                | Manage agent tasks (see below)               |
-| `rename <agent_id> <name>`               | Rename an agent                              |
-| `describe <agent_id> <description>`       | Attach a description to an agent             |
-| `delete <agent_id>`   | Delete an agent                              |
+| Command                               | Description                          |
+|---------------------------------------|--------------------------------------|
+| `list`                                | List all agents                      |
+| `info <agent_id>`                     | Show details of an agent             |
+| `interact <agent_id>`                 | Enter the agent's context to task it |
+| `task`                                | Manage agent tasks (see below)       |
+| `rename <agent_id> <name>`            | Rename an agent                      |
+| `redescribe <agent_id> <description>` | Change an agent's description        |
+| `delete <agent_id>`                   | Delete an agent                      |
 
 Agent IDs and task IDs tab complete. The `asset`, `artifact`, and `payload` commands are
 available here as they are in every connected interpreter, covered in
@@ -84,7 +84,7 @@ types. If a capability's name collides with a built in command, the client autom
 deconflicts it by appending a number and warns you of the new name.
 
 The interact context also keeps the agent management commands (`info`, `rename`,
-`describe`), the `task` command (whose `list` sub-command defaults to the current
+`redescribe`), the `task` command (whose `list` sub-command defaults to the current
 agent), and the resource management commands (`asset`, `artifact`, `payload`). Run
 `agents` to return to the Agents interpreter.
 

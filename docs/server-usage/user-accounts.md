@@ -30,20 +30,20 @@ These are the default user accounts that are present.
 ]
 ```
 
-| Field      | Description                                            | Restrictions                                                                                                                                                                             |
-|------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Field      | Description                                           | Restrictions                                                                                                                                                                            |
+|------------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `username` | The username of the user.                             | - Cannot contain leading or trailing whitespace characters.<br>- Cannot be an empty string.<br>- Can only contain printable ASCII characters.<br>- Must be unique across user accounts. |
-| `password` | The password of the user.                             | - Cannot be an empty string.<br>- Can only contain printable ASCII characters.                                                                                                         |
+| `password` | The password of the user.                             | - Cannot be an empty string.<br>- Can only contain printable ASCII characters.                                                                                                          |
 | `role`     | The role controlling the user's access to the server. | - Must correspond to a role defined in [`role_permissions.json`](roles-and-permissions.md).                                                                                             |
 
 The `role` field determines the permissions a user has when connecting to the server. The
 three roles shipped by default provide the following broad levels of access:
 
-| Role        | Permissions                                                                                                    |
+| Role        | Permissions                                                                                                   |
 |-------------|---------------------------------------------------------------------------------------------------------------|
-| `ADMIN`     | Can perform all actions on the server.                                                                         |
+| `ADMIN`     | Can perform all actions on the server.                                                                        |
 | `OPERATOR`  | Can perform most actions on the server except actions that **involve managing other user accounts or users**. |
-| `SPECTATOR` | Can only perform actions that **read** information from the server.                                            |
+| `SPECTATOR` | Can only perform actions that **read** information from the server.                                           |
 
 The exact permissions granted by each role, and how to customize roles or define your own,
 are covered in [Roles and Permissions](roles-and-permissions.md).

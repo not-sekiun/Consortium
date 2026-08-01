@@ -17,17 +17,19 @@ run `create`.
 
 ## Working with options
 
-| Command                | Description                                              |
-|------------------------|----------------------------------------------------------|
-| `option list`          | List the template's options and their current values     |
-| `option info <option>` | Show details of a single option                          |
-| `set <option> <value> [<value> ...]` | Set an option's value                         |
-| `unset <option>`       | Clear an option's value                                  |
-| `reset <option>`       | Reset an option back to its default value                |
-| `create`               | Create an agent generator from the current option values |
-| `template list`        | List all agent templates                                 |
-| `template info`        | Show details of the current template                     |
-| `generators`           | Return to the Generators interpreter                     |
+| Command                              | Description                                              |
+|--------------------------------------|----------------------------------------------------------|
+| `option list`                        | List the template's options and their current values     |
+| `option info <option>`               | Show details of a single option                          |
+| `set <option> <value> [<value> ...]` | Set an option's value                                    |
+| `unset <option>`                     | Clear an option's value                                  |
+| `reset <option>`                     | Reset an option back to its default value                |
+| `name [<name>]`                      | Set the name to give the created generator               |
+| `describe [<description>]`           | Set the description to give the created generator        |
+| `create`                             | Create an agent generator from the current option values |
+| `template list`                      | List all agent templates                                 |
+| `template info`                      | Show details of the current template                     |
+| `generators`                         | Return to the Generators interpreter                     |
 
 Option names tab complete. Values are typed according to each option's expected value
 type: use `option info <option>` to see the type and any examples. Run `set --help` for
@@ -43,6 +45,35 @@ An agent template declares the listener types it can connect through. Make sure 
 compatible listener is running before you deliver the agent, otherwise it will have
 nothing
 to connect back to. See [Setting Up Listeners](../listeners/setting-up-listeners.md).
+
+## Naming the generator
+
+A generator's name and description are **display metadata**, not template options. They
+are never derived from the values you `set`: a generator is either given an explicit
+name or has a random human-readable one generated for it at creation time.
+
+Stage them with `name` and `describe` before you run `create`:
+
+```text
+name "Recon dropper build"         # the created generator will carry this name
+describe "for the file server"     # and this description
+name                               # clear it again: a random name will be generated
+describe                           # clear the staged description
+```
+
+Both are staged locally alongside the options and are applied by `create`. They reset
+every time you `use` a template, so each trip through a template's context starts clean.
+
+Because these are metadata rather than options, a template is still free to declare an
+ordinary option literally called `name` or `description`. Such an option is set with
+`set name <value>` like any other and has nothing to do with the generator's display
+name: the two never interact.
+
+Renaming a generator that already exists is a different operation, done from the
+[Generators interpreter](setting-up-agent-generators.md) with
+`rename <generator_id> <name>` and `redescribe <generator_id> <description>`. Both
+remain available here, so you can adjust an existing generator without leaving the
+template's context.
 
 ## Creating the generator
 
@@ -65,6 +96,7 @@ use a1b2c3d4-...                # enter the template's context
 option list                     # review the configurable options
 set callback_host 10.0.0.5      # configure options as needed
 set callback_port 8443
+name "Recon dropper build"      # optional: name the generator to be created
 create                          # create and start the generator
 generators                      # return to the Generators interpreter
 payload list                    # find the produced payload
