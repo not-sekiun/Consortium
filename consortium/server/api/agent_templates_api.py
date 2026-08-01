@@ -1,4 +1,4 @@
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from pydantic import UUID4
@@ -20,6 +20,9 @@ from consortium.server.exceptions.service_exceptions import (
 )
 from consortium.server.models.agent_generator_models import AgentGeneratorModel
 from consortium.server.models.agent_template_models import AgentTemplateModel
+from consortium.server.models.request_body_models import (
+    CreateAgentGeneratorRequestBodyModel,
+)
 from consortium.server.models.union_response_models import (
     AgentTemplateOptionsValidationErrorResponse,
     RequestValidationErrorResponse,
@@ -61,7 +64,7 @@ _agent_template_not_found_error = (
 )
 async def create_agent_generator_through_agent_template_by_agent_template_id(
     agent_template_id: UUID4,
-    options: dict[str, Any],
+    create_agent_generator_request_body: CreateAgentGeneratorRequestBodyModel,
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.CREATE_AGENT_GENERATOR)),
@@ -70,7 +73,9 @@ async def create_agent_generator_through_agent_template_by_agent_template_id(
     try:
         agent_generator = _agent_generators_service.create_agent_generator_from_agent_template_by_agent_template_id(
             agent_template_id=agent_template_id,
-            parameters=options,
+            parameters=create_agent_generator_request_body.options,
+            name=create_agent_generator_request_body.name,
+            description=create_agent_generator_request_body.description,
         )
     except svc_excs.AgentTemplateNotFoundError as exc:
         raise api_excs.AgentTemplateNotFoundError.from_consortium_exception(

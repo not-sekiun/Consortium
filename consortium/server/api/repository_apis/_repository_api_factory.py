@@ -176,7 +176,7 @@ def create_upload_resource_endpoint(
         if is_directory:
             if directory_archive_file_format:
                 file_extension = directory_archive_file_format
-                file_name = file.filename if file.filename is not None else ""
+                filename = file.filename if file.filename is not None else ""
             else:
                 # Edge case where a file (`UploadFile) is uploaded with no specified
                 # filename. This can happen if the file is uploaded through a multipart
@@ -185,7 +185,7 @@ def create_upload_resource_endpoint(
                     raise api_excs.RepositoryDirectoryArchiveFileFormatNotSpecifiedError
                 # The file extension returned by `os.path.splitext()` as the second element
                 # of the tuple is the file extension WITH the leading period.
-                file_name, file_extension = os.path.splitext(file.filename)
+                filename, file_extension = os.path.splitext(file.filename)
             if not file_extension:
                 raise api_excs.RepositoryDirectoryArchiveFileFormatNotSpecifiedError
             # This checks primarily for zip and tar files but also does not falsely flag
@@ -199,7 +199,7 @@ def create_upload_resource_endpoint(
             if file_extension in (".gz", ".bz2", ".xz"):
                 # Again os.path.splitext splits the extension with the leading period
                 # included
-                file_name, second_file_extension = os.path.splitext(file_name)
+                filename, second_file_extension = os.path.splitext(filename)
                 if second_file_extension != ".tar":
                     raise api_excs.RepositoryDirectoryFileNotArchiveFileError(
                         file_extension=file_extension

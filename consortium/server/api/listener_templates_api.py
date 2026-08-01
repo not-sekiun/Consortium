@@ -1,4 +1,4 @@
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from pydantic import UUID4
@@ -20,6 +20,9 @@ from consortium.server.exceptions.service_exceptions import (
 )
 from consortium.server.models.listener_models import ListenerModel
 from consortium.server.models.listener_template_models import ListenerTemplateModel
+from consortium.server.models.request_body_models import (
+    CreateListenerRequestBodyModel,
+)
 from consortium.server.models.union_response_models import (
     ListenerTemplateOptionsValidationErrorResponse,
     RequestValidationErrorResponse,
@@ -110,13 +113,15 @@ def get_listener_template_by_listener_template_id(
 )
 async def create_listener_through_listener_template_by_listener_template_id(
     listener_template_id: UUID4,
-    options: dict[str, Any],
+    create_listener_request_body: CreateListenerRequestBodyModel,
     _: Annotated[None, Depends(AuthorizeUserRequest(UserPermissions.CREATE_LISTENER))],
 ) -> ListenerModel:
     try:
         listener = _listeners_service.create_listener_from_listener_template_by_listener_template_id(
             listener_template_id=listener_template_id,
-            parameters=options,
+            parameters=create_listener_request_body.options,
+            name=create_listener_request_body.name,
+            description=create_listener_request_body.description,
         )
     except svc_excs.ListenerTemplateNotFoundError as exc:
         raise api_excs.ListenerTemplateNotFoundError.from_consortium_exception(
