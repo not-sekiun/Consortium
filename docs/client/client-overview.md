@@ -117,8 +117,9 @@ no
 need to memorize argument formats: use `help` at any time.
 
 ```text
-help            # list every command available in the current interpreter, grouped by area
-help <command>  # show the full usage, arguments, and examples for a single command
+help              # list every command available in the current interpreter, grouped by area
+help <command>    # show a command's summary and usage
+<command> --help  # show full argument help and any built-in examples
 ```
 
 The client provides tab completion for command names and for their arguments (session

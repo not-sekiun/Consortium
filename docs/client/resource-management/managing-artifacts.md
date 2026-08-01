@@ -38,8 +38,8 @@ produced it. Pass `-v` (or `--verbose`) to additionally display detailed informa
 about that agent:
 
 ```text
-artifact info 123e4567-e89b-12d3-a456-42661417400       # show artifact details
-artifact info 123e4567-e89b-12d3-a456-42661417400 -v    # also show producing agent details
+artifact info 123e4567-e89b-12d3-a456-426614174000       # show artifact details
+artifact info 123e4567-e89b-12d3-a456-426614174000 -v    # also show producing agent details
 ```
 
 The producing agent recorded on an artifact is a point-in-time reference. If that agent
@@ -53,10 +53,10 @@ machine. Use `artifact list` to find the resource ID and `artifact info <resourc
 to inspect an artifact before downloading it:
 
 ```text
-artifact download 123e4567-e89b-12d3-a456-42661417400                    # download to the current directory
-artifact download 123e4567-e89b-12d3-a456-42661417400 -o ./loot/out.bin  # download to a specific path
-artifact download 123e4567-e89b-12d3-a456-42661417400 -w                 # overwrite an existing file
-artifact download 123e4567-e89b-12d3-a456-42661417400 -d                 # decompress a downloaded artifact directory
+artifact download 123e4567-e89b-12d3-a456-426614174000                    # download to the current directory
+artifact download 123e4567-e89b-12d3-a456-426614174000 -o ./loot/out.bin  # download to a specific path
+artifact download 123e4567-e89b-12d3-a456-426614174000 -w                 # overwrite an existing file
+artifact download 123e4567-e89b-12d3-a456-426614174000 -d                 # decompress a downloaded artifact directory
 ```
 
 By default an artifact directory is downloaded as a `.zip` archive. Pass `-d` (or
@@ -65,9 +65,9 @@ By default an artifact directory is downloaded as a `.zip` archive. Pass `-d` (o
 ## Renaming, describing, and removing an artifact
 
 ```text
-artifact rename 123e4567-e89b-12d3-a456-42661417400 "target_hosts.txt"
-artifact describe 123e4567-e89b-12d3-a456-42661417400 "collected from the file server"
-artifact remove 123e4567-e89b-12d3-a456-42661417400
+artifact rename 123e4567-e89b-12d3-a456-426614174000 "target_hosts.txt"
+artifact describe 123e4567-e89b-12d3-a456-426614174000 "collected from the file server"
+artifact remove 123e4567-e89b-12d3-a456-426614174000
 ```
 
 Artifacts are the counterpart to assets in the agent workflow: task an agent with a

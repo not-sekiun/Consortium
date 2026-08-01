@@ -101,7 +101,14 @@ session describe <session_id> "primary production server"  # describe a specifie
 
 ## Ending a session
 
-`session disconnect <session_id>` cleanly tears down a session's REST and WebSockets connections
-and removes it from the client. When the last session is disconnected the client returns
-to
-disconnected mode. Use `exit` to leave the interpreter or close the client entirely.
+`session disconnect [session_id]` cleanly tears down a session's REST and WebSockets
+connections and removes it from the client. In a connected interpreter, omit the ID to
+disconnect the current session or supply one to disconnect a different session:
+
+```text
+session disconnect
+session disconnect <session_id>
+```
+
+When the last session is disconnected the client returns to disconnected mode. Use
+`exit` to leave the interpreter or close the client entirely.

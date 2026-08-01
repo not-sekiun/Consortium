@@ -51,10 +51,10 @@ Use `asset list` to find the resource ID and `asset info <resource_id>` to inspe
 asset before downloading it:
 
 ```text
-asset download 123e4567-e89b-12d3-a456-42661417400                   # download to the current directory
-asset download 123e4567-e89b-12d3-a456-42661417400 -o ./tools/x.exe  # download to a specific path
-asset download 123e4567-e89b-12d3-a456-42661417400 -w                # overwrite an existing file
-asset download 123e4567-e89b-12d3-a456-42661417400 -d                # decompress a downloaded asset directory
+asset download 123e4567-e89b-12d3-a456-426614174000                   # download to the current directory
+asset download 123e4567-e89b-12d3-a456-426614174000 -o ./tools/x.exe  # download to a specific path
+asset download 123e4567-e89b-12d3-a456-426614174000 -w                # overwrite an existing file
+asset download 123e4567-e89b-12d3-a456-426614174000 -d                # decompress a downloaded asset directory
 ```
 
 By default an asset directory is downloaded as a `.zip` archive. Pass `-d` (or
@@ -63,9 +63,9 @@ By default an asset directory is downloaded as a `.zip` archive. Pass `-d` (or
 ## Renaming, describing, and removing an asset
 
 ```text
-asset rename 123e4567-e89b-12d3-a456-42661417400 "new_name.exe"
-asset describe 123e4567-e89b-12d3-a456-42661417400 "staged for the file server host"
-asset remove 123e4567-e89b-12d3-a456-42661417400
+asset rename 123e4567-e89b-12d3-a456-426614174000 "new_name.exe"
+asset describe 123e4567-e89b-12d3-a456-426614174000 "staged for the file server host"
+asset remove 123e4567-e89b-12d3-a456-426614174000
 ```
 
 An asset records the user account that uploaded it as a point-in-time reference. If that

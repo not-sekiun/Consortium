@@ -19,7 +19,7 @@ locally until you run `create`.
 |------------------------|------------------------------------------------------|
 | `option list`          | List the template's options and their current values |
 | `option info <option>` | Show details of a single option                      |
-| `set <option> <value>` | Set an option's value                                |
+| `set <option> <value> [<value> ...]` | Set an option's value                     |
 | `unset <option>`       | Clear an option's value                              |
 | `reset <option>`       | Reset an option back to its default value            |
 | `create`               | Create a listener from the current option values     |
@@ -28,8 +28,9 @@ locally until you run `create`.
 | `listeners`            | Return to the Listeners interpreter                  |
 
 Option names tab complete. Values are typed according to each option's expected value
-type: use `option info <option>` to see the type and any examples, and `help set` for
-the value type specification.
+type: use `option info <option>` to see the type and any examples. Run `set --help` for
+the value type specification or `set --help-full` for detailed examples, including
+lists, dictionaries, choices, inline type annotations, and `-t/--value-type`.
 
 The `option` and `template` commands group their sub-commands, and each sub-command
 carries its own help, for example `option info --help`.

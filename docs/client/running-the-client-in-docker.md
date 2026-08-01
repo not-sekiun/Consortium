@@ -39,11 +39,11 @@ directory in the project root on your host. A download with no explicit output p
 there and is immediately visible outside the container:
 
 ```text
-asset download 123e4567-e89b-12d3-a456-42661417400
+asset download 123e4567-e89b-12d3-a456-426614174000
 ```
 
 ```plaintext
-[*] Downloading asset file 'mimikatz.exe' (123e4567-e89b-12d3-a456-42661417400) to '/consortium/workspace/mimikatz.exe'...
+[*] Downloading asset file 'mimikatz.exe' (123e4567-e89b-12d3-a456-426614174000) to '/consortium/workspace/mimikatz.exe'...
 [+] Finished downloading asset
 ```
 

@@ -219,8 +219,8 @@ client.
    type `help`.
 2. Command summary: To view the summary for a specific command, which includes all of
    its arguments, type `help <command>`.
-3. Command help: To get comprehensive help for a specific command, including examples on
-   how to use it, type `<command> --help` or `<command> -h`.
+3. Command help: To get comprehensive help for a specific command, including any
+   built-in examples, type `<command> --help` or `<command> -h`.
 
 <br>
 
