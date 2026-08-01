@@ -10,11 +10,11 @@ class SessionCommand(SessionHomeInterpreterCommand):
         Examples:
           session connect
           session list
-          session interact 123e4567-e89b-12d3-a456-42661417400
-          session info 123e4567-e89b-12d3-a456-42661417400
-          session rename 123e4567-e89b-12d3-a456-42661417400 "New name"
-          session describe 123e4567-e89b-12d3-a456-42661417400 "New description"
-          session disconnect 123e4567-e89b-12d3-a456-42661417400
+          session interact 123e4567-e89b-12d3-a456-426614174000
+          session info 123e4567-e89b-12d3-a456-426614174000
+          session rename 123e4567-e89b-12d3-a456-426614174000 "New name"
+          session describe 123e4567-e89b-12d3-a456-426614174000 "New description"
+          session disconnect 123e4567-e89b-12d3-a456-426614174000
 
         Notes:
           Every sub-command carries its own help, for example:
@@ -32,7 +32,7 @@ class SessionCommand(SessionHomeInterpreterCommand):
     disconnect_epilog = format_argparse_epilog(
         """
         Examples:
-          session disconnect 123e4567-e89b-12d3-a456-42661417400
+          session disconnect 123e4567-e89b-12d3-a456-426614174000
         """,
     )
     info_help = "Display information for a client session by its ID."
@@ -40,8 +40,8 @@ class SessionCommand(SessionHomeInterpreterCommand):
     info_epilog = format_argparse_epilog(
         """
         Examples:
-          session info 123e4567-e89b-12d3-a456-42661417400
-          session info 123e4567-e89b-12d3-a456-42661417400 -p  # Displays password
+          session info 123e4567-e89b-12d3-a456-426614174000
+          session info 123e4567-e89b-12d3-a456-426614174000 -p  # Displays password
         """,
     )
     describe_help = "Set the description of a client session by its ID."
@@ -51,7 +51,7 @@ class SessionCommand(SessionHomeInterpreterCommand):
     describe_epilog = format_argparse_epilog(
         """
         Examples:
-          session describe 123e4567-e89b-12d3-a456-42661417400 "New description"
+          session describe 123e4567-e89b-12d3-a456-426614174000 "New description"
         """,
     )
     rename_help = "Set the name of a client session by its ID."
@@ -59,6 +59,6 @@ class SessionCommand(SessionHomeInterpreterCommand):
     rename_epilog = format_argparse_epilog(
         """
         Examples:
-          session rename 123e4567-e89b-12d3-a456-42661417400 "New name"
+          session rename 123e4567-e89b-12d3-a456-426614174000 "New name"
         """,
     )

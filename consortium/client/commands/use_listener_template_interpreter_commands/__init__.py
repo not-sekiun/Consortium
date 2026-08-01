@@ -4,6 +4,12 @@ from consortium.client.commands.use_listener_template_interpreter_commands.liste
 from consortium.client.commands.use_listener_template_interpreter_commands.listener_template import (
     ListenerTemplateCommand,
 )
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_describe import (
+    ListenerTemplateDescribeCommand,
+)
+from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_name import (
+    ListenerTemplateNameCommand,
+)
 from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_option import (
     ListenerTemplateOptionCommand,
 )
@@ -23,6 +29,8 @@ from consortium.client.commands.use_listener_template_interpreter_commands.liste
 USE_LISTENER_TEMPLATE_INTERPRETER_COMMANDS = [
     ListenerCreateCommand(),
     ListenerTemplateCommand(),
+    ListenerTemplateDescribeCommand(),
+    ListenerTemplateNameCommand(),
     ListenerTemplateOptionCommand(),
     ListenerTemplateResetOptionCommand(),
     ListenerTemplateSetOptionCommand(),

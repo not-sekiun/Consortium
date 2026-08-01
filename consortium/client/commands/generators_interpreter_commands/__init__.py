@@ -10,11 +10,11 @@ from consortium.client.commands.generators_interpreter_commands.generator_cancel
 from consortium.client.commands.generators_interpreter_commands.generator_delete import (
     GeneratorDeleteCommand,
 )
-from consortium.client.commands.generators_interpreter_commands.generator_describe import (
-    GeneratorDescribeCommand,
-)
 from consortium.client.commands.generators_interpreter_commands.generator_info import (
     GeneratorInfoCommand,
+)
+from consortium.client.commands.generators_interpreter_commands.generator_redescribe import (
+    GeneratorRedescribeCommand,
 )
 from consortium.client.commands.generators_interpreter_commands.generator_rename import (
     GeneratorRenameCommand,
@@ -38,7 +38,7 @@ GENERATORS_INTERPRETER_COMMANDS = [
     AgentTemplateCommand(),
     GeneratorInfoCommand(),
     GeneratorListCommand(),
-    GeneratorDescribeCommand(),
+    GeneratorRedescribeCommand(),
     GeneratorRenameCommand(),
     GeneratorUpdateCommand(),
     GeneratorStartCommand(),

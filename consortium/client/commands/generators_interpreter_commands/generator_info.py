@@ -31,10 +31,10 @@ class GeneratorInfoCommand(BaseConnectedCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-          info 123e4567-e89b-12d3-a456-42661417400
-          info 123e4567-e89b-12d3-a456-42661417400 --limit 20  # Show last 20 event log entries (tail)
-          info 123e4567-e89b-12d3-a456-42661417400 --offset 0 --limit 5  # Show first 5 event log entries
-          info 123e4567-e89b-12d3-a456-42661417400 --offset -5 --limit 10  # Show 10 entries starting from 5th from end
+          info 123e4567-e89b-12d3-a456-426614174000
+          info 123e4567-e89b-12d3-a456-426614174000 --limit 20  # Show last 20 event log entries (tail)
+          info 123e4567-e89b-12d3-a456-426614174000 --offset 0 --limit 5  # Show first 5 event log entries
+          info 123e4567-e89b-12d3-a456-426614174000 --offset -5 --limit 10  # Show 10 entries starting from 5th from end
         """,
     )
     group = "Agent Generator Management Commands"

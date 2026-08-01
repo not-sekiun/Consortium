@@ -41,9 +41,9 @@ class TaskCommand(BaseConnectedCommand):
         """
         Examples:
           task list
-          task info 123e4567-e89b-12d3-a456-42661417400
-          task watch 123e4567-e89b-12d3-a456-42661417400
-          task delete 123e4567-e89b-12d3-a456-42661417400
+          task info 123e4567-e89b-12d3-a456-426614174000
+          task watch 123e4567-e89b-12d3-a456-426614174000
+          task delete 123e4567-e89b-12d3-a456-426614174000
 
         Notes:
           Every sub-command carries its own help, for example:
@@ -71,7 +71,7 @@ class TaskCommand(BaseConnectedCommand):
           task list  # If no filters are provided, list all tasks across all agents regardless of status.
           task list --running --completed
             # Lists RUNNING plus terminal SUCCEEDED, FAILED, and ERRORED tasks.
-          task list 123e4567-e89b-12d3-a456-42661417400
+          task list 123e4567-e89b-12d3-a456-426614174000
         """,
     )
 
@@ -122,12 +122,12 @@ class TaskCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  task info 123e4567-e89b-12d3-a456-42661417400
-                  task info 123e4567-e89b-12d3-a456-42661417400 --limit 20  # Show last 20 task events (tail)
-                  task info 123e4567-e89b-12d3-a456-42661417400 --offset 0 --limit 5  # Show first 5 task events
-                  task info 123e4567-e89b-12d3-a456-42661417400 --offset -5 --limit 10  # Show 10 task events starting from 5th from end
-                  task info 123e4567-e89b-12d3-a456-42661417400 --raw  # Print task events as plain unformatted text (useful for copy-paste)
-                  task info 123e4567-e89b-12d3-a456-42661417400 --raw --limit 50  # Print last 50 task events as plain text
+                  task info 123e4567-e89b-12d3-a456-426614174000
+                  task info 123e4567-e89b-12d3-a456-426614174000 --limit 20  # Show last 20 task events (tail)
+                  task info 123e4567-e89b-12d3-a456-426614174000 --offset 0 --limit 5  # Show first 5 task events
+                  task info 123e4567-e89b-12d3-a456-426614174000 --offset -5 --limit 10  # Show 10 task events starting from 5th from end
+                  task info 123e4567-e89b-12d3-a456-426614174000 --raw  # Print task events as plain unformatted text (useful for copy-paste)
+                  task info 123e4567-e89b-12d3-a456-426614174000 --raw --limit 50  # Print last 50 task events as plain text
                 """,
             ),
         )
@@ -178,11 +178,11 @@ class TaskCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  task watch 123e4567-e89b-12d3-a456-42661417400
-                  task watch 123e4567-e89b-12d3-a456-42661417400 --interval 5
-                  task watch 123e4567-e89b-12d3-a456-42661417400 --limit 20  # Show last 20 task events (tail)
-                  task watch 123e4567-e89b-12d3-a456-42661417400 --offset 0 --limit 5  # Show first 5 task events
-                  task watch 123e4567-e89b-12d3-a456-42661417400 --offset -5 --limit 10  # Show 10 task events starting from 5th from end
+                  task watch 123e4567-e89b-12d3-a456-426614174000
+                  task watch 123e4567-e89b-12d3-a456-426614174000 --interval 5
+                  task watch 123e4567-e89b-12d3-a456-426614174000 --limit 20  # Show last 20 task events (tail)
+                  task watch 123e4567-e89b-12d3-a456-426614174000 --offset 0 --limit 5  # Show first 5 task events
+                  task watch 123e4567-e89b-12d3-a456-426614174000 --offset -5 --limit 10  # Show 10 task events starting from 5th from end
                 """,
             ),
         )
@@ -229,7 +229,7 @@ class TaskCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  task delete 123e4567-e89b-12d3-a456-42661417400
+                  task delete 123e4567-e89b-12d3-a456-426614174000
 
                 Notes:
                   QUEUED tasks and terminal SUCCEEDED, FAILED, or ERRORED tasks can

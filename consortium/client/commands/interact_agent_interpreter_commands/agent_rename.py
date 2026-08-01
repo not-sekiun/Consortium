@@ -18,7 +18,7 @@ class AgentRenameCommand(BaseConnectedCommand):
         """
         Examples:
           rename "New name"
-          rename 123e4567-e89b-12d3-a456-42661417400 "New name"
+          rename 123e4567-e89b-12d3-a456-426614174000 "New name"
         """,
     )
     group = "Agent Management Commands"

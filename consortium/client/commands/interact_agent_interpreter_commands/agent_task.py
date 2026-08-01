@@ -17,9 +17,9 @@ class TaskCommand(TaskAgentsInterpreterCommand):
         """
         Examples:
           task list
-          task info 123e4567-e89b-12d3-a456-42661417400
-          task watch 123e4567-e89b-12d3-a456-42661417400
-          task delete 123e4567-e89b-12d3-a456-42661417400
+          task info 123e4567-e89b-12d3-a456-426614174000
+          task watch 123e4567-e89b-12d3-a456-426614174000
+          task delete 123e4567-e89b-12d3-a456-426614174000
 
         Notes:
           Every sub-command carries its own help, for example:
@@ -39,7 +39,7 @@ class TaskCommand(TaskAgentsInterpreterCommand):
           task list  # If no filters are provided, list all tasks for the current agent being interacted with regardless of status.
           task list --running --completed
             # Lists RUNNING plus terminal SUCCEEDED, FAILED, and ERRORED tasks.
-          task list 123e4567-e89b-12d3-a456-42661417400
+          task list 123e4567-e89b-12d3-a456-426614174000
         """,
     )
 

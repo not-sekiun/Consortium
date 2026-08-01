@@ -48,9 +48,15 @@ class ListenerCreateCommand(BaseConnectedCommand):
             listener_template_option_values = {}
             for option_name, option in listener_template_options.items():
                 listener_template_option_values[option_name] = option["value"]
+            # The staged name and description are sent separately from the option
+            # values: they are the created listener's display metadata rather than
+            # listener template options. A name of `None` means none was staged through
+            # the `rename` command, leaving the server to generate one.
             listener = await rest_api.create_listener_through_listener_template_by_listener_template_id(
                 listener_template_id=listener_template_id,
                 listener_template_option_values=listener_template_option_values,
+                name=context.interpreter_context.listener_name,
+                description=context.interpreter_context.listener_description,
             )
             if parsed_args.no_start:
                 print_success(

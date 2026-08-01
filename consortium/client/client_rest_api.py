@@ -199,11 +199,22 @@ class RestAPI:
         self,
         listener_template_id: str,
         listener_template_option_values: dict[str, JsonValue],
+        name: str | None = None,
+        description: str = "",
     ) -> dict[str, JsonValue]:
+        # The created listener's `name` and `description` are display metadata and are
+        # sent as fields of their own, separate from the creating listener template's
+        # option values. A listener template is free to declare its own option called
+        # `name` or `description`: those stay inside `options` and are never conflated
+        # with the fields here. A `name` of `None` leaves the server to generate one.
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/listener-templates/{listener_template_id}",
-            json=listener_template_option_values,
+            json={
+                "options": listener_template_option_values,
+                "name": name,
+                "description": description,
+            },
         )
 
     # Wrapper methods for the /api/listeners API endpoint.
@@ -303,11 +314,22 @@ class RestAPI:
         self,
         agent_template_id: str,
         agent_template_option_values: dict[str, JsonValue],
+        name: str | None = None,
+        description: str = "",
     ) -> dict[str, JsonValue]:
+        # The created agent generator's `name` and `description` are display metadata and
+        # are sent as fields of their own, separate from the creating agent template's
+        # option values. An agent template is free to declare its own option called
+        # `name` or `description`: those stay inside `options` and are never conflated
+        # with the fields here. A `name` of `None` leaves the server to generate one.
         return await self._make_api_request(
             method="POST",
             url=f"{self._api_base_url}/agent-templates/{agent_template_id}",
-            json=agent_template_option_values,
+            json={
+                "options": agent_template_option_values,
+                "name": name,
+                "description": description,
+            },
         )
 
     # Wrapper methods for the /api/agent-generators API endpoint.

@@ -1,6 +1,12 @@
 from consortium.client.commands.use_agent_template_interpreter_commands.agent_template import (
     AgentTemplateCommand,
 )
+from consortium.client.commands.use_agent_template_interpreter_commands.agent_template_describe import (
+    AgentTemplateDescribeCommand,
+)
+from consortium.client.commands.use_agent_template_interpreter_commands.agent_template_name import (
+    AgentTemplateNameCommand,
+)
 from consortium.client.commands.use_agent_template_interpreter_commands.agent_template_option import (
     AgentTemplateOptionCommand,
 )
@@ -23,6 +29,8 @@ from consortium.client.commands.use_agent_template_interpreter_commands.generato
 USE_AGENT_TEMPLATE_INTERPRETER_COMMANDS = [
     GeneratorCreateCommand(),
     AgentTemplateCommand(),
+    AgentTemplateDescribeCommand(),
+    AgentTemplateNameCommand(),
     AgentTemplateOptionCommand(),
     AgentTemplateResetOptionCommand(),
     AgentTemplateSetOptionCommand(),

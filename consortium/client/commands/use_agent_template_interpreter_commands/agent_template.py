@@ -16,7 +16,7 @@ class AgentTemplateCommand(GeneratorsInterpreterAgentTemplateCommand):
         Examples:
           template list
           template info
-          template info 123e4567-e89b-12d3-a456-42661417400
+          template info 123e4567-e89b-12d3-a456-426614174000
 
         Notes:
           Every sub-command carries its own help, for example:
@@ -38,7 +38,7 @@ class AgentTemplateCommand(GeneratorsInterpreterAgentTemplateCommand):
         """
         Examples:
           template info  # Displays detailed information for the currently selected agent template being used if the agent template ID is not specified.
-          template info 123e4567-e89b-12d3-a456-42661417400
+          template info 123e4567-e89b-12d3-a456-426614174000
         """,
     )
 

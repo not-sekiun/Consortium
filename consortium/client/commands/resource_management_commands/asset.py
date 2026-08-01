@@ -37,12 +37,12 @@ class AssetCommand(BaseConnectedCommand):
         """
         Examples:
           asset list
-          asset info 123e4567-e89b-12d3-a456-42661417400
+          asset info 123e4567-e89b-12d3-a456-426614174000
           asset upload relative/path/to/asset_file.txt
-          asset download 123e4567-e89b-12d3-a456-42661417400
-          asset rename 123e4567-e89b-12d3-a456-42661417400 "New name"
-          asset describe 123e4567-e89b-12d3-a456-42661417400 "New description"
-          asset remove 123e4567-e89b-12d3-a456-42661417400
+          asset download 123e4567-e89b-12d3-a456-426614174000
+          asset rename 123e4567-e89b-12d3-a456-426614174000 "New name"
+          asset describe 123e4567-e89b-12d3-a456-426614174000 "New description"
+          asset remove 123e4567-e89b-12d3-a456-426614174000
 
         Notes:
           Every sub-command carries its own help, for example:
@@ -86,7 +86,7 @@ class AssetCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  asset info 123e4567-e89b-12d3-a456-42661417400
+                  asset info 123e4567-e89b-12d3-a456-426614174000
                 """,
             ),
         )
@@ -139,8 +139,8 @@ class AssetCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  asset download 123e4567-e89b-12d3-a456-42661417400
-                  asset download 123e4567-e89b-12d3-a456-42661417400 --decompress  # Automatically decompresses the asset if it is an asset directory.
+                  asset download 123e4567-e89b-12d3-a456-426614174000
+                  asset download 123e4567-e89b-12d3-a456-426614174000 --decompress  # Automatically decompresses the asset if it is an asset directory.
                 """,
             ),
         )
@@ -186,7 +186,7 @@ class AssetCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  asset rename 123e4567-e89b-12d3-a456-42661417400 "New name"
+                  asset rename 123e4567-e89b-12d3-a456-426614174000 "New name"
                 """,
             ),
         )
@@ -209,7 +209,7 @@ class AssetCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  asset describe 123e4567-e89b-12d3-a456-42661417400 "New description"
+                  asset describe 123e4567-e89b-12d3-a456-426614174000 "New description"
                 """,
             ),
         )
@@ -232,7 +232,7 @@ class AssetCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  asset remove 123e4567-e89b-12d3-a456-42661417400
+                  asset remove 123e4567-e89b-12d3-a456-426614174000
                 """,
             ),
         )

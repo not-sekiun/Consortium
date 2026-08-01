@@ -50,10 +50,10 @@ class SessionCommand(BaseCommand[AnyContext]):
         Examples:
           session connect
           session list
-          session interact 123e4567-e89b-12d3-a456-42661417400
+          session interact 123e4567-e89b-12d3-a456-426614174000
           session info
-          session rename 123e4567-e89b-12d3-a456-42661417400 "New name"
-          session describe 123e4567-e89b-12d3-a456-42661417400 "New description"
+          session rename 123e4567-e89b-12d3-a456-426614174000 "New name"
+          session describe 123e4567-e89b-12d3-a456-426614174000 "New description"
           session disconnect
 
         Notes:
@@ -87,7 +87,7 @@ class SessionCommand(BaseCommand[AnyContext]):
         """
         Examples:
           session disconnect  # Disconnects the current client session if the client session ID is not specified.
-          session disconnect 123e4567-e89b-12d3-a456-42661417400
+          session disconnect 123e4567-e89b-12d3-a456-426614174000
         """,
     )
     info_help = (
@@ -103,7 +103,7 @@ class SessionCommand(BaseCommand[AnyContext]):
         Examples:
           session info  # Displays information for the current client session if the client session ID is not specified.
           session info -p  # Displays password
-          session info 123e4567-e89b-12d3-a456-42661417400
+          session info 123e4567-e89b-12d3-a456-426614174000
         """,
     )
     describe_help = (
@@ -118,7 +118,7 @@ class SessionCommand(BaseCommand[AnyContext]):
         """
         Examples:
           session describe "New description"  # Changes the description of the current client session if the client session ID is not specified.
-          session describe 123e4567-e89b-12d3-a456-42661417400 "New description"
+          session describe 123e4567-e89b-12d3-a456-426614174000 "New description"
         """,
     )
     rename_help = (
@@ -133,7 +133,7 @@ class SessionCommand(BaseCommand[AnyContext]):
         """
         Examples:
           session rename "New name"  # Renames the current client session if the client session ID is not specified.
-          session rename 123e4567-e89b-12d3-a456-42661417400 "New name"
+          session rename 123e4567-e89b-12d3-a456-426614174000 "New name"
         """,
     )
 
@@ -230,7 +230,7 @@ class SessionCommand(BaseCommand[AnyContext]):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  session interact 123e4567-e89b-12d3-a456-42661417400
+                  session interact 123e4567-e89b-12d3-a456-426614174000
                 """,
             ),
         )

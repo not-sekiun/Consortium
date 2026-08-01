@@ -20,7 +20,7 @@ class AgentInfoCommand(BaseConnectedCommand):
         """
         Examples:
           info -v
-          info 123e4567-e89b-12d3-a456-42661417400
+          info 123e4567-e89b-12d3-a456-426614174000
         """,
     )
     group = "Agent Management Commands"

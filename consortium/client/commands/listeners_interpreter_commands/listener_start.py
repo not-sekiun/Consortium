@@ -19,7 +19,7 @@ class ListenerStartCommand(BaseConnectedCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-          start 123e4567-e89b-12d3-a456-42661417400
+          start 123e4567-e89b-12d3-a456-426614174000
         """,
     )
     group = "Listener Management Commands"

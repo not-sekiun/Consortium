@@ -23,7 +23,7 @@ class AgentTemplateCommand(BaseConnectedCommand):
         """
         Examples:
           template list
-          template info 123e4567-e89b-12d3-a456-42661417400
+          template info 123e4567-e89b-12d3-a456-426614174000
 
         Notes:
           Every sub-command carries its own help, for example:
@@ -46,7 +46,7 @@ class AgentTemplateCommand(BaseConnectedCommand):
     info_epilog = format_argparse_epilog(
         """
         Examples:
-          template info 123e4567-e89b-12d3-a456-42661417400
+          template info 123e4567-e89b-12d3-a456-426614174000
         """,
     )
 

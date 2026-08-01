@@ -19,7 +19,7 @@ class AgentDeleteCommand(BaseConnectedCommand):
     epilog = format_argparse_epilog(
         """
         Examples:
-          delete 123e4567-e89b-12d3-a456-42661417400
+          delete 123e4567-e89b-12d3-a456-426614174000
         """,
     )
     group = "Agent Management Commands"

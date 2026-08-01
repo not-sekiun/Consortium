@@ -48,9 +48,15 @@ class GeneratorCreateCommand(BaseConnectedCommand):
             agent_template_option_values = {}
             for option_name, option in agent_template_options.items():
                 agent_template_option_values[option_name] = option["value"]
+            # The staged name and description are sent separately from the option
+            # values: they are the created agent generator's display metadata rather than
+            # agent template options. A name of `None` means none was staged through the
+            # `rename` command, leaving the server to generate one.
             agent_generator = await rest_api.create_agent_generator_through_agent_template_by_agent_template_id(
                 agent_template_id=agent_template_id,
                 agent_template_option_values=agent_template_option_values,
+                name=context.interpreter_context.agent_generator_name,
+                description=context.interpreter_context.agent_generator_description,
             )
             if parsed_args.no_start:
                 print_success(

@@ -4,14 +4,14 @@ from consortium.client.commands.listeners_interpreter_commands.listener_cancel i
 from consortium.client.commands.listeners_interpreter_commands.listener_delete import (
     ListenerDeleteCommand,
 )
-from consortium.client.commands.listeners_interpreter_commands.listener_describe import (
-    ListenerDescribeCommand,
-)
 from consortium.client.commands.listeners_interpreter_commands.listener_info import (
     ListenerInfoCommand,
 )
 from consortium.client.commands.listeners_interpreter_commands.listener_list import (
     ListenerListCommand,
+)
+from consortium.client.commands.listeners_interpreter_commands.listener_redescribe import (
+    ListenerRedescribeCommand,
 )
 from consortium.client.commands.listeners_interpreter_commands.listener_rename import (
     ListenerRenameCommand,
@@ -38,7 +38,7 @@ LISTENERS_INTERPRETER_COMMANDS = [
     ListenerInfoCommand(),
     ListenerTemplateCommand(),
     ListenerListCommand(),
-    ListenerDescribeCommand(),
+    ListenerRedescribeCommand(),
     ListenerRenameCommand(),
     ListenerUpdateCommand(),
     ListenerStartCommand(),

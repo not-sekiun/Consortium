@@ -1,9 +1,6 @@
 from consortium.client.commands.agents_interpreter_commands.agent_delete import (
     AgentDeleteCommand,
 )
-from consortium.client.commands.agents_interpreter_commands.agent_describe import (
-    AgentDescribeCommand,
-)
 from consortium.client.commands.agents_interpreter_commands.agent_info import (
     AgentInfoCommand,
 )
@@ -12,6 +9,9 @@ from consortium.client.commands.agents_interpreter_commands.agent_interact impor
 )
 from consortium.client.commands.agents_interpreter_commands.agent_list import (
     AgentListCommand,
+)
+from consortium.client.commands.agents_interpreter_commands.agent_redescribe import (
+    AgentRedescribeCommand,
 )
 from consortium.client.commands.agents_interpreter_commands.agent_rename import (
     AgentRenameCommand,
@@ -25,7 +25,7 @@ AGENTS_INTERPRETER_COMMANDS = [
     AgentInteractCommand(),
     AgentListCommand(),
     TaskCommand(),
-    AgentDescribeCommand(),
+    AgentRedescribeCommand(),
     AgentRenameCommand(),
     AgentDeleteCommand(),
 ]

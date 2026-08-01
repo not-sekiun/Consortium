@@ -35,11 +35,11 @@ class ArtifactCommand(BaseConnectedCommand):
         """
         Examples:
           artifact list
-          artifact info 123e4567-e89b-12d3-a456-42661417400
-          artifact download 123e4567-e89b-12d3-a456-42661417400
-          artifact rename 123e4567-e89b-12d3-a456-42661417400 "New name"
-          artifact describe 123e4567-e89b-12d3-a456-42661417400 "New description"
-          artifact remove 123e4567-e89b-12d3-a456-42661417400
+          artifact info 123e4567-e89b-12d3-a456-426614174000
+          artifact download 123e4567-e89b-12d3-a456-426614174000
+          artifact rename 123e4567-e89b-12d3-a456-426614174000 "New name"
+          artifact describe 123e4567-e89b-12d3-a456-426614174000 "New description"
+          artifact remove 123e4567-e89b-12d3-a456-426614174000
 
         Notes:
           Every sub-command carries its own help, for example:
@@ -82,8 +82,8 @@ class ArtifactCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  artifact info 123e4567-e89b-12d3-a456-42661417400
-                  artifact info 123e4567-e89b-12d3-a456-42661417400 --verbose  # Display agent information
+                  artifact info 123e4567-e89b-12d3-a456-426614174000
+                  artifact info 123e4567-e89b-12d3-a456-426614174000 --verbose  # Display agent information
                 """,
             ),
         )
@@ -110,8 +110,8 @@ class ArtifactCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  artifact download 123e4567-e89b-12d3-a456-42661417400
-                  artifact download 123e4567-e89b-12d3-a456-42661417400 --decompress  # Automatically decompresses the artifact if it is an artifact directory.
+                  artifact download 123e4567-e89b-12d3-a456-426614174000
+                  artifact download 123e4567-e89b-12d3-a456-426614174000 --decompress  # Automatically decompresses the artifact if it is an artifact directory.
                 """,
             ),
         )
@@ -157,7 +157,7 @@ class ArtifactCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  artifact rename 123e4567-e89b-12d3-a456-42661417400 "New name"
+                  artifact rename 123e4567-e89b-12d3-a456-426614174000 "New name"
                 """,
             ),
         )
@@ -180,7 +180,7 @@ class ArtifactCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  artifact describe 123e4567-e89b-12d3-a456-42661417400 "New description"
+                  artifact describe 123e4567-e89b-12d3-a456-426614174000 "New description"
                 """,
             ),
         )
@@ -203,7 +203,7 @@ class ArtifactCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  artifact remove 123e4567-e89b-12d3-a456-42661417400
+                  artifact remove 123e4567-e89b-12d3-a456-426614174000
                 """,
             ),
         )

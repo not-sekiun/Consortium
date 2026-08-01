@@ -37,11 +37,11 @@ class PayloadCommand(BaseConnectedCommand):
         """
         Examples:
           payload list
-          payload info 123e4567-e89b-12d3-a456-42661417400
-          payload download 123e4567-e89b-12d3-a456-42661417400
-          payload rename 123e4567-e89b-12d3-a456-42661417400 "New name"
-          payload describe 123e4567-e89b-12d3-a456-42661417400 "New description"
-          payload remove 123e4567-e89b-12d3-a456-42661417400
+          payload info 123e4567-e89b-12d3-a456-426614174000
+          payload download 123e4567-e89b-12d3-a456-426614174000
+          payload rename 123e4567-e89b-12d3-a456-426614174000 "New name"
+          payload describe 123e4567-e89b-12d3-a456-426614174000 "New description"
+          payload remove 123e4567-e89b-12d3-a456-426614174000
 
         Notes:
           Every sub-command carries its own help, for example:
@@ -84,8 +84,8 @@ class PayloadCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  payload info 123e4567-e89b-12d3-a456-42661417400
-                  payload info 123e4567-e89b-12d3-a456-42661417400 --verbose
+                  payload info 123e4567-e89b-12d3-a456-426614174000
+                  payload info 123e4567-e89b-12d3-a456-426614174000 --verbose
                 """,
             ),
         )
@@ -109,8 +109,8 @@ class PayloadCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  payload download 123e4567-e89b-12d3-a456-42661417400
-                  payload download 123e4567-e89b-12d3-a456-42661417400 --decompress  # Automatically decompresses the payload if it is a payload directory.
+                  payload download 123e4567-e89b-12d3-a456-426614174000
+                  payload download 123e4567-e89b-12d3-a456-426614174000 --decompress  # Automatically decompresses the payload if it is a payload directory.
                 """,
             ),
         )
@@ -156,7 +156,7 @@ class PayloadCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  payload rename 123e4567-e89b-12d3-a456-42661417400 "New name"
+                  payload rename 123e4567-e89b-12d3-a456-426614174000 "New name"
                 """,
             ),
         )
@@ -179,7 +179,7 @@ class PayloadCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  payload describe 123e4567-e89b-12d3-a456-42661417400 "New description"
+                  payload describe 123e4567-e89b-12d3-a456-426614174000 "New description"
                 """,
             ),
         )
@@ -202,7 +202,7 @@ class PayloadCommand(BaseConnectedCommand):
             epilog=format_argparse_epilog(
                 """
                 Examples:
-                  payload remove 123e4567-e89b-12d3-a456-42661417400
+                  payload remove 123e4567-e89b-12d3-a456-426614174000
                 """,
             ),
         )

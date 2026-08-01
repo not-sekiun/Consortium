@@ -11,16 +11,16 @@ from consortium.client.utils.agent_command_utils import describe_agent
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-class AgentDescribeCommand(BaseConnectedCommand):
-    name = "describe"
-    description = (
-        "Set the description of the current agent, or a specific agent by its ID"
-    )
+# Paired with `rename`: both act on an agent that already exists and are named for
+# changing something that is already set. `describe` is reserved for staging the
+# description of an object that has yet to be created, inside a template's context.
+class AgentRedescribeCommand(BaseConnectedCommand):
+    name = "redescribe"
+    description = "Set the description of an agent by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          desc "New description"
-          desc 123e4567-e89b-12d3-a456-42661417400 "New description"
+          redescribe 123e4567-e89b-12d3-a456-426614174000 "New description"
         """,
     )
     group = "Agent Management Commands"
@@ -29,11 +29,8 @@ class AgentDescribeCommand(BaseConnectedCommand):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "agent_id",
-            help=(
-                "ID of the agent whose description should be changed (defaults to the "
-                "current agent being interacted with if not provided)."
-            ),
-            nargs="?",
+            help="ID of the agent whose description should be changed.",
+            nargs=1,
         )
         parser.add_argument(
             "description",
@@ -48,9 +45,7 @@ class AgentDescribeCommand(BaseConnectedCommand):
 
             await describe_agent(
                 rest_api=rest_api,
-                agent_id=parsed_args.agent_id
-                if parsed_args.agent_id
-                else context.interpreter_context.agent["agent_id"],
+                agent_id=parsed_args.agent_id[0],
                 description=parsed_args.description[0],
             )
         except SystemExit:
