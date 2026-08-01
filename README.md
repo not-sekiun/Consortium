@@ -25,10 +25,10 @@
 </p>
 
 Consortium is a <i>programming language agnostic</i>, and
-<i>networking protocol agnostic</i> command and control (C2) framework that is
-designed to be <i>collaborative</i>, <i>highly extensible</i>, and <i>modular</i>.
-The framework ships with its own listeners and agents while also allowing users to
-rapidly develop their own highly customized listeners and agents.
+<i>networking protocol agnostic</i> command and control (C2) framework that is designed
+to be <i>collaborative</i>, <i>highly extensible</i>, and <i>modular</i>. The framework
+ships with its own listeners and agents while also allowing users to rapidly develop
+their own highly customized listeners and agents.
 
 > [!CAUTION]
 > Consortium is **actively being developed** and is currently considered to be in the
@@ -43,8 +43,8 @@ rapidly develop their own highly customized listeners and agents.
 
 ## Features
 
-- **Asynchronous multiplayer/multiserver support**: Multiple clients can connect to
-  the same server to perform all C2 related operations, including the sharing of agent
+- **Asynchronous multiplayer/multiserver support**: Multiple clients can connect to the
+  same server to perform all C2 related operations, including the sharing of agent
   sessions. Control RBAC permissions via user roles.
 - **High extensibility and automation, externally and natively**: Programmatic
   automation is possible through the server's **REST API** or **websockets events API**.
@@ -62,9 +62,9 @@ rapidly develop their own highly customized listeners and agents.
 Consortium can be installed manually on the host, or run in Docker. Pick one of the two
 paths below. Both read their configuration from the same `data/` directory.
 
-| | Manual install | Docker install |
-| --- | --- | --- |
-| Requires | Python 3.14+, uv, Git, Docker | Docker, Git |
+|          | [Manual install](#manual-installation)         | [Docker install](#docker-installation)       |
+|----------|------------------------------------------------|----------------------------------------------|
+| Requires | Python 3.14+, uv, Git, Docker                  | Docker, Git                                  |
 | Best for | Developing the framework or writing components | Running a server without provisioning Python |
 
 Full instructions for both are in the
