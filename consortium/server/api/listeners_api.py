@@ -71,7 +71,7 @@ _listener_not_running_error = (
         200: {"model": list[ListenerModel]},
     },
 )
-def get_all_listeners(
+async def get_all_listeners(
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENERS)),
@@ -96,7 +96,7 @@ def get_all_listeners(
         422: {"model": RequestValidationErrorResponse},
     },
 )
-def get_listener_by_listener_id(
+async def get_listener_by_listener_id(
     listener_id: UUID4,
     _: Annotated[
         None,

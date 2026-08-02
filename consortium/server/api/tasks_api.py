@@ -39,16 +39,10 @@ _tasks_service = server_singletons.tasks_service
 _task_not_found_error = api_excs.TaskNotFoundError.from_consortium_exception(
     consortium_exception=svc_excs.TaskNotFoundError(task_id="string")
 )
-_task_not_queued_error = api_excs.TaskNotQueuedError.from_consortium_exception(
-    consortium_exception=svc_excs.TaskNotQueuedError(
+_task_not_deletable_error = api_excs.TaskNotDeletableError.from_consortium_exception(
+    consortium_exception=svc_excs.TaskNotDeletableError(
         task_str="'<command>' (<task_id>)",
         state=TaskState.RUNNING,
-    )
-)
-_task_not_terminal_error = api_excs.TaskNotTerminalError.from_consortium_exception(
-    consortium_exception=svc_excs.TaskNotTerminalError(
-        task_str="'<command>' (<task_id>)",
-        state=TaskState.QUEUED,
     )
 )
 
@@ -60,7 +54,7 @@ _task_not_terminal_error = api_excs.TaskNotTerminalError.from_consortium_excepti
         422: {"model": RequestValidationErrorResponse},
     },
 )
-def get_all_tasks(
+async def get_all_tasks(
     _: Annotated[
         None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_TASKS))
     ],
@@ -83,7 +77,7 @@ def get_all_tasks(
         422: {"model": RequestValidationErrorResponse},
     },
 )
-def get_task_by_task_id(
+async def get_task_by_task_id(
     task_id: UUID4,
     _: Annotated[
         None, Depends(AuthorizeUserRequest(UserPermissions.READ_AGENT_TASK_BY_TASK_ID))
@@ -119,16 +113,16 @@ def get_task_by_task_id(
 
 
 @router.delete(
-    "/queued/{task_id}",
+    "/{task_id}",
     status_code=204,
     responses={
         204: {},
         404: {"model": _task_not_found_error.to_pydantic_model()},
-        409: {"model": _task_not_queued_error.to_pydantic_model()},
+        409: {"model": _task_not_deletable_error.to_pydantic_model()},
         422: {"model": RequestValidationErrorResponse},
     },
 )
-async def delete_queued_task_by_task_id(
+async def delete_task_by_task_id(
     task_id: UUID4,
     _: Annotated[
         None,
@@ -136,41 +130,12 @@ async def delete_queued_task_by_task_id(
     ],
 ) -> None:
     try:
-        await _tasks_service.delete_queued_task_by_task_id(task_id=task_id)
+        await _tasks_service.delete_task_by_task_id(task_id=task_id)
     except svc_excs.TaskNotFoundError as exc:
         raise api_excs.TaskNotFoundError.from_consortium_exception(
             consortium_exception=exc
         ) from None
-    except svc_excs.TaskNotQueuedError as exc:
-        raise api_excs.TaskNotQueuedError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-
-
-@router.delete(
-    "/terminal/{task_id}",
-    status_code=204,
-    responses={
-        204: {},
-        404: {"model": _task_not_found_error.to_pydantic_model()},
-        409: {"model": _task_not_terminal_error.to_pydantic_model()},
-        422: {"model": RequestValidationErrorResponse},
-    },
-)
-async def delete_terminal_task_by_task_id(
-    task_id: UUID4,
-    _: Annotated[
-        None,
-        Depends(AuthorizeUserRequest(UserPermissions.DELETE_AGENT_TASK_BY_TASK_ID)),
-    ],
-) -> None:
-    try:
-        await _tasks_service.delete_terminal_task_by_task_id(task_id=task_id)
-    except svc_excs.TaskNotFoundError as exc:
-        raise api_excs.TaskNotFoundError.from_consortium_exception(
-            consortium_exception=exc
-        ) from None
-    except svc_excs.TaskNotTerminalError as exc:
-        raise api_excs.TaskNotTerminalError.from_consortium_exception(
+    except svc_excs.TaskNotDeletableError as exc:
+        raise api_excs.TaskNotDeletableError.from_consortium_exception(
             consortium_exception=exc
         ) from None

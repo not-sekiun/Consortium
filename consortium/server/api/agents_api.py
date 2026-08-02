@@ -60,7 +60,7 @@ _agent_not_found_error = api_excs.AgentNotFoundError.from_consortium_exception(
         200: {"model": list[AgentModel]},
     },
 )
-def get_all_agents(
+async def get_all_agents(
     _: Annotated[None, Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENTS))],
 ):
     return [AgentModel(**agent.to_json()) for agent in _agents_service.get_all_agents()]
@@ -74,7 +74,7 @@ def get_all_agents(
         422: {"model": RequestValidationErrorResponse},
     },
 )
-def get_agent_by_agent_id(
+async def get_agent_by_agent_id(
     agent_id: UUID4,
     _: Annotated[
         None, Depends(AuthorizeUserRequest(UserPermissions.READ_AGENT_BY_AGENT_ID))
@@ -144,6 +144,10 @@ async def task_agent_by_agent_id(
         ) from None
     except obj_excs.MissingRequiredAgentCapabilityOptionError as exc:
         raise api_excs.MissingRequiredAgentCapabilityOptionError.from_consortium_exception(
+            consortium_exception=exc
+        ) from None
+    except obj_excs.AgentCapabilityValidatingFunctionError as exc:
+        raise api_excs.AgentCapabilityValidatingFunctionError.from_consortium_exception(
             consortium_exception=exc
         ) from None
 

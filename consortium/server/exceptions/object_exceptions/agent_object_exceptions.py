@@ -1,5 +1,7 @@
 from typing import Any
 
+from pydantic.config import JsonValue
+
 from consortium.server.exceptions.object_exceptions.base_object_exception import (
     BaseObjectError,
 )
@@ -76,6 +78,28 @@ class AgentCapabilityOptionNotFoundError(AgentTaskingError):
                 f"'{option_name}' that did not correspond with any options in that "
                 f"agent capability for that agent's type '{agent_type_str}'."
             ),
+        )
+
+
+class AgentCapabilityValidatingFunctionError(AgentTaskingError):
+    """Raised when an agent capability rejects its resolved arguments."""
+
+    code = "AGENT_CAPABILITY_VALIDATING_FUNCTION_ERROR"
+
+    def __init__(
+        self,
+        agent_str: str,
+        command: str,
+        error_message: str,
+        detail: dict[str, JsonValue] | None = None,
+    ):
+        super().__init__(
+            message=(
+                f"Failed to task the agent {agent_str} with the capability "
+                f"'{command}'. The capabilities validating function "
+                f"failed to validate its options. {error_message}"
+            ),
+            detail=detail,
         )
 
 

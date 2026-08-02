@@ -113,7 +113,7 @@ async def create_agent_generator_through_agent_template_by_agent_template_id(
         200: {"model": list[AgentTemplateModel]},
     },
 )
-def get_all_agent_templates(
+async def get_all_agent_templates(
     _: Annotated[
         None,
         Depends(
@@ -135,7 +135,7 @@ def get_all_agent_templates(
         422: {"model": RequestValidationErrorResponse},
     },
 )
-def get_agent_template_by_agent_template_id(
+async def get_agent_template_by_agent_template_id(
     agent_template_id: UUID4,
     _: Annotated[
         None,

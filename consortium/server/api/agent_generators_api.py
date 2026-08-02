@@ -79,7 +79,7 @@ _invalid_uuid_error = InvalidUUIDError(
         200: {"model": AgentGeneratorModel},
     },
 )
-def get_all_agent_generators(
+async def get_all_agent_generators(
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_AGENT_GENERATORS)),
@@ -102,7 +102,7 @@ def get_all_agent_generators(
         422: {"model": RequestValidationErrorResponse},
     },
 )
-def get_agent_generator_by_agent_generator_id(
+async def get_agent_generator_by_agent_generator_id(
     agent_generator_id: UUID4,
     _: Annotated[
         None,

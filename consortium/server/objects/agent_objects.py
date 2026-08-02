@@ -2,7 +2,7 @@ import asyncio
 import uuid
 from collections.abc import AsyncGenerator
 from enum import StrEnum
-from typing import Any, get_type_hints
+from typing import TYPE_CHECKING, Any, get_type_hints
 
 from loguru import logger
 from pydantic import UUID4, BaseModel, JsonValue, ValidationError
@@ -13,13 +13,10 @@ from consortium.framework._core.framework_exceptions.agent_capabilities_framewor
     AgentCapabilityLaunchError,
 )
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
-    OptionValueValidationError,
+    OptionValueValidationError as OptionValueValidationFrameworkError,
 )
 from consortium.framework.agents import BaseAgentCapability, TaskInputMessageModel
-from consortium.framework.agents._task_messages_queue import (
-    END_OF_STREAM,
-    TaskMessagesQueue,
-)
+from consortium.framework.agents._task_messages_queue import END_OF_STREAM
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
@@ -31,11 +28,15 @@ from consortium.framework.signal_exceptions.agent_capabilties_signal_exception i
     AgentCapabilityExecutionError as AgentCapabilityExecutionSignalError,
     AgentCapabilityLaunchError as AgentCapabilityLaunchSignalError,
 )
+from consortium.framework.signal_exceptions.options_signal_exceptions import (
+    OptionValueValidationError as OptionValueValidationSignalError,
+)
 from consortium.server import server_singletons as server_singletons
 from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
     AgentCapabilityNotFoundError,
     AgentCapabilityOptionNotFoundError,
     AgentCapabilityOptionValueValidationError,
+    AgentCapabilityValidatingFunctionError,
     AgentCreationParameterTypeError,
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
@@ -50,14 +51,21 @@ from consortium.server.exceptions.service_exceptions.listeners_service_exception
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
     ResourceNotFoundError,
 )
+from consortium.server.exceptions.service_exceptions.tasks_service_exceptions import (
+    TaskNotFoundError,
+)
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.task_objects import Task, TaskState
+from consortium.server.objects.task_runtime import TaskRuntime
 from consortium.server.utils import (
     generate_random_human_readable_name,
     normalize_uuid,
-    run_async_background_task,
     utc_now,
 )
+
+if TYPE_CHECKING:
+    from consortium.server.services.task_runtime_service import TaskRuntimeService
+    from consortium.server.services.tasks_service import TasksService
 
 
 class AgentStatus(StrEnum):
@@ -96,6 +104,8 @@ class _AgentParametersModel(BaseModel):
 class Agent:
     def __init__(
         self,
+        tasks_service: TasksService,
+        task_runtime_service: TaskRuntimeService,
         listener_id: str | uuid.UUID,
         payload_id: str | uuid.UUID | None = None,
         agent_type: str | None = None,
@@ -211,6 +221,8 @@ class Agent:
         self.datetime_first_checked_in = utc_now()
         self.datetime_last_checked_in = utc_now()
 
+        self._tasks_service = tasks_service
+        self._task_runtime_service = task_runtime_service
         # By default, agents are considered ACTIVE when created. `self._status` is used
         # to track the reported status of the agent while the framework may
         # automatically infer other statuses such as ORPHANED or UNREACHABLE based on
@@ -218,11 +230,8 @@ class Agent:
         # INACTIVE by the listener, the moment it is not running or deleted, the agent
         # state will be ORPHANED or UNREACHABLE respectively.
         self._status = AgentStatus.ACTIVE
-        # TODO: Move all the tasks to a database instead of storing them in memory.
-        self._tasks = {}
-
-        # Fired when a new task is started (specifically after its outbox is added to
-        # self._task_outboxes). This is used specifically and only to wake up
+        # Fired when a new task is started (specifically after its runtime is attached
+        # to the registry). This is used specifically and only to wake up
         # self.get_next_task_message_sequential() when it is called with a timeout of
         # `None` while there are no readable outboxes since it will block indefinitely
         # until the first valid task message can be pulled out
@@ -232,24 +241,6 @@ class Agent:
         # woken the moment any running capability produces a message, then scans the
         # outboxes in insertion order for the first one with a pending message.
         self._outbox_activity = asyncio.Condition()
-        # Each running capability's inbox mapped by task ID. Incoming results are routed
-        # to the matching capability's inbox by dispatch_task_output_message. An inbox is
-        # only useful while the capability is running to receive those results, so an
-        # entry lives from capability start to completion. This is the counterpart of
-        # self._task_outboxes, which (unlike an inbox) outlives its capability so buffered
-        # output stays readable until drained.
-        self._task_inboxes: dict[str, TaskMessagesQueue] = {}
-        # Each task's outbox mapped by task ID, tracked separately from self._task_inboxes
-        # because an outbox outlives its capability: a capability may stream messages and
-        # then exit, and those buffered messages must stay readable until drained. An
-        # outbox is added when its capability starts and dropped only once it reaches end
-        # of stream (shut down and fully drained). This is the set of outboxes the
-        # get_next_task_message_* readers work over.
-        self._task_outboxes: dict[str, TaskMessagesQueue] = {}
-        # Each task's capability handler asyncio task mapped by task ID. Holding the
-        # references prevents their garbage collection while running, and the mapping lets
-        # us cancel a specific task's handler on deletion.
-        self._task_handler_async_tasks: dict[str, asyncio.Task] = {}
 
     def __repr__(self) -> str:
         return (
@@ -314,25 +305,67 @@ class Agent:
 
         return self._status
 
-    async def submit_task(self, task: Task) -> None:
-        if task.command not in self.agent_type.agent_capabilities:
+    async def submit_task(self, command: str, arguments: dict[str, JsonValue]) -> Task:
+        """Validate a tasking, start its capability and register the resulting task.
+
+        Args:
+            command: The name of the capability to run, matched against the capabilities
+                of this agent's type.
+            arguments: The arguments to run the capability with, keyed by option name.
+                Omitted optional options are filled in from their declared defaults. The
+                provided dictionary is not mutated.
+
+        Returns:
+            The registered task, QUEUED with its capability started.
+
+        Raises:
+            AgentCapabilityNotFoundError: If command does not name a capability of this
+                agent's type.
+            MissingRequiredAgentCapabilityOptionError: If a required option is absent
+                from arguments.
+            AgentCapabilityOptionNotFoundError: If arguments contains an unknown option
+                name.
+            AgentCapabilityOptionValueValidationError: If an argument value fails type or
+                constraint validation.
+            AgentCapabilityValidatingFunctionError: If the capability's validating
+                function rejects the resolved argument set.
+        """
+        # Validation runs before the task is constructed, so a rejected tasking was
+        # never queued and leaves nothing behind: no task ID is minted, no record is
+        # registered and no event is emitted. Every exception documented above escapes
+        # from here, which is what lets the API answer a bad tasking with a 422 rather
+        # than a task the operator then has to inspect to discover it never ran.
+        if command not in self.agent_type.agent_capabilities:
             raise AgentCapabilityNotFoundError(
-                command=task.command,
+                command=command,
                 agent_str=str(self),
                 agent_type_str=str(self.agent_type),
             )
 
-        agent_capability = self.agent_type.agent_capabilities[task.command]
+        agent_capability = self.agent_type.agent_capabilities[command]
+
+        # Check for missing required options before filling in defaults, so that a
+        # required option with default_value=None is caught rather than silently
+        # accepted. This mirrors the ordering the listener and agent template option
+        # resolution uses.
+        for option_name, option in agent_capability.options.items():
+            if option.required and option_name not in arguments:
+                raise MissingRequiredAgentCapabilityOptionError(
+                    agent_str=str(self),
+                    agent_capability_name=agent_capability.name,
+                    option_name=option_name,
+                )
 
         # Fill in default option values for options that were not provided in the
         # arguments dictionary. For options that do not have a default value
         # they fill in as `None`
+        resolved_arguments: dict[str, JsonValue] = dict(arguments)
         for option_name, option in agent_capability.options.items():
-            if option_name not in task.arguments:
-                task.arguments[option_name] = option.default_value
+            if option_name not in resolved_arguments:
+                resolved_arguments[option_name] = option.default_value
 
         # Validate entire constructed argument set.
-        for option_name, value in task.arguments.items():
+        for option_name, value in resolved_arguments.items():
             if option_name not in agent_capability.options:
                 raise AgentCapabilityOptionNotFoundError(
                     command=agent_capability.name,
@@ -346,7 +379,7 @@ class Agent:
                 if value is None and not option.required:
                     continue
                 option.validate_value(value)
-            except OptionValueValidationError as exc:
+            except OptionValueValidationFrameworkError as exc:
                 raise AgentCapabilityOptionValueValidationError(
                     option_name=option_name,
                     option_value=value,
@@ -354,26 +387,42 @@ class Agent:
                     error_message=str(exc),
                 ) from None
 
-        # Check for missing required options.
-        for option_name, option in agent_capability.options.items():
-            if option.required and option_name not in task.arguments:
-                raise MissingRequiredAgentCapabilityOptionError(
-                    agent_str=str(self),
-                    agent_capability_name=agent_capability.name,
-                    option_name=option_name,
-                )
-
-        # TODO: Handle validation failure here.
         # Run validation function on the entire set of arguments if one was provided.
         if agent_capability.validating_function:
-            agent_capability.validating_function(task.arguments)
+            try:
+                agent_capability.validating_function(resolved_arguments)
+            except OptionValueValidationSignalError as exc:
+                raise AgentCapabilityValidatingFunctionError(
+                    agent_str=str(self),
+                    command=agent_capability.name,
+                    error_message=exc.message,
+                    detail=exc.detail,
+                ) from None
 
-        self._tasks[str(task.task_id)] = task
+        task = Task(
+            agent_id=self.agent_id,
+            command=command,
+            arguments=resolved_arguments,
+        )
 
+        # Starting the capability and registering its record is one synchronous
+        # sequence: _start_agent_capability has no suspension point, so the event loop
+        # cannot interleave and no reader can observe the intermediate state. That is
+        # what allows the record to be registered last, which is what makes this
+        # transactional without a rollback path. A capability that fails to construct
+        # raises before anything is stored, leaving nothing behind to undo. Nothing
+        # that can raise may be introduced after the handler is created, and no await
+        # may be introduced anywhere in this sequence.
         await self._start_agent_capability(
             agent_capability=agent_capability,
             task=task,
         )
+        self._tasks_service._register_task(task=task, agent=self)
+
+        # Signalled only once the record exists so a woken muxer always resolves it.
+        self._new_task_started_event.set()
+
+        return task
 
     async def get_next_task_message_by_task_id(
         self,
@@ -382,9 +431,9 @@ class Agent:
     ) -> TaskLaunchMessageModel | TaskInputMessageModel | None | object:
         """Get the next task message produced by the capability for the specified task.
 
-        Reads follow the task's outbox lifecycle, not the capability's: a capability may
-        stream messages and then exit, and those buffered messages must remain readable
-        until drained.
+        Reads follow the registered runtime's outbox lifecycle, not the capability's: a
+        capability may stream messages and then exit, and those buffered messages must
+        remain readable until drained.
 
         Returns the next task message, or `None` when `timeout` elapses with nothing
         available (a transient "nothing yet, poll again" signal). Returns END_OF_STREAM
@@ -393,12 +442,12 @@ class Agent:
         END_OF_STREAM."""
         task = self.get_task_by_task_id(task_id=task_id)
 
-        # The outbox is tracked independently of self._task_inboxes (which only lives
-        # while the capability is running to accept results). A missing outbox means it
-        # was never produced or has already been fully drained, so the stream is over.
-        outbox = self._task_outboxes.get(str(task.task_id))
-        if outbox is None:
+        # A missing runtime or outbox means it was never produced, was torn down, or has
+        # already been fully drained, so the stream is over.
+        runtime = self._task_runtime_service.get_task_runtime(task_id=task.task_id)
+        if runtime is None or runtime.outbox is None:
             return END_OF_STREAM
+        outbox = runtime.outbox
 
         try:
             task_message = await outbox.get(timeout=timeout)
@@ -411,20 +460,32 @@ class Agent:
         if task_message is END_OF_STREAM:
             # End of stream: the capability finished and the outbox is fully drained, so
             # drop it. Subsequent reads for this task return END_OF_STREAM.
-            self._task_outboxes.pop(str(task.task_id), None)
+            self._task_runtime_service.release_outbox(task_id=task.task_id)
+            return END_OF_STREAM
+
+        # The task may have been deleted after outbox.get dequeued a message but before
+        # this coroutine resumed. Deleted records must never deliver a message.
+        if (
+            self._tasks_service.find_task(
+                task_id=task.task_id,
+                agent_id=self.agent_id,
+            )
+            is None
+        ):
             return END_OF_STREAM
 
         # The launch message is the first thing a capability puts on its outbox. Popping
         # it is the point at which the agent has acknowledged and picked up the task, so
         # transition it from QUEUED to RUNNING. This gate is required because
         # dispatch_task_output_message drops any result for a task that is not RUNNING.
-        # It is guarded on QUEUED so a task whose capability already completed (streamed
-        # then exited) and is only now being drained is not transitioned.
+        # The compare and swap only succeeds from QUEUED, so a task whose capability
+        # already completed (streamed then exited) and is only now being drained stays
+        # terminal, and a task that reached a terminal state while this coroutine was
+        # suspended in outbox.get above is not dragged back to RUNNING.
         if (
             isinstance(task_message, TaskLaunchMessageModel)
-            and task.status.state == TaskState.QUEUED
+            and task.status._try_transition_to_running()
         ):
-            task.status._transition_to_running()
             task.datetime_started = utc_now()
 
         return task_message
@@ -439,7 +500,9 @@ class Agent:
         # capabilities). `timeout` is the total budget for producing the next message,
         # so the time spent waiting for an outbox to appear is deducted from it and the
         # remainder is handed back for the caller to spend waiting on a message.
-        if self._task_outboxes:
+        if self._task_runtime_service.has_readable_outbox_for_agent(
+            agent_id=self.agent_id
+        ):
             return True, timeout
 
         # Always reset the event before waiting on it: it may still be set from an
@@ -486,17 +549,24 @@ class Agent:
             if not ready:
                 return None
 
-            # Dictionaries preserve insertion order, so the first tracked outbox is the
-            # earliest tasked one. We drain it completely before moving on: only once it
-            # reaches end of stream (which drops it from self._task_outboxes) do we
-            # advance to the following outbox.
-            task_id = next(iter(self._task_outboxes))
-            task_message = await self.get_next_task_message_by_task_id(
-                task_id=task_id, timeout=remaining
+            # The registry maintains insertion order per agent, so this is the earliest
+            # tasked live runtime with a readable outbox.
+            task_id = self._task_runtime_service.first_readable_task_id_for_agent(
+                agent_id=self.agent_id
             )
+            if task_id is None:
+                continue
+            try:
+                task_message = await self.get_next_task_message_by_task_id(
+                    task_id=task_id, timeout=remaining
+                )
+            except AgentTaskNotFoundError:
+                # The muxer selected this task itself. Deletion between selection and
+                # read is a benign lifecycle race, so advance to the next record.
+                continue
             if task_message is END_OF_STREAM:
-                # Earliest outbox exhausted and dropped; advance to the next one. A shut
-                # down, drained outbox returns END_OF_STREAM immediately, so this is
+                # Earliest outbox exhausted and released; advance to the next one. A
+                # shut down, drained outbox returns END_OF_STREAM immediately, so this is
                 # instantaneous and the loop stays bounded by the number of outboxes;
                 # the budget is enforced by the reads above.
                 continue
@@ -514,14 +584,16 @@ class Agent:
         # from it, which the caller handles.
         ended_task_ids: list[str] = []
         found_task_id: str | None = None
-        for task_id, outbox in self._task_outboxes.items():
+        for task_id, outbox in self._task_runtime_service.readable_outboxes_for_agent(
+            agent_id=self.agent_id
+        ):
             if not outbox.empty():
                 found_task_id = task_id
                 break
             if outbox.is_at_end_of_stream():
                 ended_task_ids.append(task_id)
         for task_id in ended_task_ids:
-            self._task_outboxes.pop(task_id, None)
+            self._task_runtime_service.release_outbox(task_id=task_id)
         return found_task_id
 
     async def get_next_task_message_any(
@@ -569,9 +641,14 @@ class Agent:
             # only after releasing its own lock, so the two locks are never held at the
             # same time by anyone and no lock ordering cycle can form. A non-blocking
             # read cannot deadlock here regardless.
-            task_message = await self.get_next_task_message_by_task_id(
-                task_id=task_id, timeout=0
-            )
+            try:
+                task_message = await self.get_next_task_message_by_task_id(
+                    task_id=task_id, timeout=0
+                )
+            except AgentTaskNotFoundError:
+                # The muxer selected this task itself, so disappearance here is a
+                # lifecycle race rather than invalid caller input.
+                continue
             if task_message is not None and task_message is not END_OF_STREAM:
                 return task_message
             # `None` (the message was taken by another reader) or END_OF_STREAM (the
@@ -645,11 +722,11 @@ class Agent:
             )
             return False
 
-        # A running task should always have a live inbox tracked for it. If it does not
-        # the capability finished or was torn down concurrently, drop and log rather than
-        # dereferencing a missing entry out of the dispatch path.
-        inbox = self._task_inboxes.get(task_id)
-        if inbox is None:
+        # A running task should always have a live runtime with an attached inbox. If it
+        # does not, the capability finished or was torn down concurrently, so drop and
+        # log rather than dereferencing a missing entry out of the dispatch path.
+        runtime = self._task_runtime_service.get_task_runtime(task_id=task.task_id)
+        if runtime is None or runtime.inbox is None:
             self.logger.warning(
                 "Agent {} received a task output message for a running task {} but no "
                 "inbox is tracked for it. The message was dropped.",
@@ -659,7 +736,7 @@ class Agent:
             return False
 
         try:
-            await inbox.put(task_message=task_output_message)
+            await runtime.inbox.put(task_message=task_output_message)
             return True
         except asyncio.QueueShutDown:
             self.logger.warning(
@@ -675,9 +752,10 @@ class Agent:
         self,
         state: TaskState | None = None,
     ) -> list[Task]:
-        if state is not None:
-            return [task for task in self._tasks.values() if task.status.state == state]
-        return list(self._tasks.values())
+        return self._tasks_service.get_all_tasks(
+            agent_id=self.agent_id,
+            status=state,
+        )
 
     def get_all_queued_tasks(self) -> list[Task]:
         return self.get_all_tasks(state=TaskState.QUEUED)
@@ -699,12 +777,14 @@ class Agent:
         task_id: str | uuid.UUID,
         state: TaskState | None = None,
     ) -> Task:
-        task_id = normalize_uuid(value=task_id)
-
-        for task in self.get_all_tasks(state=state):
-            if task_id == str(task.task_id):
-                return task
-        raise AgentTaskNotFoundError(task_id=task_id)
+        task = self._tasks_service.find_task(
+            task_id=task_id,
+            agent_id=self.agent_id,
+            status=state,
+        )
+        if task is None:
+            raise AgentTaskNotFoundError(task_id=normalize_uuid(value=task_id))
+        return task
 
     def get_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
         return self.get_task_by_task_id(task_id=task_id, state=TaskState.QUEUED)
@@ -721,109 +801,29 @@ class Agent:
     def get_errored_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
         return self.get_task_by_task_id(task_id=task_id, state=TaskState.ERRORED)
 
-    async def _discard_task_runtime(self, task_id: str) -> None:
-        # Tear down everything a task might still surface so that once it is deleted there
-        # is nothing to report for it ever again.
-        task_id = str(task_id)
-
-        # Cancel the capability handler so it stops producing and does not fire its
-        # completion event. Cancellation raises CancelledError (a BaseException), which
-        # slips past the handler's `except Exception`, skipping the terminal transitions
-        # and the AGENT_TASK_COMPLETED event.
-        handler_task = self._task_handler_async_tasks.pop(task_id, None)
-        if handler_task is not None:
-            handler_task.cancel()
-
-        # Discard the inbox and outbox. Immediate shutdown drops any buffered messages and
-        # wakes a reader already blocked in get() so it sees end of stream (None) rather
-        # than the deleted task's messages. Removing them from the maps stops any new
-        # reader from picking them up.
-        inbox = self._task_inboxes.pop(task_id, None)
-        if inbox is not None:
-            await inbox.shutdown(immediate=True)
-        outbox = self._task_outboxes.pop(task_id, None)
-        if outbox is not None:
-            await outbox.shutdown(immediate=True)
-
-    async def delete_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
-        try:
-            task = self.get_queued_task_by_task_id(task_id=task_id)
-            if task.status.state != TaskState.QUEUED:
-                raise AgentTaskNotFoundError(task_id=str(task_id))
-            await self._discard_task_runtime(str(task.task_id))
-            del self._tasks[str(task.task_id)]
-        except KeyError:
-            raise AgentTaskNotFoundError(task_id=str(task_id)) from None
-
-    async def delete_terminal_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
-        task = self.get_task_by_task_id(task_id=task_id)
-        if task.status.state not in {
-            TaskState.SUCCEEDED,
-            TaskState.FAILED,
-            TaskState.ERRORED,
-        }:
+    async def delete_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
+        if (
+            self._tasks_service.find_task(
+                task_id=task_id,
+                agent_id=self.agent_id,
+            )
+            is None
+        ):
             raise AgentTaskNotFoundError(task_id=str(task_id))
-
-        await self._discard_task_runtime(str(task.task_id))
         try:
-            del self._tasks[str(task.task_id)]
-        except KeyError:
+            # Only a vanished record is translated. TaskNotDeletableError propagates as
+            # itself: the task provably belongs to this agent, having just resolved
+            # through the agent scoped lookup above, so reporting it as not found would
+            # describe a running task as a missing one.
+            await self._tasks_service.delete_task_by_task_id(task_id=task_id)
+        except TaskNotFoundError:
             raise AgentTaskNotFoundError(task_id=str(task_id)) from None
 
     def error_pending_tasks(self, error_message: str) -> list[Task]:
-        # This method is deliberately synchronous end to end. No await runs between the
-        # state check and the terminal transition below, so a cancelled capability
-        # handler cannot interleave and drive its own terminal transition first (which
-        # would raise out of the terminal-state transition table). The queue shutdowns
-        # are the only awaitable part and are deferred to a single background coroutine
-        # rather than fired one by one, so they are awaited in a defined order.
-        errored_tasks = []
-        queues_to_shut_down = []
-        for task in self._tasks.values():
-            if task.status.state not in {TaskState.QUEUED, TaskState.RUNNING}:
-                continue
-
-            task_id = str(task.task_id)
-            handler_task = self._task_handler_async_tasks.pop(task_id, None)
-            if handler_task is not None:
-                handler_task.cancel()
-
-            # The queues are dropped from their maps synchronously so no new reader can
-            # pick them up, and are shut down afterwards.
-            inbox = self._task_inboxes.pop(task_id, None)
-            if inbox is not None:
-                queues_to_shut_down.append(inbox)
-            outbox = self._task_outboxes.pop(task_id, None)
-            if outbox is not None:
-                queues_to_shut_down.append(outbox)
-
-            task.status._transition_to_errored(
-                error=AgentCapabilityExecutionError(
-                    agent_capability_name=task.command,
-                    error_message=error_message,
-                )
-            )
-            task.datetime_completed = utc_now()
-            task.event_logger.error(
-                message=error_message,
-                data={"agent_id": str(self.agent_id)},
-            )
-            errored_tasks.append(task)
-
-        if queues_to_shut_down:
-            run_async_background_task(
-                coroutine=self._shutdown_task_queues(queues=queues_to_shut_down)
-            )
-
-        return errored_tasks
-
-    @staticmethod
-    async def _shutdown_task_queues(queues: list[TaskMessagesQueue]) -> None:
-        # Immediate shutdown drops buffered messages and wakes any reader already
-        # blocked in get() so it sees end of stream rather than the errored task's
-        # messages.
-        for queue in queues:
-            await queue.shutdown(immediate=True)
+        return self._tasks_service._error_pending_tasks_for_agent(
+            agent=self,
+            error_message=error_message,
+        )
 
     def mark_as_active(self) -> None:
         self._status = AgentStatus.ACTIVE
@@ -889,6 +889,31 @@ class Agent:
                 task_outcome = await agent_capability.execute(
                     task_launch_message=task_launch_message
                 )
+
+                # execute() returning after a cancellation was requested means the
+                # capability caught its own CancelledError instead of letting it
+                # propagate. Teardown cancels the handler before it errors the task
+                # or destroys the record, so resuming here would drive a terminal
+                # transition, and fire AGENT_TASK_COMPLETED, for a task that is
+                # already terminal or already deleted. Re-assert the cancellation
+                # the capability suppressed: cancelling() is non-zero from the
+                # moment cancel() is called, whether or not the exception survived
+                # the capability body.
+                handler_async_task = asyncio.current_task()
+                if handler_async_task is not None and handler_async_task.cancelling():
+                    # Named rather than silently re-raised: the framework recovers, but
+                    # a capability that suppresses cancellation is a component bug and
+                    # recovering quietly would leave it undiagnosable.
+                    self.logger.warning(
+                        "Agent {} had capability '{}' suppress the cancellation of "
+                        "task {} and return normally. The framework re-asserted the "
+                        "cancellation, but capabilities must let CancelledError "
+                        "propagate rather than catching it and returning.",
+                        self,
+                        agent_capability.name,
+                        task.task_id,
+                    )
+                    raise asyncio.CancelledError
 
                 # Upon returning without raising an error check the `task_outcome` to
                 # see if it is present or not and emit the final event based on that
@@ -995,48 +1020,48 @@ class Agent:
                     str(agent_capability),
                     formatted_exception,
                 )
-                # Guard the terminal transition, this is the last-resort error handler
-                # running inside a fire-and-forget asyncio task. If the transition itself
-                # raises (for example an illegal state transition) we must swallow and
-                # log it rather than let a fresh exception escape the task uncaught.
-                try:
-                    task.status._transition_to_errored(
-                        error=AgentCapabilityExecutionError(
-                            agent_capability_name=agent_capability.name,
-                            error_message=(
-                                "An unhandled exception was raised during execution. "
-                                f"{formatted_exception}"
-                            ),
-                        )
+                # This is the last-resort error handler running inside a fire and
+                # forget asyncio task, so it must not raise. A compare and swap covers
+                # the one way the transition can legitimately fail: the capability
+                # suppressed its own cancellation and then raised something else while
+                # cleaning up, so agent teardown already drove this task terminal. That
+                # is a lost race rather than an error, so log it and leave the terminal
+                # state teardown already recorded in place.
+                if task.status._try_transition_to_errored(
+                    error=AgentCapabilityExecutionError(
+                        agent_capability_name=agent_capability.name,
+                        error_message=(
+                            "An unhandled exception was raised during execution. "
+                            f"{formatted_exception}"
+                        ),
                     )
+                ):
                     task.event_logger.error(
                         message=formatted_exception,
                         data={"type": exc.__class__.__name__, "message": str(exc)},
                     )
-                except Exception as transition_exc:
+                else:
                     self.logger.error(
-                        "Agent {} failed to transition task {} to ERRORED while handling "
-                        "an unhandled capability exception. {}: {}",
+                        "Agent {} could not transition task {} to ERRORED while "
+                        "handling an unhandled capability exception, it had already "
+                        "reached {}.",
                         self,
                         task,
-                        transition_exc.__class__.__name__,
-                        str(transition_exc),
+                        task.status.state,
                     )
 
-            # Upon returning from the task's execution method the capability is no longer
-            # running, so drop its inbox (no more results will be routed to it) and update
-            # the task's completion datetime. The outbox is intentionally left in
-            # self._task_outboxes so any buffered output can still be drained.
-            self._task_inboxes.pop(str(task_launch_message.task_id), None)
+            # Upon returning from the task's execution method the capability is no
+            # longer running, so release its inbox (no more results will be routed to
+            # it) and update the task's completion datetime. The outbox remains in the
+            # registry so any buffered output can still be drained.
+            self._task_runtime_service.release_inbox(task_id=task.task_id)
             task.datetime_completed = utc_now()
 
             # Finally we fire the event to notify all event handlers that a task has
             # completed
             await server_singletons.events_service.trigger_event(
                 event_type=EventType.AGENT_TASK_COMPLETED,
-                message=(
-                    f"Agent {self} completed task {task} with status {task.status}"
-                ),
+                message=f"Agent {self} completed task {task} with status {task.status}",
                 data={
                     "agent_id": str(self.agent_id),
                     "task": task.to_json(),
@@ -1044,31 +1069,29 @@ class Agent:
             )
 
         running_agent_capability = agent_capability(agent=self, task=task)
-        # The inbox is tracked while the capability runs so results can be routed to it;
-        # it is dropped on completion (see the handler). The outbox is tracked separately
-        # so readers can drain it even after the capability exits: it is removed only when
-        # it reaches end of stream, not when the capability finishes.
-        self._task_inboxes[str(task.task_id)] = (
-            running_agent_capability._task_messages_inbox
-        )
-        self._task_outboxes[str(task.task_id)] = (
-            running_agent_capability._task_messages_outbox
-        )
-        self._new_task_started_event.set()
-
         agent_capability_task = asyncio.create_task(
             _agent_capability_task_handler(
                 agent_capability=running_agent_capability,
                 task=task,
             ),
         )
-        # Hold a reference keyed by task ID to prevent garbage collection while running
-        # and to allow cancelling this specific handler on deletion.
-        self._task_handler_async_tasks[str(task.task_id)] = agent_capability_task
-        # Once the task is finished it removes its own reference to avoid holding
-        # references to finished handlers indefinitely.
+        runtime = TaskRuntime()
+        runtime.attach(
+            handler=agent_capability_task,
+            inbox=running_agent_capability._task_messages_inbox,
+            outbox=running_agent_capability._task_messages_outbox,
+        )
+        self._task_runtime_service.attach_task_runtime(
+            task_id=task.task_id,
+            agent_id=self.agent_id,
+            task_runtime=runtime,
+        )
+
+        # Once the handler is finished, release the registry's reference to it. The
+        # callback also runs on cancellation after agent or record teardown, so a
+        # missing registry entry is a normal outcome.
         agent_capability_task.add_done_callback(
-            lambda _task, task_id=str(task.task_id): self._task_handler_async_tasks.pop(
-                task_id, None
+            lambda _task, task_id=str(task.task_id): (
+                self._task_runtime_service.release_handler(task_id=task_id)
             )
         )

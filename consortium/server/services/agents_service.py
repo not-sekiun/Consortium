@@ -17,6 +17,7 @@ from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.agent_objects import Agent
 from consortium.server.objects.task_objects import Task
 from consortium.server.services.events_service import EventsService
+from consortium.server.services.task_runtime_service import TaskRuntimeService
 from consortium.server.services.tasks_service import TasksService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
@@ -31,9 +32,11 @@ class AgentsService:
         self,
         events_service: EventsService,
         tasks_service: TasksService,
+        task_runtime_service: TaskRuntimeService,
     ):
         self._events_service = events_service
         self._tasks_service = tasks_service
+        self._task_runtime_service = task_runtime_service
         self._agents = {}
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
@@ -109,6 +112,8 @@ class AgentsService:
             The newly registered agent instance.
         """
         agent = Agent(
+            tasks_service=self._tasks_service,
+            task_runtime_service=self._task_runtime_service,
             listener_id=listener_id,
             payload_id=payload_id,
             agent_type=agent_type,
@@ -152,9 +157,9 @@ class AgentsService:
             AgentNotFoundError: If no agent with the given ID is registered.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        self._tasks_service.error_pending_tasks_for_agent(
+        self._tasks_service._error_pending_tasks_for_agent(
             agent=agent,
-            error_message=("The owning agent deregistered before this task completed."),
+            error_message="The owning agent deregistered before this task completed.",
         )
         del self._agents[str(agent.agent_id)]
 
@@ -183,7 +188,7 @@ class AgentsService:
             AgentNotFoundError: If no agent with the given ID is registered.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        self._tasks_service.error_pending_tasks_for_agent(
+        self._tasks_service._error_pending_tasks_for_agent(
             agent=agent,
             error_message=(
                 "The owning agent was deleted by an operator before this task "
@@ -485,26 +490,35 @@ class AgentsService:
     ) -> Task:
         """Queues a command for execution on the specified agent and emits an `AGENT_TASKED` event.
 
+        The tasking is validated before any task is created. When validation rejects it
+        no task is registered and no `AGENT_TASKED` event is emitted, the relevant
+        exception below is raised instead.
+
         Args:
             agent_id: The ID of the agent to task.
             command: The name of the command to execute on the agent.
-            arguments: The arguments to pass along with the command.
+            arguments: The arguments to pass along with the command. Omitted optional
+                options are filled in from their declared defaults.
 
         Returns:
             The newly created task object representing the queued command.
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
+            AgentCapabilityNotFoundError: If command does not name a capability of the
+                agent's type.
+            MissingRequiredAgentCapabilityOptionError: If a required option is absent
+                from arguments.
+            AgentCapabilityOptionNotFoundError: If arguments contains an unknown option
+                name.
+            AgentCapabilityOptionValueValidationError: If an argument value fails type or
+                constraint validation.
+            AgentCapabilityValidatingFunctionError: If the capability's validating
+                function rejects the resolved argument set.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
 
-        task = Task(
-            agent_id=agent.agent_id,
-            command=command,
-            arguments=arguments,
-        )
-        await agent.submit_task(task=task)
-        self._tasks_service.register_task(task=task, agent=agent)
+        task = await agent.submit_task(command=command, arguments=arguments)
 
         run_async_background_task(
             coroutine=self._events_service.trigger_event(

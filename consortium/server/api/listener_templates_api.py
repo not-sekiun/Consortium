@@ -57,7 +57,7 @@ _listener_template_not_found_error = (
     "/all",
     responses={200: {"model": list[ListenerTemplateModel]}},
 )
-def get_all_listener_templates(
+async def get_all_listener_templates(
     _: Annotated[
         None,
         Depends(AuthorizeUserRequest(UserPermissions.READ_ALL_LISTENER_TEMPLATES)),
@@ -77,7 +77,7 @@ def get_all_listener_templates(
         422: {"model": RequestValidationErrorResponse},
     },
 )
-def get_listener_template_by_listener_template_id(
+async def get_listener_template_by_listener_template_id(
     listener_template_id: UUID4,
     _: Annotated[
         None,

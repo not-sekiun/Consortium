@@ -9,9 +9,7 @@ from consortium.framework._core.framework_exceptions.agent_capabilities_framewor
     AgentCapabilitiesFrameworkError,
 )
 from consortium.server.models.logging_models import LoggerType
-from consortium.server.models.task_models import (
-    TaskState,
-)
+from consortium.server.models.task_models import TaskState
 from consortium.server.utils import utc_now
 
 
@@ -43,6 +41,23 @@ class TaskStatus:
     def __init__(self):
         self.state = TaskState.QUEUED
         self.error = None
+        # Set when the delete path takes exclusive ownership of this task's teardown.
+        # A claimed task is frozen: every transition is refused from that point on, so
+        # a reader holding a launch message it dequeued earlier cannot promote it to
+        # RUNNING after deletion already judged it deletable. Deliberately not part of
+        # to_json: this is internal bookkeeping, not a client visible state.
+        self._claimed_for_deletion = False
+
+    def claim_for_deletion(self) -> bool:
+        # Compare and swap that fuses "is this deletable?" with "claim it" into one
+        # operation, so no suspension point can open between the test and the claim.
+        # RUNNING is the one state a task cannot be deleted from. Returns False when
+        # the task is running or when another caller already claimed it, making the
+        # winner uniquely responsible for tearing the task down.
+        if self.state == TaskState.RUNNING or self._claimed_for_deletion:
+            return False
+        self._claimed_for_deletion = True
+        return True
 
     def __str__(self) -> str:
         return f"{self.state}: {self.error}" if self.error is not None else self.state
@@ -67,6 +82,11 @@ class TaskStatus:
         new_state: TaskState,
         error: AgentCapabilitiesFrameworkError | None = None,
     ):
+        if self._claimed_for_deletion:
+            raise AssertionError(
+                f"Task was claimed for deletion, so the transition from "
+                f"'{self.state}' to '{new_state}' is not permitted.",
+            )
         if new_state not in self._valid_state_transitions[self.state]:
             raise AssertionError(
                 f"Invalid status transition from current status '{self.state}' to new "
@@ -85,6 +105,31 @@ class TaskStatus:
         self.state = new_state
         self.error = error
 
+    def _try_transition_to_state(
+        self,
+        new_state: TaskState,
+        error: AgentCapabilitiesFrameworkError | None = None,
+    ) -> bool:
+        # Compare and swap: returns False rather than raising when the task has already
+        # left the state the caller observed. This is for the paths that race a
+        # concurrently running capability handler, where losing is an ordinary lifecycle
+        # outcome and not a programming error. Because the test and the write happen in
+        # one call, a caller no longer has to hold the gap between "check the state" and
+        # "act on it" free of suspension points, which is what previously forced task
+        # teardown to run as an uninterrupted synchronous block.
+        # This is deliberately the same shape as the conditional UPDATE ... WHERE state
+        # = ... that will replace it once task records live in a database, so the call
+        # sites survive that migration unchanged.
+        # Callers that provably own the task keep using _transition_to_state so a
+        # genuine ordering mistake still fails loudly instead of being silently
+        # swallowed.
+        if self._claimed_for_deletion:
+            return False
+        if new_state not in self._valid_state_transitions[self.state]:
+            return False
+        self._transition_to_state(new_state=new_state, error=error)
+        return True
+
     def _transition_to_queued(self) -> None:
         self._transition_to_state(new_state=TaskState.QUEUED)
 
@@ -99,6 +144,14 @@ class TaskStatus:
 
     def _transition_to_errored(self, error: AgentCapabilitiesFrameworkError) -> None:
         self._transition_to_state(new_state=TaskState.ERRORED, error=error)
+
+    def _try_transition_to_running(self) -> bool:
+        return self._try_transition_to_state(new_state=TaskState.RUNNING)
+
+    def _try_transition_to_errored(
+        self, error: AgentCapabilitiesFrameworkError
+    ) -> bool:
+        return self._try_transition_to_state(new_state=TaskState.ERRORED, error=error)
 
 
 class Task:

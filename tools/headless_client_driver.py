@@ -150,11 +150,20 @@ class _OutputActivityTracker:
             return self._write_count
 
 
+class _ClientExited(Exception):
+    # Raised inside the feeder once the client has returned, so the feed loop stops
+    # without marking delivery complete. Reaching the end of the loop is what reports
+    # a fully delivered run, and commands written into a pipe the client is no longer
+    # reading have not been delivered in any useful sense.
+    pass
+
+
 def _wait_until_client_is_ready(
     tracker: _OutputActivityTracker,
     baseline_write_count: int,
     settle: float,
     timeout: float,
+    client_exited: threading.Event,
 ) -> bool:
     # Ready means the client has written something since the previous command was
     # submitted and has then produced nothing for `settle` seconds. Requiring new
@@ -162,6 +171,10 @@ def _wait_until_client_is_ready(
     # before the command was sent has not yet started responding to it.
     deadline = time.monotonic() + timeout
     while True:
+        # A client that has exited produces no further output, so without this the
+        # wait could only ever end by running out the full timeout.
+        if client_exited.is_set():
+            return False
         write_count, last_write_at = tracker.snapshot()
         now = time.monotonic()
         if write_count > baseline_write_count and (now - last_write_at) >= settle:
@@ -203,6 +216,7 @@ def _feed_commands(
     tracker: _OutputActivityTracker | None,
     settle: float,
     ready_timeout: float,
+    client_exited: threading.Event,
 ) -> None:
     # Output volume as of the previous submission, so the readiness check can tell
     # output produced in response to that command apart from output that predates it.
@@ -212,13 +226,21 @@ def _feed_commands(
     def submit(command: str) -> None:
         nonlocal baseline_write_count
 
+        if client_exited.is_set():
+            raise _ClientExited
+
         if tracker is not None:
             if not _wait_until_client_is_ready(
                 tracker=tracker,
                 baseline_write_count=baseline_write_count,
                 settle=settle,
                 timeout=ready_timeout,
+                client_exited=client_exited,
             ):
+                # A wait cut short by the client exiting is not a settle failure, and
+                # the undelivered commands are reported by the caller instead.
+                if client_exited.is_set():
+                    raise _ClientExited
                 print(
                     f"headless driver: the client did not settle within "
                     f"{ready_timeout:g}s before '{command}'; the transcript around "
@@ -244,9 +266,10 @@ def _feed_commands(
 
         if auto_exit and last_command != "exit":
             submit("exit")
-    except (EOFError, OSError):
-        # The client may exit before all queued commands are consumed. The
-        # caller detects this through the unset delivered event.
+    except (_ClientExited, EOFError, OSError):
+        # The client may exit before all queued commands are consumed, either by
+        # tearing down the pipe under the feeder or by returning while the feeder is
+        # still working. The caller detects both through the unset delivered event.
         return
     delivered.set()
 
@@ -317,6 +340,7 @@ def _run_client(
         client_exit_code = 0
         with create_pipe_input() as pipe_input:
             delivered = threading.Event()
+            client_exited = threading.Event()
             feeder = threading.Thread(
                 target=_feed_commands,
                 args=(
@@ -328,6 +352,7 @@ def _run_client(
                     tracker,
                     settle,
                     ready_timeout,
+                    client_exited,
                 ),
                 daemon=True,
                 name="consortium-headless-client-input",
@@ -340,8 +365,15 @@ def _run_client(
                     except SystemExit as exc:
                         client_exit_code = _system_exit_code(exc)
             finally:
-                # Join inside the pipe input context so a feeder that is merely
-                # behind can still submit its remaining commands.
+                # Tell the feeder the client is gone before joining. Without this a
+                # feeder parked in its readiness wait would sit out the whole join,
+                # since an exited client never produces the output that wait needs.
+                # Nothing submitted from here on would be executed anyway: the client
+                # has stopped reading, so those commands are dropped, not delivered.
+                client_exited.set()
+                # Join inside the pipe input context so the feeder is never mid-send
+                # when the pipe closes, and so `is_alive()` below distinguishes a
+                # feeder that stopped from one that is stuck on its command source.
                 feeder.join(FEEDER_JOIN_TIMEOUT)
         return _delivery_exit_code(feeder, delivered, client_exit_code)
     except KeyboardInterrupt:

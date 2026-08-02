@@ -26,6 +26,7 @@ from consortium.server.services.payloads_service import PayloadsService
 from consortium.server.services.plugins_service import PluginsService
 from consortium.server.services.release_service import ReleaseService
 from consortium.server.services.repository_service import RepositoryService
+from consortium.server.services.task_runtime_service import TaskRuntimeService
 from consortium.server.services.tasks_service import TasksService
 from consortium.server.services.user_accounts_service import UserAccountsService
 from consortium.server.services.users_service import UsersService
@@ -108,10 +109,15 @@ c2_types_service = C2TypesService(
     agent_profiles_service=agent_profiles_service,
 )
 
-tasks_service = TasksService(events_service=events_service)
+task_runtime_service = TaskRuntimeService()
+tasks_service = TasksService(
+    events_service=events_service,
+    task_runtime_service=task_runtime_service,
+)
 agents_service = AgentsService(
     events_service=events_service,
     tasks_service=tasks_service,
+    task_runtime_service=task_runtime_service,
 )
 
 # The payloads service relies on the _agent_templates_service to check that the metadata

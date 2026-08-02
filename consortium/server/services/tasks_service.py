@@ -1,30 +1,30 @@
 import uuid
-import weakref
 from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
-    AgentTaskNotFoundError,
+from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
+    AgentCapabilityExecutionError,
 )
+from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.service_exceptions.tasks_service_exceptions import (
-    TaskAgentMismatchError,
+    TaskNotDeletableError,
     TaskNotFoundError,
-    TaskNotQueuedError,
-    TaskNotTerminalError,
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.models.task_models import TaskState
 from consortium.server.objects.task_objects import Task
 from consortium.server.services.events_service import EventsService
+from consortium.server.services.task_runtime_service import TaskRuntimeService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
     run_async_background_task,
+    utc_now,
 )
 
 if TYPE_CHECKING:
+    from consortium.framework.agents._task_messages_queue import TaskMessagesQueue
     from consortium.server.objects.agent_objects import Agent
 
 
@@ -56,19 +56,16 @@ class TasksService:
     def __init__(
         self,
         events_service: EventsService,
+        task_runtime_service: TaskRuntimeService,
         max_retained_terminal_tasks: int = DEFAULT_MAX_RETAINED_TERMINAL_TASKS,
     ):
         if max_retained_terminal_tasks < 0:
             raise ValueError("max_retained_terminal_tasks must be non-negative")
 
         self._events_service = events_service
+        self._task_runtime_service = task_runtime_service
         self._max_retained_terminal_tasks = max_retained_terminal_tasks
         self._tasks: dict[str, Task] = {}
-        # Runtime owner references are weak so the global task registry never keeps a
-        # deleted agent alive solely because one of its task records still exists.
-        self._task_agents: weakref.WeakValueDictionary[str, Agent] = (
-            weakref.WeakValueDictionary()
-        )
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
@@ -80,32 +77,12 @@ class TasksService:
         return "TasksService()"
 
     @log_and_propagate_error_on_service_method
-    def register_task(self, task: Task, agent: Agent) -> Task:
-        """Registers a task globally while retaining a weak runtime owner reference."""
-        if task.agent_id != agent.agent_id:
-            raise TaskAgentMismatchError(
-                task_agent_id=str(task.agent_id),
-                agent_id=str(agent.agent_id),
-            )
-
-        task_id = str(task.task_id)
-        self._tasks[task_id] = task
-        self._task_agents[task_id] = agent
-        self._logger.debug("Registered task {} for agent {}", task, agent)
-        # Registration is the only point at which the registry grows, so it is where
-        # the retention bound is enforced. Keeping this here rather than calling into
-        # the service from the capability handler leaves eviction entirely owned by
-        # this service.
-        self._prune_terminal_tasks()
-        return task
-
-    @log_and_propagate_error_on_service_method
     def get_all_tasks(
         self,
         agent_id: str | uuid.UUID | None = None,
         status: TaskState | None = None,
     ) -> list[Task]:
-        """Returns globally registered tasks filtered by owner and/or state."""
+        """Returns global task records filtered by owner and/or state."""
         if agent_id is None:
             normalized_agent_id = None
         else:
@@ -136,75 +113,65 @@ class TasksService:
 
     @log_and_propagate_error_on_service_method
     def get_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
-        """Returns a globally registered task by its ID."""
-        normalized_task_id = _canonicalize_uuid(value=task_id)
-        # A task ID that is not a UUID can never identify a stored task, so it is
-        # reported as not found rather than as a malformed-input error.
-        if normalized_task_id is None:
-            raise TaskNotFoundError(task_id=normalize_uuid(value=task_id))
-
-        try:
-            task = self._tasks[normalized_task_id]
-        except KeyError:
-            raise TaskNotFoundError(task_id=normalized_task_id) from None
+        """Returns a global task record by its ID."""
+        task = self.find_task(task_id=task_id)
+        if task is None:
+            normalized_task_id = _canonicalize_uuid(value=task_id)
+            raise TaskNotFoundError(
+                task_id=normalized_task_id or normalize_uuid(value=task_id)
+            )
 
         self._logger.debug("Retrieved task {}", task)
         return task
 
-    @log_and_propagate_error_on_service_method
-    async def delete_queued_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
-        """Deletes a QUEUED task and tears down its agent-side runtime state."""
-        task = self.get_task_by_task_id(task_id=task_id)
-        if task.status.state != TaskState.QUEUED:
-            raise TaskNotQueuedError(task_str=str(task), state=task.status.state)
+    def _destroy_task_record(self, task: Task) -> list[TaskMessagesQueue]:
+        # The only place a record is ever removed, which is what keeps a runtime from
+        # outliving its record: popping both here in one synchronous block makes that
+        # impossible by construction. Any new removal path has to do the same.
+        # The record is popped before the runtime is touched so that a racing second
+        # caller returns empty handed rather than detaching queues it will not shut
+        # down.
+        task_id = str(task.task_id)
+        deleted_task = self._tasks.pop(task_id, None)
+        if deleted_task is None:
+            return []
 
-        normalized_task_id = str(task.task_id)
-        agent = self._task_agents.get(normalized_task_id)
-        if agent is not None:
-            try:
-                await agent.delete_queued_task_by_task_id(task_id=normalized_task_id)
-            except AgentTaskNotFoundError:
-                # A concurrent deletion may have already torn down the agent-side
-                # runtime. The global task record still needs to be reaped.
-                pass
-
-        self._delete_task_record(task=task)
-
-    @log_and_propagate_error_on_service_method
-    async def delete_terminal_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
-        """Deletes a task that has reached SUCCEEDED, FAILED, or ERRORED."""
-        task = self.get_task_by_task_id(task_id=task_id)
-        if task.status.state not in TERMINAL_TASK_STATES:
-            raise TaskNotTerminalError(task_str=str(task), state=task.status.state)
-
-        normalized_task_id = str(task.task_id)
-        agent = self._task_agents.get(normalized_task_id)
-        if agent is not None:
-            try:
-                await agent.delete_terminal_task_by_task_id(task_id=normalized_task_id)
-            except AgentTaskNotFoundError:
-                # A concurrent deletion may have already torn down the agent-side
-                # runtime. The global task record still needs to be reaped.
-                pass
-
-        self._delete_task_record(task=task)
-
-    @log_and_propagate_error_on_service_method
-    def error_pending_tasks_for_agent(
-        self,
-        agent: Agent,
-        error_message: str,
-    ) -> list[Task]:
-        """Transitions an agent's queued and running tasks to ERRORED."""
-        errored_tasks = agent.error_pending_tasks(error_message=error_message)
-        self._logger.debug(
-            "Marked {} pending task(s) as ERRORED because agent {} was removed",
-            len(errored_tasks),
-            agent,
+        runtime = self._task_runtime_service.pop(task_id=task_id)
+        queues = runtime.detach() if runtime is not None else []
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.TASK_DELETED,
+                message=f"Deleted task: {deleted_task}",
+                data=deleted_task.to_json(),
+            )
         )
-        # These tasks just became terminal, so they are now eligible for eviction.
-        self._prune_terminal_tasks()
-        return errored_tasks
+        self._logger.debug("Deleted task {}", deleted_task)
+        return queues
+
+    @staticmethod
+    async def _shutdown_queues(queues: list[TaskMessagesQueue]) -> None:
+        # Immediate shutdown drops buffered messages and wakes readers already blocked
+        # in get() so they observe end of stream instead of deleted task output.
+        for queue in queues:
+            await queue.shutdown(immediate=True)
+
+    @log_and_propagate_error_on_service_method
+    async def delete_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
+        """Deletes a task that is not RUNNING and tears down its runtime state."""
+        task = self.get_task_by_task_id(task_id=task_id)
+        # The claim fuses the deletability test with taking ownership, so there is no
+        # gap for a reader to promote this task to RUNNING after it was judged
+        # deletable: a claimed task refuses every subsequent transition. It also makes
+        # the winner of two racing deletes uniquely responsible for the teardown.
+        if not task.status.claim_for_deletion():
+            raise TaskNotDeletableError(task_str=str(task), state=task.status.state)
+
+        # No await may be introduced between the state check and record destruction:
+        # this synchronous block closes the QUEUED-to-RUNNING deletion race. Terminal
+        # states are absorbing, so a task that passes this check while terminal cannot
+        # start running underneath the delete.
+        queues = self._destroy_task_record(task=task)
+        await self._shutdown_queues(queues=queues)
 
     def _prune_terminal_tasks(self) -> None:
         terminal_tasks = [
@@ -219,42 +186,112 @@ class TasksService:
         terminal_tasks.sort(
             key=lambda task: task.datetime_completed or task.datetime_created
         )
+        queues_to_shut_down = []
         for task in terminal_tasks[:excess_count]:
             self._logger.debug(
                 "Evicting retained terminal task {} after exceeding the limit of {}",
                 task,
                 self._max_retained_terminal_tasks,
             )
-            task_id = str(task.task_id)
-            agent = self._task_agents.get(task_id)
-            if agent is not None:
-                run_async_background_task(
-                    self._delete_evicted_task_from_agent(
-                        agent=agent,
-                        task_id=task_id,
-                    )
-                )
-            self._delete_task_record(task=task)
+            queues_to_shut_down.extend(self._destroy_task_record(task=task))
 
-    @staticmethod
-    async def _delete_evicted_task_from_agent(agent: Agent, task_id: str) -> None:
-        try:
-            await agent.delete_terminal_task_by_task_id(task_id=task_id)
-        except AgentTaskNotFoundError:
-            pass
-
-    def _delete_task_record(self, task: Task) -> None:
-        task_id = str(task.task_id)
-        deleted_task = self._tasks.pop(task_id, None)
-        self._task_agents.pop(task_id, None)
-        if deleted_task is None:
-            return
-
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.TASK_DELETED,
-                message=f"Deleted task: {deleted_task}",
-                data=deleted_task.to_json(),
+        if queues_to_shut_down:
+            run_async_background_task(
+                coroutine=self._shutdown_queues(queues=queues_to_shut_down)
             )
+
+    def find_task(
+        self,
+        task_id: str | uuid.UUID,
+        agent_id: str | uuid.UUID | None = None,
+        status: TaskState | None = None,
+    ) -> Task | None:
+        """Find a task by ID, optionally scoped to an owner and state."""
+        normalized_task_id = _canonicalize_uuid(value=task_id)
+        if normalized_task_id is None:
+            return None
+
+        task = self._tasks.get(normalized_task_id)
+        if task is None:
+            return None
+
+        if agent_id is not None:
+            normalized_agent_id = _canonicalize_uuid(value=agent_id)
+            if normalized_agent_id is None or str(task.agent_id) != normalized_agent_id:
+                return None
+
+        if status is not None and task.status.state != status:
+            return None
+
+        return task
+
+    @log_and_propagate_error_on_service_method
+    def _register_task(self, task: Task, agent: Agent) -> Task:
+        # Internal: the record store is only ever grown by Agent.submit_task, which
+        # registers a task after its capability has started. Callers outside the
+        # framework inspect and delete records, they do not create them. Ownership is
+        # validated by Agent._resolve_and_validate_tasking before anything is started
+        # (and before a task even exists to register), so this method
+        # deliberately performs no checks that could raise after a handler exists.
+        task_id = str(task.task_id)
+        self._tasks[task_id] = task
+        self._logger.debug("Registered task {} for agent {}", task, agent)
+        # Registration is the only point at which the record store grows, so it is
+        # where the retention bound is enforced. Keeping this here rather than calling
+        # into the service from the capability handler leaves eviction entirely owned
+        # by this service.
+        self._prune_terminal_tasks()
+        return task
+
+    @log_and_propagate_error_on_service_method
+    def _error_pending_tasks_for_agent(
+        self,
+        agent: Agent,
+        error_message: str,
+    ) -> list[Task]:
+        # Internal: this is agent teardown, not a record operation. It is called by
+        # AgentsService when an agent is removed and exposed to callers only through
+        # Agent.error_pending_tasks.
+        # Runtime teardown is unconditional: after the agent is gone no buffered output
+        # is reachable anyway, because every drain path resolves the agent through
+        # AgentsService.get_agent_by_agent_id first. Leaving any runtime attached would
+        # keep the removed agent alive through outbox -> _agent.
+        runtimes = self._task_runtime_service.pop_all_for_agent(agent_id=agent.agent_id)
+        queues_to_shut_down = [
+            queue for runtime in runtimes for queue in runtime.detach()
+        ]
+
+        # The transition is a compare and swap, so a handler cancelled just above that
+        # reaches its own terminal transition first is a losing racer rather than an
+        # illegal-transition error that would abort agent removal partway through the
+        # loop. Whoever wins, the task ends up terminal.
+        errored_tasks = []
+        for task in self.get_all_tasks(agent_id=agent.agent_id):
+            if not task.status._try_transition_to_errored(
+                error=AgentCapabilityExecutionError(
+                    agent_capability_name=task.command,
+                    error_message=error_message,
+                )
+            ):
+                continue
+
+            task.datetime_completed = utc_now()
+            task.event_logger.error(
+                message=error_message,
+                data={"agent_id": str(agent.agent_id)},
+            )
+            errored_tasks.append(task)
+
+        if queues_to_shut_down:
+            run_async_background_task(
+                coroutine=self._shutdown_queues(queues=queues_to_shut_down)
+            )
+
+        self._logger.debug(
+            "Marked {} pending task(s) as ERRORED because agent {} was removed",
+            len(errored_tasks),
+            agent,
         )
-        self._logger.debug("Deleted task {}", deleted_task)
+        # These tasks just became terminal, so they are now eligible for eviction.
+        self._prune_terminal_tasks()
+        return errored_tasks

@@ -85,6 +85,14 @@ _agent_capability_not_found_error = (
         ),
     )
 )
+_agent_capability_validating_function_error = agents_api_exceptions.AgentCapabilityValidatingFunctionError.from_consortium_exception(
+    consortium_exception=agent_object_exceptions.AgentCapabilityValidatingFunctionError(
+        agent_str="<agent_str>",
+        command="<command>",
+        error_message="<error_message>",
+        detail={"<key>": "<value>"},
+    ),
+)
 
 # Listeners.
 _listener_already_running_error = (
@@ -195,6 +203,13 @@ _missing_required_agent_template_option_error = agent_templates_api_exceptions.M
         option_name="<option_str>",
     ),
 )
+_agent_template_validating_function_error = agent_templates_api_exceptions.AgentTemplateValidatingFunctionError.from_consortium_exception(
+    consortium_exception=agent_templates_framework_exceptions.AgentTemplateValidatingFunctionError(
+        agent_template_str="<agent_template>",
+        error_message="<error_message>",
+        detail={"<key>": "<value>"},
+    ),
+)
 
 # Listener templates.
 _listener_template_option_value_validation_error = listener_templates_api_exceptions.ListenerTemplateOptionValueValidationError.from_consortium_exception(
@@ -215,6 +230,13 @@ _missing_required_listener_template_option_error = listener_templates_api_except
     consortium_exception=listener_templates_framework_exceptions.MissingRequiredListenerTemplateOptionError(
         listener_template_str="<listener_template>",
         option_name="<option_str>",
+    ),
+)
+_listener_template_validating_function_error = listener_templates_api_exceptions.ListenerTemplateValidatingFunctionError.from_consortium_exception(
+    consortium_exception=listener_templates_framework_exceptions.ListenerTemplateValidatingFunctionError(
+        listener_template_str="<listener_template>",
+        error_message="<error_message>",
+        detail={"<key>": "<value>"},
     ),
 )
 
@@ -271,6 +293,7 @@ AgentTaskingValidationErrorResponse = create_union_response_model(
         _missing_required_agent_capability_option_error,
         _agent_capability_option_not_found_error,
         _agent_capability_not_found_error,
+        _agent_capability_validating_function_error,
         _unprocessable_entity_error,
     ),
 )
@@ -325,6 +348,7 @@ AgentTemplateOptionsValidationErrorResponse = create_union_response_model(
         _agent_template_option_value_error,
         _agent_template_option_not_found_error,
         _missing_required_agent_template_option_error,
+        _agent_template_validating_function_error,
         _unprocessable_entity_error,
     ),
 )
@@ -337,6 +361,7 @@ ListenerTemplateOptionsValidationErrorResponse = create_union_response_model(
         _listener_template_option_value_validation_error,
         _listener_template_option_not_found_error,
         _missing_required_listener_template_option_error,
+        _listener_template_validating_function_error,
         _unprocessable_entity_error,
     ),
 )

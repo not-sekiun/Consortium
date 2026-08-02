@@ -38,30 +38,16 @@ class TaskNotFoundError(TasksServiceError):
         )
 
 
-class TaskNotQueuedError(TasksServiceError):
-    """Raised when queued-task deletion targets a task in another state."""
+class TaskNotDeletableError(TasksServiceError):
+    """Raised when task deletion targets a task that is still running."""
 
-    code = "TASK_NOT_QUEUED"
-
-    def __init__(self, task_str: str, state: TaskState) -> None:
-        super().__init__(
-            message=(
-                f"Failed to delete task {task_str} as a queued task. Its current "
-                f"state is '{state}', but only QUEUED tasks can use this endpoint."
-            )
-        )
-
-
-class TaskNotTerminalError(TasksServiceError):
-    """Raised when terminal-task deletion targets a non-terminal task."""
-
-    code = "TASK_NOT_TERMINAL"
+    code = "TASK_NOT_DELETABLE"
 
     def __init__(self, task_str: str, state: TaskState) -> None:
         super().__init__(
             message=(
-                f"Failed to delete task {task_str} as a terminal task. Its current "
-                f"state is '{state}', but only SUCCEEDED, FAILED, or ERRORED tasks can "
-                "use this endpoint."
+                f"Failed to delete task {task_str}. Its current state is '{state}', "
+                "and a running task cannot be deleted. Wait for it to reach SUCCEEDED, "
+                "FAILED, or ERRORED before deleting it."
             )
         )
