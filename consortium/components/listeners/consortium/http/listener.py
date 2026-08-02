@@ -1,11 +1,11 @@
 import json
-import socket
 
 import jsonschema
 from aiohttp import MultipartWriter, web
 
 from consortium.framework.listeners import BaseListener
 from consortium.framework.signal_exceptions import ListenerStartError
+from consortium.framework.utils import is_bindable
 from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
@@ -20,15 +20,11 @@ class Listener(BaseListener):
         local_host = self.parameters["local_host"]
         local_port = self.parameters["local_port"]
 
-        try:
-            test_socket = socket.socket()
-            test_socket.bind((local_host, local_port))
-            test_socket.close()
-        except Exception as exc:
+        if not is_bindable(address=local_host, port=local_port):
             raise ListenerStartError(
-                f"Listener was unable to bind to {local_host}:{local_port} due to the "
-                f"following error: {exc}",
-            ) from None
+                f"Listener was unable to bind to {local_host}:{local_port} because it "
+                f"is already in use or is not available.",
+            )
 
     async def on_running(self) -> None:
         local_host = self.parameters["local_host"]
@@ -112,8 +108,10 @@ class Listener(BaseListener):
                 )
                 return web.Response(status=401)
 
-            self.connected_agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
             try:
+                self.connected_agents_service.check_in_agent_by_agent_id(
+                    agent_id=agent_id
+                )
                 task_message = await self.connected_agents_service.get_next_task_message_sequential(
                     agent_id=agent_id,
                     timeout=0,  # Don't block, return immediately
@@ -298,8 +296,6 @@ class Listener(BaseListener):
 
     async def on_cancelled(self) -> None:
         # On cancellation, we need to stop the web server, but we may cancel the
-        # listener task before the web server is fully set up.
-        try:
+        # listener task before the web server is fully set up so check for the runner
+        if hasattr(self.environment, "runner"):
             await self.environment.runner.cleanup()
-        except AttributeError:
-            pass
