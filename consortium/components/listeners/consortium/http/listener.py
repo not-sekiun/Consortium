@@ -5,7 +5,6 @@ from aiohttp import MultipartWriter, web
 
 from consortium.framework.listeners import BaseListener
 from consortium.framework.signal_exceptions import ListenerStartError
-from consortium.framework.utils import is_bindable
 from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
     AgentTaskNotFoundError,
     AgentTypeResolutionError,
@@ -17,16 +16,6 @@ from consortium.server.exceptions.service_exceptions.agents_service_exceptions i
 
 class Listener(BaseListener):
     async def on_started(self) -> None:
-        local_host = self.parameters["local_host"]
-        local_port = self.parameters["local_port"]
-
-        if not is_bindable(address=local_host, port=local_port):
-            raise ListenerStartError(
-                f"Listener was unable to bind to {local_host}:{local_port} because it "
-                f"is already in use or is not available.",
-            )
-
-    async def on_running(self) -> None:
         local_host = self.parameters["local_host"]
         local_port = self.parameters["local_port"]
         tasks_url_paths = self.parameters["tasks_url_paths"]
@@ -285,10 +274,18 @@ class Listener(BaseListener):
         for url_path in results_url_paths:
             app.add_routes([web.post(url_path, handle_agent_posting_task_message)])
 
-        self.environment.runner = web.AppRunner(app)
-        await self.environment.runner.setup()
-        site = web.TCPSite(self.environment.runner, local_host, local_port)
-        await site.start()
+        try:
+            self.environment.runner = web.AppRunner(app)
+            await self.environment.runner.setup()
+            site = web.TCPSite(self.environment.runner, local_host, local_port)
+            await site.start()
+        except OSError as exc:
+            raise ListenerStartError(
+                f"Listener was unable to bind to {local_host}:{local_port} due to the "
+                f"following error: {exc}.",
+            ) from None
+
+    async def on_running(self) -> None:
         await self.stop_event.wait()
 
     async def on_stopped(self) -> None:
