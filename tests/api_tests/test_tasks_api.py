@@ -76,8 +76,6 @@ def _error_json_schema(code: str) -> dict:
 
 
 TASK_NOT_FOUND_ERROR_JSON_SCHEMA = _error_json_schema("TASK_NOT_FOUND")
-TASK_NOT_QUEUED_ERROR_JSON_SCHEMA = _error_json_schema("TASK_NOT_QUEUED")
-TASK_NOT_TERMINAL_ERROR_JSON_SCHEMA = _error_json_schema("TASK_NOT_TERMINAL")
 
 
 async def _submit_task(admin_client, agent_id: str, command: str) -> dict:
@@ -119,19 +117,18 @@ async def test_delete_unknown_task_returns_404(
     client,
 ):
     task_id = "00000000-0000-4000-8000-000000000013"
-    for task_kind in ("queued", "terminal"):
-        if client in (admin_client, operator_client):
-            validate_response(
-                test_response=await client.delete(f"/api/tasks/{task_kind}/{task_id}"),
-                expected_json_schema=TASK_NOT_FOUND_ERROR_JSON_SCHEMA,
-                expected_status_code=404,
-            )
-        else:
-            validate_response(
-                test_response=await client.delete(f"/api/tasks/{task_kind}/{task_id}"),
-                expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
-                expected_status_code=403,
-            )
+    if client in (admin_client, operator_client):
+        validate_response(
+            test_response=await client.delete(f"/api/tasks/{task_id}"),
+            expected_json_schema=TASK_NOT_FOUND_ERROR_JSON_SCHEMA,
+            expected_status_code=404,
+        )
+    else:
+        validate_response(
+            test_response=await client.delete(f"/api/tasks/{task_id}"),
+            expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+            expected_status_code=403,
+        )
 
 
 async def test_task_routes_reject_invalid_uuid_path_params(admin_client):
@@ -139,8 +136,7 @@ async def test_task_routes_reject_invalid_uuid_path_params(admin_client):
     # shape, see the uuid_parsing branch in server_exception_handlers.
     for method, path in (
         ("GET", "/api/tasks/not-a-uuid"),
-        ("DELETE", "/api/tasks/queued/not-a-uuid"),
-        ("DELETE", "/api/tasks/terminal/not-a-uuid"),
+        ("DELETE", "/api/tasks/not-a-uuid"),
     ):
         validate_response(
             test_response=await admin_client.request(method, path),
@@ -210,8 +206,8 @@ async def test_get_all_tasks_filters_by_agent_and_status(admin_client, mock_agen
         == {succeeded_task["task_id"]},
     )
 
-    await admin_client.delete(f"/api/tasks/queued/{queued_task['task_id']}")
-    await admin_client.delete(f"/api/tasks/terminal/{succeeded_task['task_id']}")
+    await admin_client.delete(f"/api/tasks/{queued_task['task_id']}")
+    await admin_client.delete(f"/api/tasks/{succeeded_task['task_id']}")
 
 
 async def test_get_task_by_task_id_returns_task(admin_client, mock_agent):
@@ -230,7 +226,7 @@ async def test_get_task_by_task_id_returns_task(admin_client, mock_agent):
         ),
     )
 
-    await admin_client.delete(f"/api/tasks/queued/{task['task_id']}")
+    await admin_client.delete(f"/api/tasks/{task['task_id']}")
 
 
 async def test_delete_queued_task_returns_204_and_removes_record(
@@ -244,7 +240,7 @@ async def test_delete_queued_task_returns_204_and_removes_record(
     )
 
     validate_response(
-        test_response=await admin_client.delete(f"/api/tasks/queued/{task['task_id']}"),
+        test_response=await admin_client.delete(f"/api/tasks/{task['task_id']}"),
         expected_status_code=204,
     )
     validate_response(
@@ -265,8 +261,8 @@ async def test_concurrent_queued_deletes_do_not_return_500(
     )
 
     responses = await asyncio.gather(
-        admin_client.delete(f"/api/tasks/queued/{task['task_id']}"),
-        admin_client.delete(f"/api/tasks/queued/{task['task_id']}"),
+        admin_client.delete(f"/api/tasks/{task['task_id']}"),
+        admin_client.delete(f"/api/tasks/{task['task_id']}"),
     )
 
     assert all(response.status_code in {204, 404} for response in responses)
@@ -290,9 +286,7 @@ async def test_delete_terminal_task_returns_204_and_removes_record(
     await _allow_task_to_complete()
 
     validate_response(
-        test_response=await admin_client.delete(
-            f"/api/tasks/terminal/{task['task_id']}"
-        ),
+        test_response=await admin_client.delete(f"/api/tasks/{task['task_id']}"),
         expected_status_code=204,
     )
     validate_response(
@@ -300,47 +294,6 @@ async def test_delete_terminal_task_returns_204_and_removes_record(
         expected_json_schema=TASK_NOT_FOUND_ERROR_JSON_SCHEMA,
         expected_status_code=404,
     )
-
-
-async def test_delete_succeeded_task_through_queued_route_returns_409(
-    admin_client,
-    mock_agent,
-):
-    task = await _submit_task(
-        admin_client,
-        agent_id=mock_agent["agent_id"],
-        command="mock_cmd",
-    )
-    await _allow_task_to_complete()
-
-    validate_response(
-        test_response=await admin_client.delete(f"/api/tasks/queued/{task['task_id']}"),
-        expected_json_schema=TASK_NOT_QUEUED_ERROR_JSON_SCHEMA,
-        expected_status_code=409,
-    )
-
-    await admin_client.delete(f"/api/tasks/terminal/{task['task_id']}")
-
-
-async def test_delete_queued_task_through_terminal_route_returns_409(
-    admin_client,
-    mock_agent,
-):
-    task = await _submit_task(
-        admin_client,
-        agent_id=mock_agent["agent_id"],
-        command="mock_blocking_cmd",
-    )
-
-    validate_response(
-        test_response=await admin_client.delete(
-            f"/api/tasks/terminal/{task['task_id']}"
-        ),
-        expected_json_schema=TASK_NOT_TERMINAL_ERROR_JSON_SCHEMA,
-        expected_status_code=409,
-    )
-
-    await admin_client.delete(f"/api/tasks/queued/{task['task_id']}")
 
 
 async def test_task_remains_queryable_after_owning_agent_is_deleted(
@@ -368,4 +321,4 @@ async def test_task_remains_queryable_after_owning_agent_is_deleted(
         ),
     )
 
-    await admin_client.delete(f"/api/tasks/terminal/{task['task_id']}")
+    await admin_client.delete(f"/api/tasks/{task['task_id']}")
