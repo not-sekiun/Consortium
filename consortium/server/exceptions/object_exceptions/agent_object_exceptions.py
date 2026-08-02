@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic.config import JsonValue
+from pydantic import JsonValue
 
 from consortium.server.exceptions.object_exceptions.base_object_exception import (
     BaseObjectError,
