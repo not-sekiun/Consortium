@@ -161,6 +161,16 @@ def _handle_list_value_option_parameter(
     return option_json_data["name"], new_values
 
 
+# Renders an option's choices as a quoted, comma separated list for error messages.
+# Joining the list's own representation instead would iterate over that representation
+# character by character, rendering "'[', ''', 'e', 'x', ..." instead of the choices.
+def _format_available_values(option_json_data: dict) -> str:
+    return ", ".join(
+        f"'{available_value}'"
+        for available_value in option_json_data["available_values"]
+    )
+
+
 def _handle_choice_value_option_parameter(
     value_string: str,
     value_type_flag: str | None,
@@ -192,7 +202,7 @@ def _handle_choice_value_option_parameter(
         raise ValueError(
             f"Failed to set option '{option_json_data['name']}' to value '{value}'. "
             f"The provided value is not a valid choice. Valid choices are: "
-            f"{', '.join(f"'{option_json_data['available_values']}'")}",
+            f"{_format_available_values(option_json_data=option_json_data)}",
         )
 
     # In every other case when a value type is explicitly specified (even if that
@@ -202,7 +212,7 @@ def _handle_choice_value_option_parameter(
         raise ValueError(
             f"Failed to set option '{option_json_data['name']}' to value '{value}'. "
             f"The provided value is not a valid choice. Valid choices are: "
-            f"{', '.join(f"'{option_json_data['available_values']}'")}",
+            f"{_format_available_values(option_json_data=option_json_data)}",
         )
 
     return option_json_data["name"], value
@@ -295,7 +305,10 @@ def _handle_toggleable_choice_value_option_parameter(
     value_type = _resolve_value_type_from_overriding_factors(
         value_type_flag=value_type_flag,
         value_type_annotation=value_type_annotation,
-        option_specified_value_type=option_json_data["value_type"],
+        # Toggleable choices options do not serialize a value type: every choice is a
+        # string by definition. Read it defensively so a payload without the key
+        # resolves to the default rather than raising.
+        option_specified_value_type=option_json_data.get("value_type"),
     )
     first_option_value = (
         _convert_value_string_from_string_representation_based_on_value_type(
@@ -303,11 +316,16 @@ def _handle_toggleable_choice_value_option_parameter(
             value_type=value_type,
         )
     )
-    if value_type == "bool" and len(value_strings) == 1:
+    if value_type == "bool":
         toggle_value = first_option_value
-        value_strings = option_json_data["available_values"]
-    elif value_type == "bool" and len(value_strings) > 1:
-        toggle_value = first_option_value
+        if len(value_strings) == 1:
+            # Only a boolean was supplied, so every available choice is toggled to it.
+            value_strings = list(option_json_data["available_values"])
+        else:
+            # The leading boolean states what the named choices are toggled to, it is
+            # not a choice itself. Drop it so the loop below only sees choice names,
+            # which it requires to be strings.
+            value_strings = value_strings[1:]
 
     for parameter_value_string in value_strings:
         parameter_value_string, value_type_annotation = (
@@ -318,7 +336,7 @@ def _handle_toggleable_choice_value_option_parameter(
         value_type = _resolve_value_type_from_overriding_factors(
             value_type_flag=value_type_flag,
             value_type_annotation=value_type_annotation,
-            option_specified_value_type=option_json_data["value_type"],
+            option_specified_value_type=option_json_data.get("value_type"),
         )
         # The value type of all choices should be strings for toggleable choices
         # because those dictate the names of the choices that will be toggled to a
@@ -341,7 +359,7 @@ def _handle_toggleable_choice_value_option_parameter(
                 f"Failed to set option '{option_json_data['name']}' to value "
                 f"'{parameter_value_string}'. The provided value is not a valid "
                 f"choice. Valid choices are: "
-                f"{', '.join(f"'{option_json_data['available_values']}'")}.",
+                f"{_format_available_values(option_json_data=option_json_data)}.",
             )
 
         toggled_on_values.append(parameter_value_string)

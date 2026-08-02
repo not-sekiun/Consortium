@@ -1147,10 +1147,6 @@ class ListenerTemplate(BaseListenerTemplate):
         ),
     }
 
-    # Used when no explicit name is passed to create_listener().
-    def resolve_listener_name(self, parameters: dict) -> str:
-        return parameters["name"]
-
     # The returned string becomes self.endpoint on the listener instance.
     def resolve_listener_endpoint(self, parameters: dict) -> str:
         return f"tcp://{parameters['local_host']}:{parameters['local_port']}"

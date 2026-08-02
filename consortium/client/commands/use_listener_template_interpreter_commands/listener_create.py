@@ -20,15 +20,31 @@ class ListenerCreateCommand(BaseConnectedCommand):
         Examples:
           create
           create --no-start
-          create -n
+          create -n "My listener"
+          create -n "My listener" -d "Catches the long haul implants"
         """,
     )
     group = "Listener Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "--no-start",
             "-n",
+            "--name",
+            help=(
+                "Name to give the created listener (defaults to a randomly generated "
+                "one)."
+            ),
+            nargs="?",
+        )
+        parser.add_argument(
+            "-d",
+            "--description",
+            help="Description to give the created listener.",
+            nargs="?",
+            default="",
+        )
+        parser.add_argument(
+            "--no-start",
             help="Create the listener without starting it.",
             action="store_true",
             default=False,
@@ -48,15 +64,16 @@ class ListenerCreateCommand(BaseConnectedCommand):
             listener_template_option_values = {}
             for option_name, option in listener_template_options.items():
                 listener_template_option_values[option_name] = option["value"]
-            # The staged name and description are sent separately from the option
-            # values: they are the created listener's display metadata rather than
-            # listener template options. A name of `None` means none was staged through
-            # the `rename` command, leaving the server to generate one.
+            # The name and description are sent separately from the option values: they
+            # are the created listener's display metadata rather than listener template
+            # options, so a listener template that declares its own option called `name`
+            # or `description` still sets that option through `set` as normal. A name of
+            # `None` means none was given, leaving the server to generate one.
             listener = await rest_api.create_listener_through_listener_template_by_listener_template_id(
                 listener_template_id=listener_template_id,
                 listener_template_option_values=listener_template_option_values,
-                name=context.interpreter_context.listener_name,
-                description=context.interpreter_context.listener_description,
+                name=parsed_args.name,
+                description=parsed_args.description,
             )
             if parsed_args.no_start:
                 print_success(

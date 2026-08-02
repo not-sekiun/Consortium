@@ -20,15 +20,31 @@ class GeneratorCreateCommand(BaseConnectedCommand):
         Examples:
           create
           create --no-start
-          create -n
+          create -n "My agent generator"
+          create -n "My agent generator" -d "Generates the long haul implants"
         """,
     )
     group = "Agent Generator Management Commands"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "--no-start",
             "-n",
+            "--name",
+            help=(
+                "Name to give the created agent generator (defaults to a randomly "
+                "generated one)."
+            ),
+            nargs="?",
+        )
+        parser.add_argument(
+            "-d",
+            "--description",
+            help="Description to give the created agent generator.",
+            nargs="?",
+            default="",
+        )
+        parser.add_argument(
+            "--no-start",
             help="Create the agent generator without starting it.",
             action="store_true",
             default=False,
@@ -48,15 +64,16 @@ class GeneratorCreateCommand(BaseConnectedCommand):
             agent_template_option_values = {}
             for option_name, option in agent_template_options.items():
                 agent_template_option_values[option_name] = option["value"]
-            # The staged name and description are sent separately from the option
-            # values: they are the created agent generator's display metadata rather than
-            # agent template options. A name of `None` means none was staged through the
-            # `rename` command, leaving the server to generate one.
+            # The name and description are sent separately from the option values: they
+            # are the created agent generator's display metadata rather than agent
+            # template options, so an agent template that declares its own option called
+            # `name` or `description` still sets that option through `set` as normal. A
+            # name of `None` means none was given, leaving the server to generate one.
             agent_generator = await rest_api.create_agent_generator_through_agent_template_by_agent_template_id(
                 agent_template_id=agent_template_id,
                 agent_template_option_values=agent_template_option_values,
-                name=context.interpreter_context.agent_generator_name,
-                description=context.interpreter_context.agent_generator_description,
+                name=parsed_args.name,
+                description=parsed_args.description,
             )
             if parsed_args.no_start:
                 print_success(

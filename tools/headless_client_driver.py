@@ -16,6 +16,18 @@ The driver invokes the real ``consortium.py client`` entry point in-process. It
 only replaces prompt-toolkit's input and output with its supported pipe-input
 and plain-text implementations. Commands are newline-delimited. An ``exit``
 command is appended at end-of-input unless ``--no-auto-exit`` is supplied.
+
+Commands are submitted one at a time behind a readiness handshake rather than on
+a fixed timer: before each submission the driver waits for the client to produce
+output and then fall silent for ``--settle`` seconds, which is what stops a
+command being queued while the previous one is still rendering. A command that
+blocks silently for longer than ``--settle`` can still be raced, so ``--delay``
+remains available as an additional per-command pause. ``--no-wait-for-ready``
+restores the old purely time-based feeding.
+
+The driver exits with the client's exit code. If the client exits before every
+command has been submitted, the driver reports the dropped commands on stderr
+and exits with code 3 (unless the client itself already failed).
 """
 
 import argparse
@@ -24,15 +36,29 @@ import runpy
 import sys
 import threading
 import time
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import TextIO
+from typing import Any, TextIO
 
 from prompt_toolkit.application.current import create_app_session
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.input.base import PipeInput
 from prompt_toolkit.input.defaults import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
+
+# How long to wait for the feeder thread to drain its command source once the
+# client has returned. The wait happens while the pipe input is still open so a
+# feeder that is only slightly behind still delivers everything.
+FEEDER_JOIN_TIMEOUT = 5.0
+
+# Reported when commands were dropped but the client itself exited cleanly, so
+# a delivery problem is not mistaken for a successful run.
+DELIVERY_FAILURE_EXIT_CODE = 3
+
+# How often the feeder rechecks the output stream while waiting for the client to
+# become ready. Short enough that the handshake does not itself become the thing
+# that paces the run.
+READINESS_POLL_INTERVAL = 0.01
 
 
 class HeadlessOutput(PlainTextOutput):
@@ -42,6 +68,107 @@ class HeadlessOutput(PlainTextOutput):
 
     def get_size(self) -> Size:
         return self._size
+
+
+# prompt-toolkit's flush_stdout() writes through `stdout.buffer` in binary whenever the
+# stream exposes one, bypassing the text-mode write(). Wrapping the buffer keeps that
+# path visible to the tracker, rather than hiding `buffer` to force writes back onto the
+# text path and changing how the client's output is encoded.
+class _TrackedBinaryStream:
+    def __init__(self, buffer: Any, record_write: Callable[[], None]) -> None:
+        self._buffer = buffer
+        self._record_write = record_write
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._buffer, name)
+
+    def write(self, data: bytes) -> int:
+        written = self._buffer.write(data)
+        if data:
+            self._record_write()
+        return written
+
+    def flush(self) -> None:
+        self._buffer.flush()
+
+
+# Wraps the driver's stdout so the feeder thread can tell when the client has gone
+# quiet. Both prompt-toolkit's rendering and the client's own direct writes pass
+# through here: prompt-toolkit renders into the stream this wraps, and command output
+# runs outside the interpreter's patch_stdout block so it reaches the same stream.
+# That makes "no writes for a while" a usable proxy for "the REPL is back at its
+# prompt", which a fixed sleep cannot approximate.
+class _OutputActivityTracker:
+    def __init__(self, stream: TextIO) -> None:
+        self._stream = stream
+        self._lock = threading.Lock()
+        self._write_count = 0
+        self._last_write_at = time.monotonic()
+        self._buffer = (
+            _TrackedBinaryStream(
+                buffer=stream.buffer,
+                record_write=self._record_write,
+            )
+            if hasattr(stream, "buffer")
+            else None
+        )
+
+    # Delegate everything else the Output implementation reaches for (encoding, fileno,
+    # isatty, and so on) to the wrapped stream.
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._stream, name)
+
+    @property
+    def buffer(self) -> _TrackedBinaryStream:
+        # Report the same absence as the wrapped stream when it has no buffer, so
+        # flush_stdout()'s hasattr() check still resolves correctly.
+        if self._buffer is None:
+            raise AttributeError("buffer")
+        return self._buffer
+
+    def _record_write(self) -> None:
+        with self._lock:
+            self._write_count += 1
+            self._last_write_at = time.monotonic()
+
+    def write(self, data: str) -> int:
+        written = self._stream.write(data)
+        if data:
+            self._record_write()
+        return written
+
+    def flush(self) -> None:
+        self._stream.flush()
+
+    def snapshot(self) -> tuple[int, float]:
+        with self._lock:
+            return self._write_count, self._last_write_at
+
+    @property
+    def write_count(self) -> int:
+        with self._lock:
+            return self._write_count
+
+
+def _wait_until_client_is_ready(
+    tracker: _OutputActivityTracker,
+    baseline_write_count: int,
+    settle: float,
+    timeout: float,
+) -> bool:
+    # Ready means the client has written something since the previous command was
+    # submitted and has then produced nothing for `settle` seconds. Requiring new
+    # output matters as much as requiring silence: a stream that has been quiet since
+    # before the command was sent has not yet started responding to it.
+    deadline = time.monotonic() + timeout
+    while True:
+        write_count, last_write_at = tracker.snapshot()
+        now = time.monotonic()
+        if write_count > baseline_write_count and (now - last_write_at) >= settle:
+            return True
+        if now >= deadline:
+            return False
+        time.sleep(READINESS_POLL_INTERVAL)
 
 
 def _configure_utf8_output() -> None:
@@ -72,22 +199,78 @@ def _feed_commands(
     commands: Iterable[str],
     delay: float,
     auto_exit: bool,
+    delivered: threading.Event,
+    tracker: _OutputActivityTracker | None,
+    settle: float,
+    ready_timeout: float,
 ) -> None:
+    # Output volume as of the previous submission, so the readiness check can tell
+    # output produced in response to that command apart from output that predates it.
+    baseline_write_count = 0
     last_command = None
+
+    def submit(command: str) -> None:
+        nonlocal baseline_write_count
+
+        if tracker is not None:
+            if not _wait_until_client_is_ready(
+                tracker=tracker,
+                baseline_write_count=baseline_write_count,
+                settle=settle,
+                timeout=ready_timeout,
+            ):
+                print(
+                    f"headless driver: the client did not settle within "
+                    f"{ready_timeout:g}s before '{command}'; the transcript around "
+                    f"this command may be interleaved",
+                    file=sys.stderr,
+                )
+
+        pipe_input.send_text(f"{command}\n")
+
+        # Snapshot after submitting so the command's own echo counts as new output
+        # for the next readiness check rather than satisfying it in advance.
+        if tracker is not None:
+            baseline_write_count = tracker.write_count
+        if delay:
+            time.sleep(delay)
+
     try:
         for command in commands:
             if not command.strip():
                 continue
-            pipe_input.send_text(f"{command}\n")
+            submit(command)
             last_command = command.strip()
-            if delay:
-                time.sleep(delay)
 
         if auto_exit and last_command != "exit":
-            pipe_input.send_text("exit\n")
+            submit("exit")
     except (EOFError, OSError):
-        # The client may exit before all queued commands are consumed.
+        # The client may exit before all queued commands are consumed. The
+        # caller detects this through the unset delivered event.
         return
+    delivered.set()
+
+
+def _delivery_exit_code(
+    feeder: threading.Thread,
+    delivered: threading.Event,
+    client_exit_code: int,
+) -> int:
+    if delivered.is_set():
+        return client_exit_code
+
+    if feeder.is_alive():
+        reason = (
+            "the command feeder did not finish within "
+            f"{FEEDER_JOIN_TIMEOUT:g}s of the client exiting"
+        )
+    else:
+        reason = "the client stopped reading before the command feeder finished"
+    print(
+        f"headless driver: {reason}; some commands were not delivered",
+        file=sys.stderr,
+    )
+    return client_exit_code or DELIVERY_FAILURE_EXIT_CODE
 
 
 def _system_exit_code(exc: SystemExit) -> int:
@@ -107,35 +290,66 @@ def _run_client(
     rows: int,
     delay: float,
     auto_exit: bool,
+    settle: float,
+    ready_timeout: float,
+    wait_for_ready: bool,
 ) -> int:
     original_argv = sys.argv
     original_cwd = Path.cwd()
     original_sys_path = list(sys.path)
-    output = HeadlessOutput(stdout=sys.stdout, columns=columns, rows=rows)
+    original_stdout = sys.stdout
+    tracker = _OutputActivityTracker(stream=sys.stdout) if wait_for_ready else None
+    output = HeadlessOutput(
+        stdout=sys.stdout if tracker is None else tracker,
+        columns=columns,
+        rows=rows,
+    )
 
     try:
         os.chdir(entrypoint.parent)
         sys.path.insert(0, str(entrypoint.parent))
         sys.argv = [str(entrypoint), "client", *client_args]
+        # Route the client's own writes through the tracker too. Command output is
+        # produced outside the interpreter's patch_stdout block, so it would not be
+        # observed through prompt-toolkit's output alone.
+        if tracker is not None:
+            sys.stdout = tracker
+        client_exit_code = 0
         with create_pipe_input() as pipe_input:
+            delivered = threading.Event()
             feeder = threading.Thread(
                 target=_feed_commands,
-                args=(pipe_input, commands, delay, auto_exit),
+                args=(
+                    pipe_input,
+                    commands,
+                    delay,
+                    auto_exit,
+                    delivered,
+                    tracker,
+                    settle,
+                    ready_timeout,
+                ),
                 daemon=True,
                 name="consortium-headless-client-input",
             )
             feeder.start()
-            with create_app_session(input=pipe_input, output=output):
-                try:
-                    runpy.run_path(str(entrypoint), run_name="__main__")
-                except SystemExit as exc:
-                    return _system_exit_code(exc)
-        return 0
+            try:
+                with create_app_session(input=pipe_input, output=output):
+                    try:
+                        runpy.run_path(str(entrypoint), run_name="__main__")
+                    except SystemExit as exc:
+                        client_exit_code = _system_exit_code(exc)
+            finally:
+                # Join inside the pipe input context so a feeder that is merely
+                # behind can still submit its remaining commands.
+                feeder.join(FEEDER_JOIN_TIMEOUT)
+        return _delivery_exit_code(feeder, delivered, client_exit_code)
     except KeyboardInterrupt:
         return 130
     finally:
         sys.argv = original_argv
         sys.path[:] = original_sys_path
+        sys.stdout = original_stdout
         os.chdir(original_cwd)
 
 
@@ -160,7 +374,33 @@ def _build_parser() -> argparse.ArgumentParser:
         "--delay",
         type=float,
         default=0.05,
-        help="Delay between submitted commands in seconds (default: 0.05).",
+        help=(
+            "Additional pause after each submitted command in seconds, applied on top "
+            "of the readiness handshake (default: 0.05)."
+        ),
+    )
+    parser.add_argument(
+        "--settle",
+        type=float,
+        default=0.25,
+        help=(
+            "How long the client's output must stay silent before the next command is "
+            "submitted, in seconds (default: 0.25)."
+        ),
+    )
+    parser.add_argument(
+        "--ready-timeout",
+        type=float,
+        default=30.0,
+        help=(
+            "Maximum time to wait for the client to settle before submitting a command "
+            "anyway, in seconds (default: 30.0)."
+        ),
+    )
+    parser.add_argument(
+        "--no-wait-for-ready",
+        action="store_true",
+        help="Feed commands on --delay alone instead of waiting for the client to settle.",
     )
     parser.add_argument(
         "--columns",
@@ -193,6 +433,10 @@ def main() -> int:
 
     if arguments.delay < 0:
         parser.error("--delay must be zero or greater")
+    if arguments.settle < 0:
+        parser.error("--settle must be zero or greater")
+    if arguments.ready_timeout <= 0:
+        parser.error("--ready-timeout must be greater than zero")
     if arguments.columns <= 0:
         parser.error("--columns must be greater than zero")
     if arguments.rows <= 0:
@@ -227,6 +471,9 @@ def main() -> int:
         rows=arguments.rows,
         delay=arguments.delay,
         auto_exit=not arguments.no_auto_exit,
+        settle=arguments.settle,
+        ready_timeout=arguments.ready_timeout,
+        wait_for_ready=not arguments.no_wait_for_ready,
     )
 
 

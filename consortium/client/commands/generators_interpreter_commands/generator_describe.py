@@ -13,30 +13,30 @@ from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import print_success
 
 
-# Paired with `rename`: both act on a listener that already exists and are named for
-# changing something that is already set. Staging the description of a listener that has
-# yet to be created is `describe`, inside a listener template's context.
-class ListenerRedescribeCommand(BaseConnectedCommand):
-    name = "redescribe"
-    description = "Set the description of a listener by its ID"
+# Paired with `rename`: both act on an agent generator that already exists. Giving a
+# description to an agent generator that has yet to be created is done through the
+# `create` command's -d/--description flag inside an agent template's context.
+class GeneratorDescribeCommand(BaseConnectedCommand):
+    name = "describe"
+    description = "Set the description of an agent generator by its ID"
     epilog = format_argparse_epilog(
         """
         Examples:
-          redescribe 123e4567-e89b-12d3-a456-426614174000 "New description"
+          describe 123e4567-e89b-12d3-a456-426614174000 "New description"
         """,
     )
-    group = "Listener Management Commands"
-    autocompletes = Autocomplete.LISTENER_ID
+    group = "Agent Generator Management Commands"
+    autocompletes = Autocomplete.AGENT_GENERATOR_ID
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "listener_id",
-            help="ID of the listener whose description should be changed.",
+            "agent_generator_id",
+            help="ID of the agent generator whose description should be changed.",
             nargs=1,
         )
         parser.add_argument(
             "description",
-            help="New description for the listener.",
+            help="New description for the agent generator.",
             nargs=1,
         )
 
@@ -45,17 +45,17 @@ class ListenerRedescribeCommand(BaseConnectedCommand):
             parsed_args = self.parser.parse_args(context.arguments)
             rest_api = context.client_session.rest_api
 
-            listener = await rest_api.get_listener_by_listener_id(
-                listener_id=parsed_args.listener_id[0],
+            agent_generator = await rest_api.get_agent_generator_by_agent_generator_id(
+                agent_generator_id=parsed_args.agent_generator_id[0],
             )
-            await rest_api.update_listener_by_listener_id(
-                listener_id=parsed_args.listener_id[0],
-                new_listener_attributes={
+            await rest_api.update_agent_generator_by_agent_generator_id(
+                agent_generator_id=parsed_args.agent_generator_id[0],
+                new_agent_generator_attributes={
                     "description": parsed_args.description[0],
                 },
             )
             print_success(
-                f"Updated description of listener '{listener['name']}' ({listener['listener_id']}) "
+                f"Updated description of agent generator '{agent_generator['name']}' ({agent_generator['agent_generator_id']}) "
                 f"to '{parsed_args.description[0]}'",
             )
         except SystemExit:

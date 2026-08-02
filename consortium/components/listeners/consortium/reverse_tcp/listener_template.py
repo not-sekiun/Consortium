@@ -1,7 +1,6 @@
 from consortium.framework.framework_types import JSONObject
 from consortium.framework.listeners import BaseListenerTemplate
 from consortium.framework.options import SingleValueOption, validate_is_ip_address
-from consortium.framework.utils.random_utils import random_name
 
 from .listener import Listener
 from .listener_type import ListenerType
@@ -50,10 +49,6 @@ class ListenerTemplate(BaseListenerTemplate):
             less_than_or_equal_to=65535,
         ),
     }
-
-    def resolve_listener_name(self, parameters: JSONObject) -> str:
-        name = parameters.get("name", "")
-        return str(name) if name else random_name()
 
     def resolve_listener_endpoint(self, parameters: JSONObject) -> str:
         return f"{parameters['local_host']}:{parameters['local_host']}"

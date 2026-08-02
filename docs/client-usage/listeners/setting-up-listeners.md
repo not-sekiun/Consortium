@@ -43,15 +43,14 @@ Commands available here:
 | `cancel <listener_id>`                               | Cancel a listener                                               |
 | `update <listener_id> <param> <value> [<value> ...]` | Update a non-running listener's parameters                      |
 | `rename <listener_id> <name>`                        | Rename an existing listener                                     |
-| `redescribe <listener_id> <description>`             | Change an existing listener's description                       |
+| `describe <listener_id> <description>`               | Change an existing listener's description                       |
 | `delete <listener_id>`                               | Delete a non-running listener                                   |
 
 Listener IDs, template IDs, and (for `update`) parameter names all tab complete.
 
-`rename` and `redescribe` act on a listener that already exists, which is why both are
-named for changing something already set. To choose the name and description a listener
-is *born* with, use the `name` and `describe` commands inside the template's context
-before running `create`. See
+`rename` and `describe` act on a listener that already exists. To choose the name and
+description a listener is *born* with, pass `-n/--name` and `-d/--description` to the
+`create` command inside the template's context. See
 [Using Listener Templates](using-listener-templates.md#naming-the-listener).
 
 ## The typical workflow

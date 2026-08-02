@@ -11,19 +11,17 @@ from consortium.client.utils.agent_command_utils import describe_agent
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 
 
-# Paired with `rename`: both act on an agent that already exists and are named for
-# changing something that is already set. `describe` is reserved for staging the
-# description of an object that has yet to be created, inside a template's context.
-class AgentRedescribeCommand(BaseConnectedCommand):
-    name = "redescribe"
+# Paired with `rename`: both act on an agent that already exists.
+class AgentDescribeCommand(BaseConnectedCommand):
+    name = "describe"
     description = (
         "Set the description of the current agent, or a specific agent by its ID"
     )
     epilog = format_argparse_epilog(
         """
         Examples:
-          redescribe "New description"
-          redescribe 123e4567-e89b-12d3-a456-426614174000 "New description"
+          describe "New description"
+          describe 123e4567-e89b-12d3-a456-426614174000 "New description"
         """,
     )
     group = "Agent Management Commands"

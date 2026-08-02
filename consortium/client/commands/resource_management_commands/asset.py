@@ -4,7 +4,6 @@ import tempfile
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 
 from prompt_toolkit.completion import PathCompleter
-from rich.progress import Progress
 from rich.table import Table
 
 from consortium.client.models.context_models import ConnectedContext
@@ -27,6 +26,9 @@ from consortium.client.utils.printer_utils import (
     print_error,
     print_info,
     print_success,
+)
+from consortium.client.utils.repository_resource_command_utils import (
+    download_resource_stream_to_file,
 )
 
 
@@ -462,17 +464,13 @@ class AssetCommand(BaseConnectedCommand):
             f"Downloading asset {'directory' if asset['is_directory'] else 'file'} "
             f"'{asset['name']}' ({asset['resource_id']}) to '{output_file_path}'..."
         )
-        with Progress(transient=True) as progress:
-            downloading_task = progress.add_task(
-                "",
-                total=asset["size"],
-            )
-            with output_file_path.open("wb") as output_file:
-                async for chunk in rest_api.download_asset_by_resource_id(
-                    resource_id=parsed_args.resource_id[0],
-                ):
-                    progress.update(downloading_task, advance=len(chunk))
-                    output_file.write(chunk)
+        await download_resource_stream_to_file(
+            resource_stream=rest_api.download_asset_by_resource_id(
+                resource_id=parsed_args.resource_id[0],
+            ),
+            output_file_path=output_file_path,
+            total_size_bytes=asset["size"],
+        )
         print_success("Finished downloading asset")
 
         if asset["is_directory"] and parsed_args.decompress:

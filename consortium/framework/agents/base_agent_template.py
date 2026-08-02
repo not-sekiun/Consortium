@@ -1,6 +1,5 @@
 import pathlib
 import uuid
-from abc import ABC
 from collections.abc import Callable
 from inspect import signature
 from typing import get_type_hints
@@ -72,7 +71,7 @@ class _AgentTemplateMetadataModel(ComponentMetadataModel):
     )
 
 
-class BaseAgentTemplate(ComponentMetadata, ABC):
+class BaseAgentTemplate(ComponentMetadata):
     """Abstract base class for agent templates that govern agent generator creation.
 
     An agent template declares the configuration schema (options, validating function),
