@@ -15,6 +15,7 @@ from consortium.client.client_config import (
 )
 from consortium.client.models.client_models import ClientConfig
 from consortium.client.models.logging_models import LoggingConfigModel
+from consortium.client.utils.formatter_utils import format_validation_error
 from consortium.client.utils.logging_utils import log_formatter
 
 
@@ -49,7 +50,7 @@ async def _start_client(arguments: argparse.Namespace) -> None:
         print(
             f"Failed to start client. The provided client configuration file "
             f"'{client_config_filepath}' does not adhere to the expected client "
-            f"configuration file JSON schema: {exc}",
+            f"configuration file JSON schema:\n{format_validation_error(exc)}",
         )
         return
 
@@ -85,7 +86,7 @@ async def _start_client(arguments: argparse.Namespace) -> None:
         print(
             f"Failed to start client. The provided logging configuration file "
             f"'{logging_config_filepath}' does not adhere to the expected logging "
-            f"configuration file JSON schema: {exc}",
+            f"configuration file JSON schema:\n{format_validation_error(exc)}",
         )
         return
 

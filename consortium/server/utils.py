@@ -14,11 +14,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel, RootModel, create_model
+from pydantic import BaseModel, RootModel, ValidationError, create_model
 
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
     BaseFrameworkError,
 )
+from consortium.framework._core.utils import _format_validation_error_location
 from consortium.framework.utils.shell_utils import run_command
 from consortium.server.exceptions.object_exceptions.base_object_exception import (
     BaseObjectError,
@@ -63,6 +64,33 @@ if TYPE_CHECKING:
     from consortium.server.services.tasks_service import TasksService
     from consortium.server.services.user_accounts_service import UserAccountsService
     from consortium.server.services.users_service import UsersService
+
+
+def format_validation_error(exc: ValidationError) -> str:
+    # Pydantic's default `str(exc)` renders every error as a multi line block that
+    # repeats the model name, appends the error type in brackets and tacks on a
+    # documentation URL, which is noisy when all a caller wants to surface is what went
+    # wrong and where. This collapses each error into a single readable line of the form
+    # `<location>: <message> (type=<error type>)` and joins them, so callers can print
+    # `format_validation_error(exc)` in place of a bare `exc`.
+    #
+    # The location is rendered with the same field path formatting the framework uses for
+    # its own validation errors (`options[0].name` rather than the raw `('options', 0,
+    # 'name')` tuple), so both surfaces read consistently. When an error has no location
+    # (for example a model level validator failure) the location is reported as the
+    # placeholder `(model)` rather than an empty string.
+    errors = exc.errors()
+    if not errors:
+        return "No validation errors were reported."
+
+    formatted_errors = []
+    for error in errors:
+        location = _format_validation_error_location(location=error["loc"]) or "(model)"
+        formatted_errors.append(f"{location}: {error['msg']} (type={error['type']})")
+
+    error_count = len(formatted_errors)
+    header = f"{error_count} validation error{'s' if error_count != 1 else ''}:"
+    return "\n".join([header, *(f"  - {line}" for line in formatted_errors)])
 
 
 def use_route_name_as_operation_id(route: APIRoute) -> str:

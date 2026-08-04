@@ -3,5 +3,7 @@
     "local_port": 9999,
     "remote_host_whitelist": [],
     "remote_host_blacklist": [],
-    "server_header": null
+    "server_header": null,
+    "ssl_keyfile": null,
+    "ssl_certfile": null
 }

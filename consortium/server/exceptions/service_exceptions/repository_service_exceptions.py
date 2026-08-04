@@ -177,19 +177,19 @@ class InvalidRepositoryMetadataDataSchemaError(InvalidRepositoryMetadataFileErro
         self,
         repository_directory: str,
         resource_id: str,
-        json_schema_error_message: str,
+        validation_error_message: str,
     ):
         super().__init__(
             message=(
                 "Failed to load the repository metadata file "
                 "`.repository.json` from the repository directory "
-                f"'{repository_directory}'. The `data` field of the repository resource "
-                f"with resource ID '{resource_id}' does not conform to the expected "
-                f"JSON schema. {json_schema_error_message}"
+                f"'{repository_directory}'. The `data` field of the repository "
+                f"resource with resource ID '{resource_id}' failed validation. "
+                f"{validation_error_message}"
             ),
             detail={
                 "repository_directory": repository_directory,
                 "resource_id": resource_id,
-                "json_schema_error_message": json_schema_error_message,
+                "validation_error_message": validation_error_message,
             },
         )

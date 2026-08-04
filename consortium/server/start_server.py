@@ -11,6 +11,7 @@ import consortium.server.server_singletons as server_singletons
 from consortium.server.models.logging_models import LoggingConfigModel
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server import Server
+from consortium.server.utils import format_validation_error
 
 
 async def _start_server(arguments: argparse.Namespace) -> None:
@@ -50,6 +51,8 @@ async def _start_server(arguments: argparse.Namespace) -> None:
             remote_host_whitelist=json_data.get("remote_host_whitelist", []),
             remote_host_blacklist=json_data.get("remote_host_blacklist", []),
             server_header=json_data.get("server_header", None),
+            ssl_keyfile=json_data.get("ssl_keyfile", None),
+            ssl_certfile=json_data.get("ssl_certfile", None),
         )
     except FileNotFoundError:
         print(
@@ -67,7 +70,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         print(
             f"Failed to start server. The provided server configuration file "
             f"'{server_config_filepath}' does not adhere to the expected server "
-            f"configuration file JSON schema: {exc}",
+            f"configuration JSON file schema:\n{format_validation_error(exc)}",
         )
         return
 
@@ -105,7 +108,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         print(
             f"Failed to start server. The provided logging configuration file "
             f"'{logging_config_filepath}' does not adhere to the expected logging "
-            f"configuration file JSON schema: {exc}",
+            f"configuration file JSON schema:\n{format_validation_error(exc)}",
         )
         return
 
@@ -113,6 +116,19 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         path = pathlib.Path(logging_config.log_file)
         if not path.is_absolute():
             logging_config.log_file = str(consortium_root / path)
+
+    # Resolve the SSL key and certificate paths. Relative paths are interpreted
+    # relative to the project root so that the configuration is independent of the
+    # directory the server is invoked from.
+    if server_config.ssl_keyfile is not None:
+        path = pathlib.Path(server_config.ssl_keyfile)
+        if not path.is_absolute():
+            server_config.ssl_keyfile = str(consortium_root / path)
+
+    if server_config.ssl_certfile is not None:
+        path = pathlib.Path(server_config.ssl_certfile)
+        if not path.is_absolute():
+            server_config.ssl_certfile = str(consortium_root / path)
 
     try:
         server_singletons.logging_service.configure_default_logging(

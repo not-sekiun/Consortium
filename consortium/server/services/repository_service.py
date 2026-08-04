@@ -21,7 +21,7 @@ from consortium.server.objects.repository_objects import (
     RepositoryDirectory,
     RepositoryFile,
 )
-from consortium.server.utils import normalize_uuid
+from consortium.server.utils import format_validation_error, normalize_uuid
 
 
 class RepositoryService:
@@ -131,7 +131,7 @@ class RepositoryService:
                         raise InvalidRepositoryMetadataDataSchemaError(
                             repository_directory=str(self.repository_directory_path),
                             resource_id=resource_id,
-                            json_schema_error_message=str(exc),
+                            validation_error_message=format_validation_error(exc),
                         ) from None
 
         # Pre-pass check and verify all resources actually exist on disk before

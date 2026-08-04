@@ -37,7 +37,7 @@
   &nbsp;·&nbsp;
   <a href="https://not-sekiun.github.io/Consortium/framework-api/framework-api-overview/">Framework API</a>
   &nbsp;·&nbsp;
-  <a href="https://not-sekiun.github.io/Consortium/reference/framework-reference-overview/">Framework Reference</a>
+  <a href="https://not-sekiun.github.io/Consortium/framework-reference/framework-reference-overview/">Framework Reference</a>
   &nbsp;·&nbsp;
   <a href="https://not-sekiun.github.io/Consortium/scripts/scripts-overview/">Scripts</a>
 </p>

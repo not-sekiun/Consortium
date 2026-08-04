@@ -2,7 +2,29 @@ import textwrap
 from datetime import UTC, datetime
 from typing import Any
 
+from pydantic import ValidationError
 from rich.console import Console
+
+from consortium.framework._core.utils import _format_validation_error_location
+
+
+# Collapses a pydantic `ValidationError` into a compact, readable multi line string. This
+# is duplicated from `consortium.server.utils.format_validation_error` so the client can
+# format its own configuration validation errors without importing server code. See that
+# function for the rationale behind the format.
+def format_validation_error(exc: ValidationError) -> str:
+    errors = exc.errors()
+    if not errors:
+        return "No validation errors were reported."
+
+    formatted_errors = []
+    for error in errors:
+        location = _format_validation_error_location(location=error["loc"]) or "(model)"
+        formatted_errors.append(f"{location}: {error['msg']} (type={error['type']})")
+
+    error_count = len(formatted_errors)
+    header = f"{error_count} validation error{'s' if error_count != 1 else ''}:"
+    return "\n".join([header, *(f"  - {line}" for line in formatted_errors)])
 
 
 # Exports rich formatted text with color markup codes as ANSI escape sequences.

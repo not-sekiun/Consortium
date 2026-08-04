@@ -326,6 +326,11 @@ class Server:
                 headers=[("Server", self.server_config.server_header)]
                 if self.server_config.server_header is not None
                 else None,
+                # Serve over HTTPS when a key and certificate are configured. When both
+                # are None (the default) uvicorn falls back to plain HTTP. The paths are
+                # already resolved to absolute paths by the startup procedure.
+                ssl_keyfile=self.server_config.ssl_keyfile,
+                ssl_certfile=self.server_config.ssl_certfile,
             )
             server = uvicorn.Server(config)
             await server.serve()
