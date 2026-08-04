@@ -18,18 +18,10 @@ class RepositoryObjectError(BaseObjectError):
     code = "REPOSITORY_OBJECT_ERROR"
 
 
-class RepositoryObjectFileSystemError(RepositoryObjectError):
-    """Raised when a filesystem operation performed on a repository object fails.
+class RepositoryResourceFileSystemError(RepositoryObjectError):
+    """Raised when a filesystem operation on a repository resource fails."""
 
-    This is the object level counterpart of the repository service's
-    `RepositoryFileSystemError`, covering the underlying `OSError` raised while creating,
-    reading, writing or deleting a repository file or directory on disk. It exists
-    separately so that callers reaching a repository object directly, without going
-    through the repository service, still receive a typed error rather than a raw
-    `OSError`.
-    """
-
-    code = "REPOSITORY_OBJECT_FILE_SYSTEM_ERROR"
+    code = "REPOSITORY_RESOURCE_FILE_SYSTEM_ERROR"
 
     def __init__(self, operation: str, path: str, underlying_error: str) -> None:
         super().__init__(
@@ -114,36 +106,6 @@ class RepositoryDirectoryDoesNotExistError(RepositoryDirectoryError):
         super().__init__(
             "Failed to perform the requested operation on the directory "
             f"{repository_directory_str}. The directory does not exist on the disk.",
-        )
-
-
-class RelativePathOutsideRepositoryDirectoryError(RepositoryDirectoryError):
-    """Raised when a relative path provided to a repository directory operation resolves
-    to a location outside of the repository directory.
-    """
-
-    code = "RELATIVE_PATH_OUTSIDE_REPOSITORY_DIRECTORY_ERROR"
-
-    def __init__(self, relative_path: str, repository_directory_str: str) -> None:
-        super().__init__(
-            f"Failed to perform the requested operation on the path '{relative_path}' "
-            f"relative to the directory {repository_directory_str}. The path is outside "
-            f"of the repository directory.",
-        )
-
-
-class RepositoryDirectoryRelativePathNotContainedError(RepositoryDirectoryError):
-    """Raised when a relative path provided to a repository directory operation resolves
-    to a location that is not contained within the repository directory.
-    """
-
-    code = "REPOSITORY_DIRECTORY_RELATIVE_PATH_NOT_CONTAINED_ERROR"
-
-    def __init__(self, relative_path: str, repository_directory_str: str) -> None:
-        super().__init__(
-            f"Failed to perform the requested operation on the path '{relative_path}' "
-            f"relative to the directory {repository_directory_str}. The path provided "
-            f"when resolved is not contained within the repository directory.",
         )
 
 

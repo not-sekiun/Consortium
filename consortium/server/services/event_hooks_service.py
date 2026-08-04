@@ -84,6 +84,10 @@ class EventHooksService:
                 invalid JSON.
             InvalidEventHookManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
+            InvalidEventHookPyProjectFileTOMLError: If `pyproject.toml` is not
+                valid TOML.
+            InvalidEventHookPyProjectFileDependencyError: If `pyproject.toml`
+                contains an invalid dependency entry.
             EventHookEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
             EventHookSymbolNotFoundError: If the symbol specified in the manifest
@@ -122,7 +126,7 @@ class EventHooksService:
     ) -> tuple[
         list[BaseEventHook],
         list[pathlib.Path],
-        list[tuple[pathlib.Path, EventHookLoadingError]] | None,
+        list[tuple[pathlib.Path, EventHookLoadingError]],
     ]:
         """Recursively scans a directory for event hooks and instantiates them.
 
@@ -209,6 +213,10 @@ class EventHooksService:
                 invalid JSON.
             InvalidEventHookManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
+            InvalidEventHookPyProjectFileTOMLError: If `pyproject.toml` is not
+                valid TOML.
+            InvalidEventHookPyProjectFileDependencyError: If `pyproject.toml`
+                contains an invalid dependency entry.
             EventHookEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
             EventHookSymbolNotFoundError: If the symbol specified in the manifest
@@ -254,7 +262,12 @@ class EventHooksService:
 
         Raises:
             EventHookAlreadyRegisteredError: If an event hook with the same ID is
-                already registered.
+                already registered. This path only checks for a duplicate ID, not a
+                duplicate label: `DuplicateEventHookLabelError` and the component
+                dependency errors are only raised by the registration path
+                (`register_event_hook`), not this loading path.
+            EventHookSetupError: If an error occurs while the event hook is setting
+                up.
         """
         event_hook = await self._event_hook_registry_service.load_component(
             component=event_hook,
@@ -299,6 +312,13 @@ class EventHooksService:
                 incompatible with the current framework version.
             InternalEventHookError: If an unhandled exception occurs while
                 loading the event hook.
+            EventHookAlreadyRegisteredError: If an event hook with the same ID is
+                already registered. As with `load_event_hook`, this path only checks
+                for a duplicate ID: `DuplicateEventHookLabelError` and the component
+                dependency errors are only raised by the registration path
+                (`register_event_hook_from_directory`), not this loading path.
+            EventHookSetupError: If an error occurs while the event hook is setting
+                up.
         """
         event_hook = (
             await self._event_hook_registry_service.load_component_from_directory(
@@ -330,6 +350,8 @@ class EventHooksService:
 
         Raises:
             EventHookNotFoundError: If no event hook with the given ID is registered.
+            EventHookTeardownError: If an error occurs while the event hook is
+                tearing down.
         """
         event_hook = (
             await self._event_hook_registry_service.unload_component_by_component_id(
@@ -344,7 +366,7 @@ class EventHooksService:
         self,
         event_hook_id: str | uuid.UUID,
         ignore_enabled_flag: bool = False,
-    ) -> BaseEventHook:
+    ) -> BaseEventHook | None:
         """Unloads and reloads an event hook from its original directory.
 
         If the event hook is disabled after reload and `ignore_enabled_flag`
@@ -361,6 +383,31 @@ class EventHooksService:
 
         Raises:
             EventHookNotFoundError: If no event hook with the given ID is registered.
+            EventHookTeardownError: If an error occurs while the previously loaded
+                event hook is tearing down.
+            EventHookManifestFileNotFoundError: If `manifest.json` is missing from
+                the event hook's directory on reload.
+            InvalidEventHookManifestFileJSONError: If `manifest.json` contains
+                invalid JSON on reload.
+            InvalidEventHookManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema on reload.
+            EventHookEntryPointModuleNotFoundError: If the entry-point module
+                cannot be found on reload.
+            EventHookSymbolNotFoundError: If the symbol specified in the manifest
+                is not found on reload.
+            EventHookInterfaceError: If the class does not inherit from the
+                expected base class on reload.
+            IncompatibleEventHookFrameworkVersionError: If the event hook is
+                incompatible with the current framework version on reload.
+            InternalEventHookError: If an unhandled exception occurs while
+                reloading the event hook.
+            EventHookAlreadyRegisteredError: If the reloaded event hook's ID is
+                already registered.
+            EventHookSetupError: If an error occurs while the reloaded event hook
+                is setting up. Same as `load_event_hook_from_directory`, this method
+                does not raise `DuplicateEventHookLabelError` or the component
+                dependency errors: it reloads through the same loading path, not the
+                registration path.
         """
         event_hook = (
             await self._event_hook_registry_service.reload_component_by_component_id(
@@ -437,7 +484,18 @@ class EventHooksService:
 
     @log_and_propagate_error_on_service_method
     async def unload_framework_event_hooks(self) -> None:
-        """Unloads all event hooks that were loaded from the framework's event hooks directory."""
+        """Unloads all event hooks that were loaded from the framework's event hooks directory.
+
+        Raises:
+            EventHookNotFoundError: If an event hook selected for unloading is no
+                longer registered by the time its unload is attempted.
+            EventHookTeardownError: If an error occurs while an event hook is
+                tearing down.
+            OSError: If resolving an event hook's root directory fails while
+                filtering for hooks under the framework's event hooks directory.
+                Left unwrapped as it originates from `pathlib.Path.resolve`, not
+                from event hook loading or teardown.
+        """
         self._logger.info("Unloading framework event hooks...")
         unloaded_event_hooks = 0
         for event_hook in self.get_all_event_hooks():
@@ -458,7 +516,22 @@ class EventHooksService:
     async def reload_framework_event_hooks(
         self,
     ) -> None:
-        """Unloads all framework event hooks then reloads them from the event hooks directory."""
+        """Unloads all framework event hooks then reloads them from the event hooks directory.
+
+        Reloading itself does not raise: `load_framework_event_hooks` catches and logs
+        errors for each individual event hook that fails to load rather than
+        propagating them. Everything below is surfaced by the unload phase.
+
+        Raises:
+            EventHookNotFoundError: If an event hook selected for unloading is no
+                longer registered by the time its unload is attempted.
+            EventHookTeardownError: If an error occurs while an event hook is
+                tearing down.
+            OSError: If resolving an event hook's root directory fails while
+                filtering for hooks under the framework's event hooks directory.
+                Left unwrapped as it originates from `pathlib.Path.resolve`, not
+                from event hook loading or teardown.
+        """
         self._logger.info("Reloading framework event hooks...")
         await self.unload_framework_event_hooks()
         await self.load_framework_event_hooks()

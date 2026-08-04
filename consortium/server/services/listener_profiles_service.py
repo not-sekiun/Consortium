@@ -81,6 +81,10 @@ class ListenerProfilesService:
                 invalid JSON.
             InvalidListenerProfileManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
+            InvalidListenerProfilePyProjectFileTOMLError: If `pyproject.toml` is not
+                valid TOML.
+            InvalidListenerProfilePyProjectFileDependencyError: If `pyproject.toml`
+                contains an invalid dependency entry.
             ListenerProfileEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
             ListenerProfileSymbolNotFoundError: If the symbol specified in the manifest
@@ -120,7 +124,7 @@ class ListenerProfilesService:
     ) -> tuple[
         list[ListenerProfile],
         list[pathlib.Path],
-        list[tuple[pathlib.Path, ListenerProfileLoadingError]] | None,
+        list[tuple[pathlib.Path, ListenerProfileLoadingError]],
     ]:
         """Recursively scans a directory for listener profiles and instantiates them.
 
@@ -165,6 +169,10 @@ class ListenerProfilesService:
 
         Args:
             listener_profile: The listener profile instance to load.
+
+        Raises:
+            ListenerProfileAlreadyRegisteredError: If a listener profile with the same
+                ID is already registered in the listener profiles service.
         """
         listener_profile = await self._listener_profile_registry_service.load_component(
             component=listener_profile,
@@ -202,6 +210,10 @@ class ListenerProfilesService:
                 invalid JSON.
             InvalidListenerProfileManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
+            InvalidListenerProfilePyProjectFileTOMLError: If `pyproject.toml` is not
+                valid TOML.
+            InvalidListenerProfilePyProjectFileDependencyError: If `pyproject.toml`
+                contains an invalid dependency entry.
             ListenerProfileEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
             ListenerProfileSymbolNotFoundError: If the symbol specified in the manifest
@@ -212,6 +224,8 @@ class ListenerProfilesService:
                 incompatible with the current framework version.
             InternalListenerProfileError: If an unhandled exception occurs while
                 loading the profile.
+            ListenerProfileAlreadyRegisteredError: If a listener profile with the same
+                ID is already registered in the listener profiles service.
         """
         listener_profile = (
             await self._listener_profile_registry_service.load_component_from_directory(
@@ -262,7 +276,7 @@ class ListenerProfilesService:
         self,
         listener_profile_id: str | uuid.UUID,
         ignore_enabled_flag: bool = False,
-    ) -> ListenerProfile:
+    ) -> ListenerProfile | None:
         """Unloads and reloads a listener profile from its original directory.
 
         If the profile is disabled after reload and `ignore_enabled_flag`
@@ -281,6 +295,25 @@ class ListenerProfilesService:
         Raises:
             ListenerProfileNotFoundError: If no listener profile with the given ID is
                 registered.
+            ListenerProfileManifestFileNotFoundError: If `manifest.json` is missing
+                from the profile's directory at the time of reload.
+            InvalidListenerProfileManifestFileJSONError: If `manifest.json` contains
+                invalid JSON at the time of reload.
+            InvalidListenerProfileManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema at the time of reload.
+            ListenerProfileEntryPointModuleNotFoundError: If the entry-point module
+                specified in the manifest cannot be found at the time of reload.
+            ListenerProfileSymbolNotFoundError: If the symbol specified in the
+                manifest is not found at the time of reload.
+            ListenerProfileInterfaceError: If the class does not inherit from the
+                expected base class at the time of reload.
+            IncompatibleListenerProfileFrameworkVersionError: If the profile is
+                incompatible with the current framework version at the time of
+                reload.
+            InternalListenerProfileError: If an unhandled exception occurs while
+                reloading the profile.
+            ListenerProfileAlreadyRegisteredError: If a listener profile with the same
+                ID is already registered in the listener profiles service.
         """
         listener_profile = await (
             self._listener_profile_registry_service.reload_component_by_component_id(
@@ -361,7 +394,14 @@ class ListenerProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def unload_framework_listener_profiles(self) -> None:
-        """Unloads all listener profiles that were loaded from the framework's profiles directory."""
+        """Unloads all listener profiles that were loaded from the framework's profiles directory.
+
+        Raises:
+            ListenerProfileNotFoundError: If a listener profile is deregistered
+                between being listed and being unloaded.
+            OSError: If `Path.resolve()` fails while resolving a listener profile's
+                root directory or the framework listeners directory for comparison.
+        """
         self._logger.info("Unloading framework listener profiles...")
         unloaded_listener_profiles = 0
         for listener_profile in self.get_all_listener_profiles():
@@ -379,7 +419,15 @@ class ListenerProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def reload_framework_listener_profiles(self) -> None:
-        """Unloads all framework listener profiles then reloads them from the profiles directory."""
+        """Unloads all framework listener profiles then reloads them from the profiles directory.
+
+        Raises:
+            ListenerProfileNotFoundError: If a listener profile is deregistered
+                between being listed and being unloaded, during the unload half.
+            OSError: If `Path.resolve()` fails while comparing listener profile
+                directories during the unload half, or if the framework listener
+                profiles directory cannot be scanned during the load half.
+        """
         self._logger.info("Reloading framework listener profiles...")
         await self.unload_framework_listener_profiles()
         await self.load_framework_listener_profiles()

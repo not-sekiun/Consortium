@@ -38,6 +38,18 @@ class PathsService:
         agents_directory: The agents subdirectory of the components directory.
         plugins_directory: The plugins subdirectory of the components directory.
         event_hooks_directory: The event hooks subdirectory of the components directory.
+
+    Raises:
+        FileNotFoundError: If the user accounts file does not exist at
+            `user_accounts_json_file`.
+        IsADirectoryError: If a directory exists at `user_accounts_json_file` instead
+            of a file.
+        NotADirectoryError: If a file exists at the path of one of the expected
+            directories instead of a directory.
+        PermissionError: If the process lacks permission to create one of the
+            expected directories.
+        OSError: If resolving the consortium root path, or creating one of the
+            expected directories, fails for another operating-system-level reason.
     """
 
     def __init__(self):

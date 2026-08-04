@@ -110,6 +110,18 @@ class AgentsService:
 
         Returns:
             The newly registered agent instance.
+
+        Raises:
+            AgentCreationParameterTypeError: If any of the provided parameters is not of
+                the type the agent expects.
+            ListenerNotFoundError: If no listener with the given `listener_id` is
+                registered.
+            AgentTypeResolutionError: If the agent's type cannot be resolved, either
+                because neither `payload_id` nor `agent_type` was provided, because
+                `payload_id` does not correspond to a known payload, or because
+                `agent_type` does not name a known agent type.
+            RuntimeError: If called with no running event loop. The `AGENT_REGISTERED`
+                event is scheduled with `asyncio.create_task`, which requires one.
         """
         agent = Agent(
             tasks_service=self._tasks_service,
@@ -155,6 +167,8 @@ class AgentsService:
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
+            RuntimeError: If called with no running event loop. The `AGENT_DEREGISTERED`
+                event is scheduled with `asyncio.create_task`, which requires one.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         self._tasks_service._error_pending_tasks_for_agent(
@@ -218,6 +232,8 @@ class AgentsService:
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
+            RuntimeError: If called with no running event loop. The `AGENT_CHECKED_IN`
+                event is scheduled with `asyncio.create_task`, which requires one.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         run_async_background_task(
@@ -420,6 +436,11 @@ class AgentsService:
         Raises:
             AgentNotFoundError: Raised if the agent with the specified agent ID is not
                 found.
+            ValidationError: Raised if the arguments provided fail validation of the
+                task output message they are assembled into, for example a `task_id`
+                that is not a valid UUID or `data` that is not JSON serializable. Left
+                unwrapped as it describes the arguments the caller supplied rather than
+                a failure of the agent or its task.
 
         Note:
             A task output message whose task ID does not correspond to a running task
@@ -558,6 +579,9 @@ class AgentsService:
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
+            RuntimeError: If called with no running event loop on the path where at
+                least one field changes. The `AGENT_UPDATED` event is scheduled with
+                `asyncio.create_task`, which requires one.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
 

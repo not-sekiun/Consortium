@@ -136,8 +136,10 @@ class UsersService:
             The newly created user session.
 
         Raises:
-            UserAccountNotFoundError: If no account with the given username exists.
-            InvalidUserAccountCredentialsError: If the password is incorrect.
+            UserAccountAuthenticationError: If no account with the given username
+                exists, or if the password does not match.
+            RuntimeError: If called with no running event loop. The `USER_LOGGED_IN`
+                event is scheduled with `asyncio.create_task`, which requires one.
         """
         user_account = server_singletons.user_accounts_service.authenticate_user_account_credentials(
             username=username,
@@ -169,6 +171,8 @@ class UsersService:
 
         Raises:
             UserIDNotFoundError: If no logged-in user with the given ID exists.
+            RuntimeError: If called with no running event loop. The `USER_LOGGED_OUT`
+                event is scheduled with `asyncio.create_task`, which requires one.
         """
         user = self.get_user_by_user_id(user_id=user_id)
 

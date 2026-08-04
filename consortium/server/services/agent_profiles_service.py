@@ -84,6 +84,10 @@ class AgentProfilesService:
                 invalid JSON.
             InvalidAgentProfileManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
+            InvalidAgentProfilePyProjectFileTOMLError: If `pyproject.toml` is not
+                valid TOML.
+            InvalidAgentProfilePyProjectFileDependencyError: If `pyproject.toml`
+                contains an invalid dependency entry.
             AgentProfileEntryPointModuleNotFoundError: If the entry-point module
                 specified in the manifest cannot be found.
             AgentProfileSymbolNotFoundError: If the symbol specified in the manifest
@@ -122,7 +126,7 @@ class AgentProfilesService:
     ) -> tuple[
         list[AgentProfile],
         list[pathlib.Path],
-        list[tuple[pathlib.Path, AgentProfileLoadingError]] | None,
+        list[tuple[pathlib.Path, AgentProfileLoadingError]],
     ]:
         """Recursively scans a directory for agent profiles and instantiates them.
 
@@ -166,6 +170,21 @@ class AgentProfilesService:
 
         Args:
             agent_profile: The agent profile instance to load.
+
+        Raises:
+            AgentProfileAlreadyRegisteredError: If an agent profile with the same ID
+                is already registered in the agent profiles service.
+            DuplicateAgentTypeNameError: If the loaded profile's agent type name
+                collides with a distinct agent type already registered under the same
+                name while agent type references are resolved.
+            UnresolvableAgentTypeReferenceError: If any registered profile's
+                `agent_type` is a string reference that cannot be resolved to a
+                registered agent type while agent type references are resolved.
+            TypeError: If a registered profile's `agent_type` is a string reference
+                that resolves to another agent profile. The resolver in
+                `c2_types_service` then attempts to call that profile as a
+                constructor, which is not callable, so this is raised whenever the
+                string-reference resolution path is taken.
         """
         agent_profile = await self._agent_profile_registry_service.load_component(
             component=agent_profile,
@@ -212,6 +231,19 @@ class AgentProfilesService:
                 incompatible with the current framework version.
             InternalAgentProfileError: If an unhandled exception occurs while
                 loading the profile.
+            AgentProfileAlreadyRegisteredError: If an agent profile with the same ID
+                is already registered in the agent profiles service.
+            DuplicateAgentTypeNameError: If the loaded profile's agent type name
+                collides with a distinct agent type already registered under the same
+                name while agent type references are resolved.
+            UnresolvableAgentTypeReferenceError: If any registered profile's
+                `agent_type` is a string reference that cannot be resolved to a
+                registered agent type while agent type references are resolved.
+            TypeError: If a registered profile's `agent_type` is a string reference
+                that resolves to another agent profile. The resolver in
+                `c2_types_service` then attempts to call that profile as a
+                constructor, which is not callable, so this is raised whenever the
+                string-reference resolution path is taken.
         """
         agent_profile = (
             await self._agent_profile_registry_service.load_component_from_directory(
@@ -264,7 +296,7 @@ class AgentProfilesService:
         self,
         agent_profile_id: str | uuid.UUID,
         ignore_enabled_flag: bool = False,
-    ) -> AgentProfile:
+    ) -> AgentProfile | None:
         """Unloads and reloads an agent profile from its original directory.
 
         After a successful reload, agent type references and the compatible agent type
@@ -284,6 +316,36 @@ class AgentProfilesService:
         Raises:
             AgentProfileNotFoundError: If no agent profile with the given ID is
                 registered.
+            AgentProfileManifestFileNotFoundError: If `manifest.json` is missing from
+                the profile's directory at the time of reload.
+            InvalidAgentProfileManifestFileJSONError: If `manifest.json` contains
+                invalid JSON at the time of reload.
+            InvalidAgentProfileManifestFileSchemaError: If `manifest.json` does not
+                follow the expected schema at the time of reload.
+            AgentProfileEntryPointModuleNotFoundError: If the entry-point module
+                specified in the manifest cannot be found at the time of reload.
+            AgentProfileSymbolNotFoundError: If the symbol specified in the manifest
+                is not found at the time of reload.
+            AgentProfileInterfaceError: If the class does not inherit from the
+                expected base class at the time of reload.
+            IncompatibleAgentProfileFrameworkVersionError: If the profile is
+                incompatible with the current framework version at the time of
+                reload.
+            InternalAgentProfileError: If an unhandled exception occurs while
+                reloading the profile.
+            AgentProfileAlreadyRegisteredError: If an agent profile with the same ID
+                is already registered in the agent profiles service.
+            DuplicateAgentTypeNameError: If the reloaded profile's agent type name
+                collides with a distinct agent type already registered under the same
+                name while agent type references are resolved.
+            UnresolvableAgentTypeReferenceError: If any registered profile's
+                `agent_type` is a string reference that cannot be resolved to a
+                registered agent type while agent type references are resolved.
+            TypeError: If a registered profile's `agent_type` is a string reference
+                that resolves to another agent profile. The resolver in
+                `c2_types_service` then attempts to call that profile as a
+                constructor, which is not callable, so this is raised whenever the
+                string-reference resolution path is taken.
         """
         agent_profile = await (
             self._agent_profile_registry_service.reload_component_by_component_id(
@@ -319,6 +381,28 @@ class AgentProfilesService:
         Args:
             ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
+
+        Raises:
+            OSError: If the framework agent profiles directory cannot be scanned (for
+                example, due to a permissions error) while discovering candidate
+                agent profile directories.
+            DuplicateAgentTypeNameError: If a loaded profile's agent type name
+                collides with a distinct agent type already registered under the same
+                name while agent type references are resolved. Per-profile loading
+                failures wrapped in `AgentTemplatesFrameworkError` or
+                `AgentProfilesServiceError` are caught and logged without aborting
+                the overall load, but this error is neither.
+            UnresolvableAgentTypeReferenceError: If any registered profile's
+                `agent_type` is a string reference that cannot be resolved to a
+                registered agent type while agent type references are resolved. Not
+                caught by the per-profile error handling for the same reason as
+                above.
+            TypeError: If a registered profile's `agent_type` is a string reference
+                that resolves to another agent profile. The resolver in
+                `c2_types_service` then attempts to call that profile as a
+                constructor, which is not callable, so this is raised whenever the
+                string-reference resolution path is taken. Not caught by the
+                per-profile error handling for the same reason as above.
         """
         self._logger.info("Loading framework agent profiles...")
         retrieved, skipped, errored = self.get_all_agent_profiles_from_directory(
@@ -363,7 +447,14 @@ class AgentProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def unload_framework_agent_profiles(self) -> None:
-        """Unloads all agent profiles that were loaded from the framework's profiles directory."""
+        """Unloads all agent profiles that were loaded from the framework's profiles directory.
+
+        Raises:
+            AgentProfileNotFoundError: If an agent profile is deregistered between
+                being listed and being unloaded.
+            OSError: If `Path.resolve()` fails while resolving an agent profile's
+                root directory or the framework agents directory for comparison.
+        """
         self._logger.info("Unloading framework agent profiles...")
         unloaded_agent_profiles = 0
         for agent_profile in self.get_all_agent_profiles():
@@ -381,7 +472,27 @@ class AgentProfilesService:
 
     @log_and_propagate_error_on_service_method
     async def reload_framework_agent_profiles(self) -> None:
-        """Unloads all framework agent profiles then reloads them from the profiles directory."""
+        """Unloads all framework agent profiles then reloads them from the profiles directory.
+
+        Raises:
+            AgentProfileNotFoundError: If an agent profile is deregistered between
+                being listed and being unloaded, during the unload half.
+            OSError: If `Path.resolve()` fails while comparing agent profile
+                directories during the unload half, or if the framework agent
+                profiles directory cannot be scanned during the load half.
+            DuplicateAgentTypeNameError: If a loaded profile's agent type name
+                collides with a distinct agent type already registered under the same
+                name while agent type references are resolved, during the load half.
+            UnresolvableAgentTypeReferenceError: If any registered profile's
+                `agent_type` is a string reference that cannot be resolved to a
+                registered agent type while agent type references are resolved,
+                during the load half.
+            TypeError: If a registered profile's `agent_type` is a string reference
+                that resolves to another agent profile. The resolver in
+                `c2_types_service` then attempts to call that profile as a
+                constructor, which is not callable, so this is raised whenever the
+                string-reference resolution path is taken during the load half.
+        """
         self._logger.info("Reloading framework agent profiles...")
         await self.unload_framework_agent_profiles()
         await self.load_framework_agent_profiles()

@@ -28,8 +28,10 @@ tools/defaults.txt
 .idea/
 .vscode/
 .claude/
+.codex/
 CLAUDE.md
 AGENTS.md
+.env
 
 site/
 .cache/

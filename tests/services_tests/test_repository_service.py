@@ -1,16 +1,50 @@
 import json
 import pathlib
+import shutil
+import uuid
 
 import pytest
 
+from consortium.server.exceptions.object_exceptions.repository_object_exceptions import (
+    RepositoryResourceFileSystemError,
+)
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
+    InvalidRepositoryMetadataFileEncodingError,
     InvalidRepositoryMetadataFileJSONError,
     InvalidRepositoryMetadataFileSchemaError,
+    RepositoryMetadataFileSystemError,
     ResourceIDReservationNotFoundError,
     ResourceNotFoundError,
     UnsyncedRepositoryMetadataFileError,
 )
 from consortium.server.services.repository_service import RepositoryService
+
+# A resource name carrying non-ASCII characters. Used to pin the explicit UTF-8 encoding
+# on the metadata file: under a non-UTF-8 locale default these bytes either mojibake or
+# fail to decode outright.
+_NON_ASCII_NAME = "wörker.txt"
+
+
+def _metadata_entry(resource_id: str, name: str, is_directory: bool = False) -> dict:
+    return {
+        "resource_id": resource_id,
+        "name": name,
+        "description": "",
+        "size": None,
+        "extension": "",
+        "exists_on_disk": True,
+        "md5_checksum": None,
+        "datetime_created": "2024-01-01T00:00:00",
+        "datetime_modified": "2024-01-01T00:00:00",
+        "is_directory": is_directory,
+        "data": {},
+    }
+
+
+def _raise_oserror(*args, **kwargs):
+    # Stands in for the residual `OSError` family (ENOSPC, EIO) that no pre-flight check
+    # can rule out.
+    raise OSError(5, "Input/output error")
 
 
 @pytest.fixture
@@ -417,3 +451,123 @@ def test_get_all_resources_returns_all(service: RepositoryService):
 
 def test_get_all_resources_empty_on_fresh_service(service: RepositoryService):
     assert service.get_all_resources() == []
+
+
+# ---------------------------------------------------------------------------
+# metadata file encoding
+# ---------------------------------------------------------------------------
+
+
+def test_load_repository_metadata_decodes_utf8_names(
+    service: RepositoryService, repo_dir: pathlib.Path
+):
+    # Written with `ensure_ascii=False` so the non-ASCII name lands in the file as real
+    # UTF-8 bytes rather than as `\uXXXX` escapes. This is what a hand-edited or
+    # externally written metadata file looks like, and it is the case that regresses if
+    # the read stops pinning the encoding: under a cp1252 default these bytes decode to
+    # mojibake instead of raising.
+    resource_id = str(uuid.uuid4())
+    resource_path = repo_dir / resource_id
+    resource_path.write_text("content")
+    metadata = {resource_id: _metadata_entry(resource_id, _NON_ASCII_NAME)}
+    (repo_dir / ".repository.json").write_text(
+        json.dumps(metadata, ensure_ascii=False), encoding="utf-8"
+    )
+
+    service.load_repository_metadata()
+
+    assert service.get_all_resources()[0].name == _NON_ASCII_NAME
+
+
+def test_metadata_round_trips_non_ascii_names(
+    service: RepositoryService, repo_dir: pathlib.Path
+):
+    service.create_file(content="hello", name=_NON_ASCII_NAME)
+
+    reloaded = RepositoryService(repository_directory_path=repo_dir)
+    reloaded.load_repository_metadata()
+
+    assert reloaded.get_all_resources()[0].name == _NON_ASCII_NAME
+
+
+def test_load_repository_metadata_invalid_utf8_raises_encoding_error(
+    service: RepositoryService, repo_dir: pathlib.Path
+):
+    # A decode failure must be reported as its own condition rather than escaping as a
+    # raw `UnicodeDecodeError` or being misreported as a JSON syntax error: the bytes
+    # never became text, so the file was never parsed.
+    (repo_dir / ".repository.json").write_bytes(b'{"\xff\xfe": {}}')
+
+    with pytest.raises(InvalidRepositoryMetadataFileEncodingError):
+        service.load_repository_metadata()
+
+
+# ---------------------------------------------------------------------------
+# filesystem errors: metadata vs resource
+# ---------------------------------------------------------------------------
+
+
+def test_save_repository_metadata_filesystem_error_is_metadata_scoped(
+    service: RepositoryService, monkeypatch: pytest.MonkeyPatch
+):
+    monkeypatch.setattr(pathlib.Path, "open", _raise_oserror)
+
+    with pytest.raises(RepositoryMetadataFileSystemError):
+        service.save_repository_metadata()
+
+
+def test_load_repository_metadata_filesystem_error_is_metadata_scoped(
+    service: RepositoryService, monkeypatch: pytest.MonkeyPatch
+):
+    service.save_repository_metadata()
+    monkeypatch.setattr(pathlib.Path, "open", _raise_oserror)
+
+    with pytest.raises(RepositoryMetadataFileSystemError):
+        service.load_repository_metadata()
+
+
+def test_add_file_missing_source_raises_resource_error(
+    service: RepositoryService, tmp_path: pathlib.Path
+):
+    # The service performs no resource IO of its own, so this must surface as the object
+    # layer's resource error rather than anything metadata scoped. A caller needs to be
+    # able to tell "the content was never placed" from "the content was placed but not
+    # recorded".
+    with pytest.raises(RepositoryResourceFileSystemError):
+        service.add_file(path=tmp_path / "does_not_exist.txt")
+
+
+def test_add_directory_missing_source_raises_resource_error(
+    service: RepositoryService, tmp_path: pathlib.Path
+):
+    with pytest.raises(RepositoryResourceFileSystemError):
+        service.add_directory(path=tmp_path / "does_not_exist_dir")
+
+
+# ---------------------------------------------------------------------------
+# delete tolerates a resource already gone from disk
+# ---------------------------------------------------------------------------
+
+
+def test_delete_resource_tolerates_file_already_missing(service: RepositoryService):
+    # Refusing here would leave the record permanently undeletable, since deregistration
+    # never runs. The caller asked for the resource not to exist, and it does not.
+    resource = service.create_file(content="x", name="x.txt")
+    resource.path.unlink()
+
+    service.delete_resource_by_resource_id(resource_id=resource.resource_id)
+
+    with pytest.raises(ResourceNotFoundError):
+        service.get_resource_by_resource_id(resource_id=resource.resource_id)
+
+
+def test_delete_resource_tolerates_directory_already_missing(
+    service: RepositoryService,
+):
+    resource = service.create_directory(name="d")
+    shutil.rmtree(resource.path)
+
+    service.delete_resource_by_resource_id(resource_id=resource.resource_id)
+
+    with pytest.raises(ResourceNotFoundError):
+        service.get_resource_by_resource_id(resource_id=resource.resource_id)

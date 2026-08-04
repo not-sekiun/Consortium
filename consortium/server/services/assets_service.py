@@ -148,6 +148,11 @@ class AssetsService:
                 account with that ID exists.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If the file cannot be written to disk.
+            RepositoryMetadataFileSystemError: If the asset metadata cannot be written to
+                disk after the file is written.
+            UnicodeDecodeError: If `content` is a text stream carrying content that
+                cannot be decoded.
         """
         asset = await asyncio.to_thread(
             self._repository_service.create_file,
@@ -207,6 +212,10 @@ class AssetsService:
                 account with that ID exists.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If no file exists at `path`, or the file
+                cannot be moved or copied into the repository.
+            RepositoryMetadataFileSystemError: If the asset metadata cannot be written to
+                disk afterwards.
         """
         asset = await asyncio.to_thread(
             self._repository_service.add_file,
@@ -276,6 +285,10 @@ class AssetsService:
             InvalidRepositoryDirectoryArchiveFileFormatError: If `content` is archive
                 content that cannot be unpacked as `archive_file_format`, or if
                 `archive_file_format` is not set.
+            RepositoryResourceFileSystemError: If the directory cannot be created or the
+                source directory or archive cannot be unpacked into it.
+            RepositoryMetadataFileSystemError: If the asset metadata cannot be written to
+                disk after the directory is created.
         """
         asset = await asyncio.to_thread(
             self._repository_service.create_directory,
@@ -337,6 +350,11 @@ class AssetsService:
                 account with that ID exists.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If no directory exists at `path`, or the
+                directory or any file within it cannot be moved or copied into the
+                repository.
+            RepositoryMetadataFileSystemError: If the asset metadata cannot be written to
+                disk afterwards.
         """
         asset = await asyncio.to_thread(
             self._repository_service.add_directory,
@@ -390,6 +408,8 @@ class AssetsService:
             ResourceNotFoundError: If no asset with the given ID exists.
             UserAccountIDNotFoundError: If `user_account_id` is provided but no user
                 account with that ID exists.
+            RepositoryMetadataFileSystemError: If the updated metadata cannot be written
+                to disk.
         """
         data = None
         if user_account_id is not _UNSET:
@@ -429,6 +449,10 @@ class AssetsService:
 
         Raises:
             ResourceNotFoundError: If no asset with the given ID exists.
+            RepositoryResourceFileSystemError: If the asset's file or directory exists on
+                disk but cannot be deleted.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk after deletion.
         """
         # Snapshot JSON before deletion since to_json() reads from disk
         asset = self._repository_service.get_resource_by_resource_id(

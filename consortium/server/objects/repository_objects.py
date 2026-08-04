@@ -1,4 +1,4 @@
-import contextlib
+import functools
 import hashlib
 import os
 import pathlib
@@ -16,12 +16,11 @@ from consortium.server.exceptions.object_exceptions.repository_object_exceptions
     InvalidRepositoryDirectoryArchiveFileFormatError,
     RepositoryDirectoryAlreadyExistsError,
     RepositoryDirectoryDoesNotExistError,
-    RepositoryDirectoryRelativePathNotContainedError,
     RepositoryFileAlreadyExistsError,
     RepositoryFileDoesNotExistError,
-    RepositoryObjectFileSystemError,
+    RepositoryResourceFileSystemError,
 )
-from consortium.server.utils import utc_now
+from consortium.server.utils import utc_now, wrap_filesystem_errors
 
 _DEFAULT_CHUNK_SIZE = 64000  # 64 KB, mimics shutil.copyfileobj default chunk size
 
@@ -36,20 +35,27 @@ _RESOURCE_MISSING_ERRORS = (FileNotFoundError, NotADirectoryError)
 
 def _filesystem_error(
     operation: str, path: pathlib.Path | str, exc: OSError
-) -> RepositoryObjectFileSystemError:
-    return RepositoryObjectFileSystemError(
+) -> RepositoryResourceFileSystemError:
+    return RepositoryResourceFileSystemError(
         operation=operation,
         path=str(path),
         underlying_error=f"{type(exc).__name__}: {exc}",
     )
 
 
-@contextlib.contextmanager
-def _wrap_filesystem_errors(operation: str, path: pathlib.Path | str):
-    try:
-        yield
-    except OSError as exc:
-        raise _filesystem_error(operation=operation, path=path, exc=exc) from exc
+# Every filesystem fault touching a file or directory's own bytes is reported as
+# `RepositoryResourceFileSystemError`, so the error type is bound once here rather than
+# repeated at each call site. One type rather than several is deliberate: a caller cannot
+# act differently on a missing path than it can on a full disk, since both mean the
+# operation did not happen and the file is unchanged. The specific failure is carried in
+# the error's `message` and `detail`. The default caught set (`OSError` only) is also
+# deliberate: `RepositoryFile.read` can raise `UnicodeDecodeError` for a text stream the
+# caller supplied, which stays unwrapped because it describes that content rather than a
+# failure of the file itself.
+_wrap_filesystem_errors = functools.partial(
+    wrap_filesystem_errors,
+    RepositoryResourceFileSystemError,
+)
 
 
 def _stat_or_none(path: pathlib.Path, operation: str) -> os.stat_result | None:
@@ -199,12 +205,58 @@ class RepositoryFile:
 
         return cls(path=path, name=name, description=description, data=data)
 
+    @classmethod
+    def from_existing_path(
+        cls,
+        source_path: pathlib.Path | str,
+        path: pathlib.Path | str,
+        copy: bool = False,
+        name: str | None = None,
+        description: str = "",
+        data: dict[str, JsonValue] | None = None,
+    ):
+        # Takes a file that already exists at `source_path` and puts it at `path`, as
+        # opposed to `create`, which writes new content there. As with `create`, `path` is
+        # where this file comes to live: what a caller does with the resulting object is
+        # its own concern and not described here. A source that is missing surfaces from
+        # the move or copy itself rather than from a preceding existence check, so the
+        # window between checking and acting is not left open.
+        if isinstance(source_path, str):
+            source_path = pathlib.Path(source_path)
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+
+        # The failing path is reported as the source, which is what the caller named and
+        # what these operations usually fail on. When the destination is at fault instead,
+        # the `OSError` carries it in its own message and reaches the caller through
+        # `underlying_error`.
+        with _wrap_filesystem_errors(
+            operation="copy the file" if copy else "move the file",
+            path=source_path,
+        ):
+            if copy:
+                shutil.copy2(str(source_path), path)
+            else:
+                shutil.move(str(source_path), path)
+
+        return cls(
+            path=path,
+            name=name if name else source_path.name,
+            description=description,
+            data=data,
+        )
+
     def read(
         self,
         binary: bool = False,
         encoding: str = "utf-8",
         chunk_size: int | None = None,
     ) -> str | bytes | Generator[str | bytes]:
+        # Checked up front so a missing file is reported when this method is called rather
+        # than when a returned generator is first iterated. The opens below report the
+        # same condition again for a file removed after this check: the two together mean
+        # the answer is the same whether or not the read lost that race, where relying on
+        # this check alone would let the raced case surface as a filesystem error.
         if not self.exists_on_disk:
             raise RepositoryFileDoesNotExistError(repository_file_str=str(self))
 
@@ -222,15 +274,25 @@ class RepositoryFile:
                 # chunk is pulled. Wrapping the enclosing method would leave the open and
                 # every subsequent read unguarded.
                 with _wrap_filesystem_errors(operation="read the file", path=self.path):
-                    with self.path.open(mode=mode, encoding=encoding) as file:
-                        while chunk := file.read(size):
-                            yield chunk
+                    try:
+                        with self.path.open(mode=mode, encoding=encoding) as file:
+                            while chunk := file.read(size):
+                                yield chunk
+                    except _RESOURCE_MISSING_ERRORS:
+                        raise RepositoryFileDoesNotExistError(
+                            repository_file_str=str(self)
+                        ) from None
 
             return chunk_iterator()
         else:
             with _wrap_filesystem_errors(operation="read the file", path=self.path):
-                with self.path.open(mode=mode, encoding=encoding) as file:
-                    return file.read()
+                try:
+                    with self.path.open(mode=mode, encoding=encoding) as file:
+                        return file.read()
+                except _RESOURCE_MISSING_ERRORS:
+                    raise RepositoryFileDoesNotExistError(
+                        repository_file_str=str(self)
+                    ) from None
 
     def write(
         self,
@@ -250,10 +312,18 @@ class RepositoryFile:
                 return file.write(data)
 
     def delete(self):
-        if not self.path.exists():
-            raise RepositoryFileDoesNotExistError(repository_file_str=str(self))
+        # The missing case is reported from the unlink itself rather than from a preceding
+        # existence check, so that a file removed between the two cannot surface as a
+        # filesystem error. Callers key on this type to tolerate an already deleted
+        # resource, and a check-then-act pair would drop them into the wrong branch
+        # exactly when the resource is being removed concurrently.
         with _wrap_filesystem_errors(operation="delete the file", path=self.path):
-            self.path.unlink()
+            try:
+                self.path.unlink()
+            except _RESOURCE_MISSING_ERRORS:
+                raise RepositoryFileDoesNotExistError(
+                    repository_file_str=str(self)
+                ) from None
 
     def to_json(
         self, include_checksum: bool = False, force_checksum_refresh: bool = False
@@ -549,29 +619,56 @@ class RepositoryDirectory:
 
         return cls(path=path, name=name, description=description, data=data)
 
+    @classmethod
+    def from_existing_path(
+        cls,
+        source_path: pathlib.Path | str,
+        path: pathlib.Path | str,
+        copy: bool = False,
+        name: str | None = None,
+        description: str = "",
+        data: dict[str, JsonValue] | None = None,
+    ):
+        # Takes a directory that already exists at `source_path` and puts it at `path`, as
+        # opposed to `create`, which builds new content there. `copytree` is called
+        # without `dirs_exist_ok` because `path` is a destination the caller has just
+        # named for this directory: something already sitting there means the caller
+        # picked an occupied path, which should fail rather than merge into it.
+        if isinstance(source_path, str):
+            source_path = pathlib.Path(source_path)
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+
+        # The failing path is reported as the source, which is what the caller named and
+        # what these operations usually fail on. When the destination is at fault instead,
+        # the `OSError` carries it in its own message and reaches the caller through
+        # `underlying_error`.
+        with _wrap_filesystem_errors(
+            operation="copy the directory" if copy else "move the directory",
+            path=source_path,
+        ):
+            if copy:
+                shutil.copytree(str(source_path), path)
+            else:
+                shutil.move(str(source_path), path)
+
+        return cls(
+            path=path,
+            name=name if name else source_path.name,
+            description=description,
+            data=data,
+        )
+
     def delete(self) -> None:
-        if not self.exists_on_disk:
-            raise RepositoryDirectoryDoesNotExistError(
-                repository_directory_str=str(self),
-            )
+        # Reported from the removal itself rather than from a preceding existence check,
+        # for the same reason as `RepositoryFile.delete`.
         with _wrap_filesystem_errors(operation="delete the directory", path=self.path):
-            shutil.rmtree(self.path)
-
-    def resolve_relative_path(
-        self,
-        relative_path: pathlib.Path | str,
-    ) -> pathlib.Path:
-        if isinstance(relative_path, str):
-            relative_path = pathlib.Path(relative_path)
-
-        resolved = (self.path / relative_path).resolve()
-        if not resolved.is_relative_to(self.path.resolve()):
-            raise RepositoryDirectoryRelativePathNotContainedError(
-                relative_path=str(relative_path),
-                repository_directory_str=str(self),
-            ) from None
-
-        return resolved
+            try:
+                shutil.rmtree(self.path)
+            except _RESOURCE_MISSING_ERRORS:
+                raise RepositoryDirectoryDoesNotExistError(
+                    repository_directory_str=str(self),
+                ) from None
 
     def to_json(
         self, include_checksum: bool = False, force_checksum_refresh: bool = False

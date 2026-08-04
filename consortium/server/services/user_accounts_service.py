@@ -1,10 +1,11 @@
+import functools
 import json
 import pathlib
 import uuid
 from pathlib import Path
 
-import jsonschema
 from loguru import logger
+from pydantic import ValidationError
 
 from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
     EmptyUserAccountPasswordError,
@@ -13,22 +14,34 @@ from consortium.server.exceptions.service_exceptions.user_accounts_service_excep
     UserAccountAuthenticationError,
     UserAccountIDNotFoundError,
     UserAccountsFileContainsDuplicateUsernamesError,
+    UserAccountsFileEncodingError,
     UserAccountsFileIsNotJSONError,
-    UserAccountsFileNotFoundError,
-    UserAccountsFilepathIsDirectoryError,
-    UserAccountsFileReadAccessError,
     UserAccountsFileSchemaError,
-    UserAccountsFileWriteAccessError,
+    UserAccountsFileSystemError,
     UserAccountsServiceError,
     UserAccountUsernameAlreadyExistsError,
     UserAccountUsernameNotFoundError,
 )
 from consortium.server.models.logging_models import LoggerType
-from consortium.server.models.user_account_models import UserAccountModel
+from consortium.server.models.user_account_models import (
+    PersistentUserAccountsFileModel,
+    UserAccountModel,
+)
 from consortium.server.services.authorization_service import AuthorizationService
 from consortium.server.utils import (
+    format_validation_error,
     log_and_propagate_error_on_service_method,
     normalize_uuid,
+    wrap_filesystem_errors,
+)
+
+# This module reports every filesystem fault through `UserAccountsFileSystemError`, so the
+# error type is bound once here rather than repeated at each call site. Decoding and
+# encoding failures are caught separately at the two call sites: they describe the file's
+# text rather than the filesystem operation carrying it.
+_wrap_filesystem_errors = functools.partial(
+    wrap_filesystem_errors,
+    UserAccountsFileSystemError,
 )
 
 
@@ -318,12 +331,16 @@ class UserAccountsService:
             The list of user accounts loaded from the file.
 
         Raises:
-            UserAccountsFileNotFoundError: If the file does not exist.
-            UserAccountsFilepathIsDirectoryError: If the path points to a directory.
+            UserAccountsFileSystemError: If the file cannot be read, for example because
+                it does not exist, the process lacks read permission, or the path points
+                to a directory.
+            UserAccountsFileEncodingError: If the file's bytes are not valid UTF-8.
             UserAccountsFileIsNotJSONError: If the file is not valid JSON.
-            UserAccountsFileSchemaError: If the JSON does not follow the expected schema.
-            UserAccountsFileReadAccessError: If the file cannot be read due to
-                insufficient permissions.
+            UserAccountsFileSchemaError: If the JSON does not follow the expected schema,
+                including when an entry is missing a required field, carries an empty
+                username or password, or carries an unrecognised field.
+            InvalidUserAccountRoleError: If an entry's role is not one of the roles
+                currently registered with the authorization service.
             UserAccountUsernameAlreadyExistsError: If a username from the file conflicts
                 with an already-registered account.
             UserAccountsFileContainsDuplicateUsernamesError: If the file itself contains
@@ -355,77 +372,108 @@ class UserAccountsService:
             The list of parsed user accounts.
 
         Raises:
-            UserAccountsFileNotFoundError: If the file does not exist.
-            UserAccountsFilepathIsDirectoryError: If the path points to a directory.
+            UserAccountsFileSystemError: If the file cannot be read, for example because
+                it does not exist, the process lacks read permission, or the path points
+                to a directory.
+            UserAccountsFileEncodingError: If the file's bytes are not valid UTF-8.
             UserAccountsFileIsNotJSONError: If the file is not valid JSON.
-            UserAccountsFileSchemaError: If the JSON does not follow the expected schema.
-            UserAccountsFileReadAccessError: If the file cannot be read due to
-                insufficient permissions.
+            UserAccountsFileSchemaError: If the JSON does not follow the expected schema,
+                including when an entry is missing a required field, carries an empty
+                username or password, or carries an unrecognised field.
+            InvalidUserAccountRoleError: If an entry's role is not one of the roles
+                currently registered with the authorization service.
             UserAccountUsernameAlreadyExistsError: If a username from the file conflicts
                 with an already-registered account.
             UserAccountsFileContainsDuplicateUsernamesError: If the file itself contains
                 duplicate usernames.
         """
-        user_accounts_file_json_schema = {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "username": {"type": "string", "minLength": 1},
-                    "password": {"type": "string", "minLength": 1},
-                    "role": {
-                        "type": "string",
-                        "enum": ["SPECTATOR", "ADMIN", "OPERATOR"],
-                    },
-                },
-            },
-        }
-
-        if not user_accounts_filepath.exists():
-            raise UserAccountsFileNotFoundError(
-                user_accounts_filepath=str(user_accounts_filepath),
-            )
+        # A missing file is deliberately left to `open()` below: `FileNotFoundError` is
+        # self-explanatory once wrapped, and checking first would only add a syscall and a
+        # window in which the file can disappear between the check and the open. A
+        # directory does need the check, because the `OSError` it produces does not name
+        # the real problem on every platform.
         if user_accounts_filepath.is_dir():
-            raise UserAccountsFilepathIsDirectoryError(
-                user_accounts_filepath=str(user_accounts_filepath),
+            raise UserAccountsFileSystemError._path_is_a_directory(
+                operation="read the user accounts file",
+                path=str(user_accounts_filepath),
             )
+
+        self._logger.debug("Reading user accounts from: {}", user_accounts_filepath)
+        # The encoding is pinned rather than left to the platform default so that a file
+        # written on one machine reads back identically on another. Usernames are the
+        # persistent identifier for an account, so a locale-dependent decode would not
+        # merely garble a display string, it would change who an entry refers to.
+        with _wrap_filesystem_errors(
+            operation="read the user accounts file",
+            path=user_accounts_filepath,
+        ):
+            try:
+                with user_accounts_filepath.open("r", encoding="utf-8") as file:
+                    data = file.read()
+            except UnicodeDecodeError as exc:
+                raise UserAccountsFileEncodingError(
+                    user_accounts_filepath=str(user_accounts_filepath),
+                    underlying_error=f"{type(exc).__name__}: {exc}",
+                ) from None
+
         try:
-            self._logger.debug("Reading user accounts from: {}", user_accounts_filepath)
-            with user_accounts_filepath.open("r") as file:
-                data = file.read()
             json_data = json.loads(data)
-            jsonschema.validate(
-                instance=json_data,
-                schema=user_accounts_file_json_schema,
-            )
-        except jsonschema.ValidationError as exc:
-            raise UserAccountsFileSchemaError(
-                user_accounts_filepath=str(user_accounts_filepath),
-                json_schema_error_message=exc.message,
-            ) from None
         except json.JSONDecodeError:
             raise UserAccountsFileIsNotJSONError(
                 user_accounts_filepath=str(user_accounts_filepath),
             ) from None
-        except PermissionError:
-            raise UserAccountsFileReadAccessError(
+
+        # One validation pass covers the top level array, every entry in it and the
+        # non-empty constraints on each field. This replaced a JSON schema that declared
+        # `properties` without `required`, so an entry missing a field passed validation
+        # and then escaped as a raw `pydantic.ValidationError` from the model
+        # construction below.
+        try:
+            persistent_user_accounts = PersistentUserAccountsFileModel.model_validate(
+                json_data,
+            ).root
+        except ValidationError as exc:
+            raise UserAccountsFileSchemaError(
                 user_accounts_filepath=str(user_accounts_filepath),
+                validation_error_message=format_validation_error(exc),
             ) from None
+
+        # Roles are validated separately from the file's own shape because the valid set
+        # is whatever the authorization service loaded from the role permissions file at
+        # runtime, which a static model cannot express. Checking them here also keeps the
+        # file loading path agreeing with `create_user_account`, which has always
+        # validated against the same source.
+        valid_roles = self._authorization_service.get_all_roles()
 
         existing_usernames = [
             user_account.username for user_account in self.get_all_user_accounts()
         ]
         new_usernames = []
         new_user_accounts = []
-        for user_account_json_data in json_data:
-            # The JSON schema guarantees that the usernames and passwords are not empty
-            # strings, so we do not need to check for that condition here.
-            new_user_account = UserAccountModel(**user_account_json_data)
+        for persistent_user_account in persistent_user_accounts:
+            if persistent_user_account.role not in valid_roles:
+                raise InvalidUserAccountRoleError._during_user_accounts_file_loading(
+                    user_accounts_filepath=str(user_accounts_filepath),
+                    username=persistent_user_account.username,
+                    role=persistent_user_account.role,
+                )
+            # The model guarantees the usernames and passwords are not empty strings, so
+            # we do not need to check for that condition here.
+            new_user_account = UserAccountModel(
+                username=persistent_user_account.username,
+                password=persistent_user_account.password,
+                role=persistent_user_account.role,
+            )
             if new_user_account.username in existing_usernames:
                 raise UserAccountUsernameAlreadyExistsError._during_user_accounts_file_loading(
                     username=new_user_account.username,
                     user_accounts_filepath=str(user_accounts_filepath),
                 )
+            # Known defect, tracked as H4 in HIGH_DIFF.md and left unchanged here:
+            # `new_usernames` is never appended to, so this check cannot fire and a file
+            # containing the same username twice loads as two separate accounts that
+            # share it. Deliberately not fixed alongside the validation rework, because
+            # making it fire can stop a server that boots today from booting.
             if new_user_account.username in new_usernames:
                 raise UserAccountsFileContainsDuplicateUsernamesError(
                     user_accounts_filepath=user_accounts_filepath,
@@ -454,13 +502,14 @@ class UserAccountsService:
             The number of bytes written.
 
         Raises:
-            UserAccountsFilepathIsDirectoryError: If the path points to a directory.
-            UserAccountsFileWriteAccessError: If the file cannot be written due to
-                insufficient permissions.
+            UserAccountsFileSystemError: If the file cannot be written, for example
+                because the process lacks write permission, the path points to a
+                directory, or the disk is full.
         """
         if user_accounts_filepath.is_dir():
-            raise UserAccountsFilepathIsDirectoryError(
-                user_accounts_filepath=str(user_accounts_filepath),
+            raise UserAccountsFileSystemError._path_is_a_directory(
+                operation="write the user accounts file",
+                path=str(user_accounts_filepath),
             )
 
         self._logger.debug("Writing user accounts to: {}", user_accounts_filepath)
@@ -476,15 +525,29 @@ class UserAccountsService:
                 },
             )
 
-        try:
-            with user_accounts_filepath.open("w") as file:
-                # Data is guaranteed to be JSON serializable at this point.
-                data = json.dumps(serializable_user_accounts, indent=4)
-                number_of_bytes_written = file.write(data)
-        except PermissionError:
-            raise UserAccountsFileWriteAccessError(
-                user_accounts_filepath=str(user_accounts_filepath),
-            ) from None
+        # Data is guaranteed to be JSON serializable at this point.
+        data = json.dumps(serializable_user_accounts, indent=4)
+
+        # Encoded here and written as bytes rather than handed to a text mode file, so
+        # that the returned count is the number of bytes that actually reached the disk.
+        # A text mode write returns characters, and on a platform that translates newlines
+        # it writes more bytes than it reports: this file is 96 characters but 102 bytes
+        # on Windows, because each of the six `\n` separators becomes `\r\n`. Writing
+        # bytes also makes the file byte identical whatever host produced it, which is the
+        # same reason the read path pins its encoding.
+        #
+        # The encode itself cannot fail: `json.dumps` defaults to `ensure_ascii=True`, so
+        # `data` is always pure ASCII. That is also why there is no `UnicodeEncodeError`
+        # counterpart to the decode handling on the read path. Passing
+        # `ensure_ascii=False` would change both facts.
+        encoded_data = data.encode("utf-8")
+
+        with _wrap_filesystem_errors(
+            operation="write the user accounts file",
+            path=user_accounts_filepath,
+        ):
+            with user_accounts_filepath.open("wb") as file:
+                number_of_bytes_written = file.write(encoded_data)
 
         self._logger.debug(
             "Wrote user accounts to user accounts file ({} byte(s) written)",
@@ -496,8 +559,10 @@ class UserAccountsService:
     def load_framework_user_accounts(self) -> bool:
         """Loads user accounts from the framework's configured user accounts file.
 
-        Errors encountered while loading are logged and suppressed; callers receive
-        a boolean indicating success or failure.
+        Every failure this can encounter is a `UserAccountsServiceError`, so all of them
+        are logged and reported through the return value rather than raised. Callers that
+        need the server to react to a failed load have to check that return value: it is
+        the only signal, and a `False` leaves the service with no accounts registered.
 
         Returns:
             `True` if accounts were loaded successfully, `False` if a
@@ -525,8 +590,10 @@ class UserAccountsService:
     def reload_framework_user_accounts(self) -> bool:
         """Deletes all existing user accounts then reloads them from the framework's file.
 
-        Errors encountered while reloading are logged and suppressed; callers receive a
-        boolean indicating success or failure.
+        Every failure this can encounter is a `UserAccountsServiceError`, so all of them
+        are logged and reported through the return value rather than raised. The existing
+        accounts are deleted before the reload is attempted, so a `False` leaves the
+        service with no accounts registered rather than with the previous set.
 
         Returns:
             `True` if accounts were reloaded successfully, `False` if a
@@ -555,25 +622,28 @@ class UserAccountsService:
         return True
 
     @log_and_propagate_error_on_service_method
-    def write_framework_user_accounts(self) -> bool:
+    def write_framework_user_accounts(self) -> int:
         """Writes all in-memory user accounts to the framework's configured user accounts file.
 
-        Errors encountered while writing are logged and suppressed; callers receive a
-        boolean indicating success or failure.
+        Failures propagate rather than being reported through the return value. A failed
+        write means the in-memory registry and the file have diverged and the change will
+        be lost on the next restart, which a caller that just accepted a change has to be
+        able to react to. `log_and_propagate_error_on_service_method` logs the error on
+        the way out, so nothing is lost by not catching it here.
 
         Returns:
-            `True` if accounts were written successfully, `False` if a
-            `UserAccountsServiceError` occurred.
+            The number of bytes written.
+
+        Raises:
+            UserAccountsFileSystemError: If the file cannot be written, for example
+                because the process lacks write permission, the configured path points to
+                a directory, or the disk is full.
         """
         self._logger.debug("Writing framework user accounts...")
 
-        try:
-            number_of_bytes_written = self.write_user_accounts_to_user_accounts_file(
-                user_accounts_filepath=self._user_accounts_json_file,
-            )
-        except UserAccountsServiceError as exc:
-            self._logger.error(exc)
-            return False
+        number_of_bytes_written = self.write_user_accounts_to_user_accounts_file(
+            user_accounts_filepath=self._user_accounts_json_file,
+        )
 
         for user_account in self.get_all_user_accounts():
             self._logger.debug(
@@ -584,4 +654,4 @@ class UserAccountsService:
             "Wrote framework user accounts ({} byte(s) written)",
             number_of_bytes_written,
         )
-        return True
+        return number_of_bytes_written

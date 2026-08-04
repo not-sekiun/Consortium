@@ -70,6 +70,12 @@ class AuthorizationService:
                 to the expected JSON schema.
             InvalidRolePermissionsFilePermissionValueError: If any permission
                 string is not a recognised UserPermissions value.
+            OSError: If `path` cannot be opened or read (for example it does not
+                exist, or read permission is denied). Left unwrapped: it
+                describes a filesystem problem with the supplied path rather
+                than a defect in the loaded data.
+            UnicodeDecodeError: If the file's contents cannot be decoded as
+                text. Left unwrapped for the same reason as OSError above.
         """
         valid_permissions = {p.value for p in UserPermissions}
         with path.open(mode="r") as file:
@@ -106,6 +112,16 @@ class AuthorizationService:
             path: Absolute path to write the role permissions JSON file to.
             role_permissions: Mapping of role name -> list of permission strings
                 to persist.
+
+        Raises:
+            TypeError: If `role_permissions` contains a value that is not JSON
+                serialisable. Left unwrapped: it indicates a caller supplied
+                data that cannot be persisted.
+            ValueError: If `role_permissions` contains a circular reference.
+                Left unwrapped for the same reason as TypeError above.
+            OSError: If `path` cannot be opened or written to (for example the
+                parent directory does not exist, or write permission is
+                denied).
         """
         with path.open(mode="w") as file:
             data = json.dumps(role_permissions, indent=4)
@@ -123,14 +139,13 @@ class AuthorizationService:
         construction time and replaces the current in-memory role permissions
         with the loaded data.
 
-        Returns:
-            None
-
         Raises:
             InvalidRolePermissionsFileJSONError: Propagated from the base loader.
             InvalidRolePermissionsFileSchemaError: Propagated from the base loader.
             InvalidRolePermissionsFilePermissionValueError: Propagated from the
                 base loader.
+            OSError: Propagated from the base loader.
+            UnicodeDecodeError: Propagated from the base loader.
         """
         data = self.load_role_permissions_from_path(self._role_permissions_json_file)
         self._role_permissions = {
@@ -147,6 +162,10 @@ class AuthorizationService:
         Calls `save_role_permissions_to_path` with the path supplied at
         construction time and the current in-memory state.
 
+        Raises:
+            TypeError: Propagated from the base writer.
+            ValueError: Propagated from the base writer.
+            OSError: Propagated from the base writer.
         """
         serialisable = {
             role: sorted(permissions)
@@ -192,7 +211,13 @@ class AuthorizationService:
         """Creates a new role with an optional initial set of permissions.
 
         Args:
-            role: The name of the new role. Must match ``^[A-Z][A-Z0-9_]*$``.
+            role: The name of the new role. No format validation is performed
+                here, any string is accepted. Note that
+                `_ROLE_PERMISSIONS_JSON_SCHEMA` requires role names to match
+                ``^[A-Z][A-Z0-9_]*$`` when a role permissions file is loaded
+                (see `load_role_permissions_from_path`), so a role created here
+                whose name violates that pattern will fail to load back the
+                next time `load_server_role_permissions` is called.
             permissions: Initial permissions to assign. When ``None``, the role
                 starts with no permissions.
 

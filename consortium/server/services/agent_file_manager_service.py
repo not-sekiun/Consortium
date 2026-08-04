@@ -113,7 +113,22 @@ class AgentFileManagerService:
             IsADirectoryError: If the asset is a directory, which has no readable file
                 content.
             RepositoryFileDoesNotExistError: If the asset is a file but no longer exists
-                on disk.
+                on disk. Always raised immediately, before any content is read, even
+                when `chunk_size` is set: existence is checked before the generator is
+                built.
+            RepositoryResourceFileSystemError: If reading the file from disk fails for a
+                reason other than it being missing (for example a permissions error).
+                Raised immediately when `chunk_size` is `None`. When `chunk_size` is
+                set, the file is not opened until the returned generator is first
+                iterated, so this is raised on that first iteration instead, not when
+                this method is called.
+            LookupError: If `encoding` names an encoding Python does not recognize.
+                Never raised when `binary` is `True`, since `encoding` is then ignored.
+                Same call-time-versus-first-iteration timing as
+                `RepositoryResourceFileSystemError` above.
+            UnicodeDecodeError: If the file's content cannot be decoded using
+                `encoding`. Never raised when `binary` is `True`. Same timing as
+                `LookupError` above.
         """
         asset = self.get_asset_by_asset_id(asset_id=asset_id)
         # Directory assets have no single readable content stream; reading one as a file
@@ -150,6 +165,17 @@ class AgentFileManagerService:
 
         Returns:
             The newly created artifact file resource, attributed to the owning agent.
+
+        Raises:
+            AgentNotFoundError: If the owning agent is no longer registered.
+            RepositoryResourceFileSystemError: If the artifact file cannot be written to
+                disk.
+            RepositoryMetadataFileSystemError: If the repository's metadata file cannot
+                be written to disk after the artifact file is created.
+            UnicodeDecodeError: If `content` is a text stream whose underlying data
+                cannot be decoded while it is being read to write the artifact file.
+                Left unwrapped: it describes the content supplied rather than a
+                failure of the artifacts repository itself.
         """
         return await self._artifacts_service.create_artifact_file(
             content=content,
@@ -182,6 +208,13 @@ class AgentFileManagerService:
 
         Returns:
             The newly registered artifact file resource, attributed to the owning agent.
+
+        Raises:
+            AgentNotFoundError: If the owning agent is no longer registered.
+            RepositoryResourceFileSystemError: If no file exists at `path`, or the file
+                cannot be moved or copied into the artifacts repository.
+            RepositoryMetadataFileSystemError: If the repository's metadata file cannot
+                be written to disk afterwards.
         """
         return await self._artifacts_service.add_artifact_file(
             path=path,
@@ -225,9 +258,15 @@ class AgentFileManagerService:
                 agent.
 
         Raises:
+            AgentNotFoundError: If the owning agent is no longer registered.
             InvalidRepositoryDirectoryArchiveFileFormatError: If `content` is archive
                 content that cannot be unpacked as `archive_file_format`, or if
                 `archive_file_format` is not set.
+            RepositoryResourceFileSystemError: If the artifact directory cannot be
+                created, or the source directory or archive cannot be copied or
+                unpacked into it.
+            RepositoryMetadataFileSystemError: If the repository's metadata file cannot
+                be written to disk after the artifact directory is created.
         """
         return await self._artifacts_service.create_artifact_directory(
             content=content,
@@ -262,6 +301,14 @@ class AgentFileManagerService:
         Returns:
             The newly registered artifact directory resource, attributed to the owning
                 agent.
+
+        Raises:
+            AgentNotFoundError: If the owning agent is no longer registered.
+            RepositoryResourceFileSystemError: If no directory exists at `path`, or the
+                directory or any file within it cannot be moved or copied into the
+                artifacts repository.
+            RepositoryMetadataFileSystemError: If the repository's metadata file cannot
+                be written to disk afterwards.
         """
         return await self._artifacts_service.add_artifact_directory(
             path=path,

@@ -106,6 +106,11 @@ class ConnectedAgentsService:
             AgentTypeResolutionError: Raised if the agent type cannot be resolved from
                 the provided payload_id or agent_type.
             AgentCreationParameterTypeError: Raised if a parameter has an invalid type.
+            ListenerNotFoundError: Raised if the listener that owns this service no
+                longer exists. The agent construction path looks the listener up by ID
+                and rejects registration against a listener that has been deleted.
+            RuntimeError: If called with no running event loop. The `AGENT_REGISTERED`
+                event is scheduled with `asyncio.create_task`, which requires one.
 
         Returns:
             The registered agent object.
@@ -141,6 +146,8 @@ class ConnectedAgentsService:
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected
                 to this listener.
+            RuntimeError: If called with no running event loop. The `AGENT_DEREGISTERED`
+                event is scheduled with `asyncio.create_task`, which requires one.
         """
         self._validate_agent_connected_to_listener(agent_id=agent_id)
         self._agents_service.deregister_agent_by_agent_id(agent_id=agent_id)
@@ -156,6 +163,8 @@ class ConnectedAgentsService:
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected
                 to this listener.
+            RuntimeError: If called with no running event loop. The `AGENT_CHECKED_IN`
+                event is scheduled with `asyncio.create_task`, which requires one.
         """
         self._validate_agent_connected_to_listener(agent_id=agent_id)
         self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
@@ -371,6 +380,9 @@ class ConnectedAgentsService:
                 to this listener.
             AgentTaskNotFoundError: Raised if the task ID does not correspond to a
                 running task for this agent.
+            ValidationError: Raised by pydantic if the dispatched output message fails
+                model validation, for example when `data` holds values that are not
+                JSON-serializable or `payload` is not a supported binary type.
         """
         agent = self._validate_agent_connected_to_listener(agent_id=agent_id)
         # Validate the task ID corresponds to a running task before submitting

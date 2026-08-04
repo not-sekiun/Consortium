@@ -80,9 +80,21 @@ class AgentTemplatesPayloadsService:
             The created payload.
 
         Raises:
-            AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
-            ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
+            AgentTemplateIDNotFoundError: If the bound agent template ID no longer
+                exists.
+            MissingRequiredAgentTemplateOptionError: If a required option is absent
+                from `build_parameters`.
+            AgentTemplateOptionNotFoundError: If `build_parameters` contains an unknown
+                option name.
+            AgentTemplateOptionValueValidationError: If an option value in
+                `build_parameters` fails type or constraint validation.
+            AgentTemplateValidatingFunctionError: If the agent template's validating
+                function rejects the resolved options.
+            ResourceIDReservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If the file cannot be written to disk.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk.
         """
         return await self._payloads_service.create_payload_file(
             agent_template_id=self._agent_template_id,
@@ -128,9 +140,22 @@ class AgentTemplatesPayloadsService:
             The created payload.
 
         Raises:
-            AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
-            ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
+            AgentTemplateIDNotFoundError: If the bound agent template ID no longer
+                exists.
+            MissingRequiredAgentTemplateOptionError: If a required option is absent
+                from `build_parameters`.
+            AgentTemplateOptionNotFoundError: If `build_parameters` contains an unknown
+                option name.
+            AgentTemplateOptionValueValidationError: If an option value in
+                `build_parameters` fails type or constraint validation.
+            AgentTemplateValidatingFunctionError: If the agent template's validating
+                function rejects the resolved options.
+            ResourceIDReservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If the directory cannot be created or the
+                archive cannot be unpacked into it.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk.
         """
         return await self._payloads_service.create_payload_directory(
             agent_template_id=self._agent_template_id,
@@ -178,9 +203,22 @@ class AgentTemplatesPayloadsService:
             The registered payload.
 
         Raises:
-            AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
-            ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
+            AgentTemplateIDNotFoundError: If the bound agent template ID no longer
+                exists.
+            MissingRequiredAgentTemplateOptionError: If a required option is absent
+                from `build_parameters`.
+            AgentTemplateOptionNotFoundError: If `build_parameters` contains an unknown
+                option name.
+            AgentTemplateOptionValueValidationError: If an option value in
+                `build_parameters` fails type or constraint validation.
+            AgentTemplateValidatingFunctionError: If the agent template's validating
+                function rejects the resolved options.
+            ResourceIDReservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If no file exists at `path`, or the file
+                cannot be moved or copied into the repository.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk afterwards.
         """
         return await self._payloads_service.add_payload_file(
             agent_template_id=self._agent_template_id,
@@ -229,9 +267,23 @@ class AgentTemplatesPayloadsService:
             The registered payload.
 
         Raises:
-            AgentTemplateNotFoundError: If the bound agent template ID no longer exists.
-            ResourceIDreservationNotFoundError: If `payload_id` is provided but has no
+            AgentTemplateIDNotFoundError: If the bound agent template ID no longer
+                exists.
+            MissingRequiredAgentTemplateOptionError: If a required option is absent
+                from `build_parameters`.
+            AgentTemplateOptionNotFoundError: If `build_parameters` contains an unknown
+                option name.
+            AgentTemplateOptionValueValidationError: If an option value in
+                `build_parameters` fails type or constraint validation.
+            AgentTemplateValidatingFunctionError: If the agent template's validating
+                function rejects the resolved options.
+            ResourceIDReservationNotFoundError: If `payload_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If no directory exists at `path`, or the
+                directory or any file within it cannot be moved or copied into the
+                repository.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk afterwards.
         """
         return await self._payloads_service.add_payload_directory(
             agent_template_id=self._agent_template_id,
@@ -256,11 +308,12 @@ class AgentTemplatesPayloadsService:
         Args:
             payload_id: The ID of the payload to delete.
 
-        Returns:
-            Nothing.
-
         Raises:
             ResourceNotFoundError: If no payload with the given ID exists.
+            RepositoryResourceFileSystemError: If the resource cannot be removed from
+                disk.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk.
         """
         await self._payloads_service.delete_payload_by_resource_id(
             resource_id=payload_id,

@@ -149,6 +149,11 @@ class ArtifactsService:
                 registered.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If the file cannot be written to disk.
+            RepositoryMetadataFileSystemError: If the artifact metadata cannot be written
+                to disk after the file is written.
+            UnicodeDecodeError: If `content` is a text stream carrying content that
+                cannot be decoded.
         """
         artifact = await asyncio.to_thread(
             self._repository_service.create_file,
@@ -209,6 +214,10 @@ class ArtifactsService:
                 registered.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If no file exists at `path`, or the file
+                cannot be moved or copied into the repository.
+            RepositoryMetadataFileSystemError: If the artifact metadata cannot be written
+                to disk afterwards.
         """
         artifact = await asyncio.to_thread(
             self._repository_service.add_file,
@@ -278,6 +287,10 @@ class ArtifactsService:
             InvalidRepositoryDirectoryArchiveFileFormatError: If `content` is archive
                 content that cannot be unpacked as `archive_file_format`, or if
                 `archive_file_format` is not set.
+            RepositoryResourceFileSystemError: If the directory cannot be created or the
+                source directory or archive cannot be unpacked into it.
+            RepositoryMetadataFileSystemError: If the artifact metadata cannot be written
+                to disk after the directory is created.
         """
         artifact = await asyncio.to_thread(
             self._repository_service.create_directory,
@@ -340,6 +353,11 @@ class ArtifactsService:
                 registered.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If no directory exists at `path`, or the
+                directory or any file within it cannot be moved or copied into the
+                repository.
+            RepositoryMetadataFileSystemError: If the artifact metadata cannot be written
+                to disk afterwards.
         """
         artifact = await asyncio.to_thread(
             self._repository_service.add_directory,
@@ -393,6 +411,8 @@ class ArtifactsService:
             ResourceNotFoundError: If no artifact with the given ID exists.
             AgentNotFoundError: If `agent_id` is provided but no agent with that ID is
                 registered.
+            RepositoryMetadataFileSystemError: If the updated metadata cannot be written
+                to disk.
         """
         data = None
         if agent_id is not _UNSET:
@@ -434,6 +454,10 @@ class ArtifactsService:
 
         Raises:
             ResourceNotFoundError: If no artifact with the given ID exists.
+            RepositoryResourceFileSystemError: If the artifact's file or directory exists
+                on disk but cannot be deleted.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk after deletion.
         """
         # Snapshot JSON before deletion since to_json() reads from disk
         artifact = self._repository_service.get_resource_by_resource_id(

@@ -140,9 +140,22 @@ class PayloadsService:
             The created payload.
 
         Raises:
-            AgentTemplateNotFoundError: If no agent template with the given ID exists.
+            AgentTemplateIDNotFoundError: If no agent template with the given ID exists.
+            MissingRequiredAgentTemplateOptionError: If a required option is absent
+                from `build_parameters`.
+            AgentTemplateOptionNotFoundError: If `build_parameters` contains an unknown
+                option name.
+            AgentTemplateOptionValueValidationError: If an option value in
+                `build_parameters` fails type or constraint validation.
+            AgentTemplateValidatingFunctionError: If the agent template's validating
+                function rejects the resolved options.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            RepositoryResourceFileSystemError: If the file cannot be written to disk.
+            RepositoryMetadataFileSystemError: If the payload metadata cannot be written
+                to disk after the file is written.
+            UnicodeDecodeError: If `content` is a text stream carrying content that
+                cannot be decoded.
         """
         # Validate payload build parameters against the agent template and check that
         # the agent template exists
@@ -227,10 +240,22 @@ class PayloadsService:
             The registered payload.
 
         Raises:
-            AgentTemplateNotFoundError: If no agent template with the given ID
+            AgentTemplateIDNotFoundError: If no agent template with the given ID
                 exists.
+            MissingRequiredAgentTemplateOptionError: If a required option is absent
+                from `build_parameters`.
+            AgentTemplateOptionNotFoundError: If `build_parameters` contains an unknown
+                option name.
+            AgentTemplateOptionValueValidationError: If an option value in
+                `build_parameters` fails type or constraint validation.
+            AgentTemplateValidatingFunctionError: If the agent template's validating
+                function rejects the resolved options.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but
                 has no corresponding reservation.
+            RepositoryResourceFileSystemError: If no file exists at `path`, or the file
+                cannot be moved or copied into the repository.
+            RepositoryMetadataFileSystemError: If the payload metadata cannot be written
+                to disk afterwards.
         """
         agent_template = (
             self._agent_templates_service.get_agent_template_by_agent_template_id(
@@ -310,9 +335,24 @@ class PayloadsService:
             The created payload.
 
         Raises:
-            AgentTemplateNotFoundError: If no agent template with the given ID exists.
+            AgentTemplateIDNotFoundError: If no agent template with the given ID exists.
+            MissingRequiredAgentTemplateOptionError: If a required option is absent
+                from `build_parameters`.
+            AgentTemplateOptionNotFoundError: If `build_parameters` contains an unknown
+                option name.
+            AgentTemplateOptionValueValidationError: If an option value in
+                `build_parameters` fails type or constraint validation.
+            AgentTemplateValidatingFunctionError: If the agent template's validating
+                function rejects the resolved options.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            InvalidRepositoryDirectoryArchiveFileFormatError: If `content` cannot be
+                unpacked as `archive_file_format`, or if `archive_file_format` is not
+                set.
+            RepositoryResourceFileSystemError: If the directory cannot be created or the
+                archive cannot be unpacked into it.
+            RepositoryMetadataFileSystemError: If the payload metadata cannot be written
+                to disk after the directory is created.
         """
         # Validate payload build parameters against the agent template and check that
         # the agent template exists
@@ -396,10 +436,23 @@ class PayloadsService:
             The registered payload.
 
         Raises:
-            AgentTemplateNotFoundError: If no agent template with the given ID
+            AgentTemplateIDNotFoundError: If no agent template with the given ID
                 exists.
+            MissingRequiredAgentTemplateOptionError: If a required option is absent
+                from `build_parameters`.
+            AgentTemplateOptionNotFoundError: If `build_parameters` contains an unknown
+                option name.
+            AgentTemplateOptionValueValidationError: If an option value in
+                `build_parameters` fails type or constraint validation.
+            AgentTemplateValidatingFunctionError: If the agent template's validating
+                function rejects the resolved options.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but
                 has no corresponding reservation.
+            RepositoryResourceFileSystemError: If no directory exists at `path`, or the
+                directory or any file within it cannot be moved or copied into the
+                repository.
+            RepositoryMetadataFileSystemError: If the payload metadata cannot be written
+                to disk afterwards.
         """
         agent_template = (
             self._agent_templates_service.get_agent_template_by_agent_template_id(
@@ -478,8 +531,19 @@ class PayloadsService:
 
         Raises:
             ResourceNotFoundError: If no payload with the given ID exists.
-            AgentTemplateNotFoundError: If `agent_template_id` is provided but no agent
-                template with that ID exists.
+            RepositoryMetadataFileSystemError: If the updated metadata cannot be written
+                to disk.
+            AgentTemplateIDNotFoundError: If `agent_template_id` is provided but no
+                agent template with that ID exists.
+            MissingRequiredAgentTemplateOptionError: If `agent_template_id` is provided
+                and a required option is absent from `build_parameters`.
+            AgentTemplateOptionNotFoundError: If `agent_template_id` is provided and
+                `build_parameters` contains an unknown option name.
+            AgentTemplateOptionValueValidationError: If `agent_template_id` is provided
+                and an option value in `build_parameters` fails type or constraint
+                validation.
+            AgentTemplateValidatingFunctionError: If `agent_template_id` is provided and
+                the agent template's validating function rejects the resolved options.
         """
         resource_id = normalize_uuid(resource_id)
 
@@ -542,6 +606,10 @@ class PayloadsService:
 
         Raises:
             ResourceNotFoundError: If no payload with the given ID exists.
+            RepositoryResourceFileSystemError: If the payload's file or directory exists
+                on disk but cannot be deleted.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk after deletion.
         """
         resource_id = normalize_uuid(resource_id)
 

@@ -6,8 +6,9 @@ Exception hierarchy:
         - [`ResourceNotFoundError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.ResourceNotFoundError]
         - [`ResourceAlreadyExistsError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.ResourceAlreadyExistsError]
         - [`ResourceIDReservationNotFoundError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.ResourceIDReservationNotFoundError]
-        - [`RepositoryFileSystemError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryFileSystemError]
+        - [`RepositoryMetadataFileSystemError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryMetadataFileSystemError]
         - [`InvalidRepositoryMetadataFileError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileError]
+            - [`InvalidRepositoryMetadataFileEncodingError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileEncodingError]
             - [`InvalidRepositoryMetadataFileJSONError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileJSONError]
             - [`InvalidRepositoryMetadataFileSchemaError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileSchemaError]
             - [`UnsyncedRepositoryMetadataFileError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.UnsyncedRepositoryMetadataFileError]
@@ -86,22 +87,10 @@ class ResourceIDReservationNotFoundError(RepositoryServiceError):
         )
 
 
-class RepositoryFileSystemError(RepositoryServiceError):
-    """Raised when a filesystem operation performed by the repository service fails.
+class RepositoryMetadataFileSystemError(RepositoryServiceError):
+    """Raised when a filesystem operation on the repository metadata file fails."""
 
-    This covers every underlying `OSError` the service can encounter while operating on
-    the repository directory: reading and writing the repository metadata file, and
-    moving, copying or removing a resource's file or directory. The specific failure is
-    reported through `message` and `detail` rather than through separate exception types,
-    because a caller cannot act differently on a missing source path than it can on a
-    full disk. Both mean the operation did not happen and the repository is unchanged.
-
-    These are server side faults: no repository operation takes a filesystem path from a
-    client, so a failure here reflects the state of the machine the server is running on
-    or a bug in the code that supplied the path.
-    """
-
-    code = "REPOSITORY_FILE_SYSTEM_ERROR"
+    code = "REPOSITORY_METADATA_FILE_SYSTEM_ERROR"
 
     def __init__(self, operation: str, path: str, underlying_error: str):
         super().__init__(
@@ -123,6 +112,28 @@ class InvalidRepositoryMetadataFileError(RepositoryServiceError):
     """
 
     code = "INVALID_REPOSITORY_METADATA_FILE_ERROR"
+
+
+class InvalidRepositoryMetadataFileEncodingError(
+    InvalidRepositoryMetadataFileError,
+):
+    """Raised when the repository metadata file's bytes cannot be decoded as UTF-8."""
+
+    code = "INVALID_REPOSITORY_METADATA_FILE_ENCODING_ERROR"
+
+    def __init__(self, repository_directory: str, underlying_error: str):
+        super().__init__(
+            message=(
+                "Failed to load the repository metadata file "
+                "`.repository.json` from the repository directory "
+                f"'{repository_directory}'. The repository metadata file's bytes could "
+                f"not be decoded as UTF-8. {underlying_error}"
+            ),
+            detail={
+                "repository_directory": repository_directory,
+                "underlying_error": underlying_error,
+            },
+        )
 
 
 class InvalidRepositoryMetadataFileJSONError(

@@ -80,6 +80,16 @@ class PluginsService:
                 invalid JSON.
             InvalidPluginManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
+            InvalidPluginPyProjectFileTOMLError: If `pyproject.toml` exists
+                but is not valid TOML.
+            InvalidPluginPyProjectFileDependencyError: If `pyproject.toml`
+                declares a dependency entry that cannot be parsed as a
+                requirement.
+            ThirdPartyDependencyNotFoundError: If a third-party dependency
+                declared in `pyproject.toml` is not installed.
+            IncompatibleThirdPartyDependencyVersionError: If a third-party
+                dependency declared in `pyproject.toml` is installed but its
+                version does not satisfy the required specifier.
             PluginEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
             PluginSymbolNotFoundError: If the symbol specified in the manifest
@@ -133,6 +143,14 @@ class PluginsService:
             A three-element tuple: (1) a list of successfully instantiated plugins, (2)
             a list of paths skipped because the plugin was disabled, and (3) a list of
             `(path, error)` tuples for plugins that failed to load.
+
+        Raises:
+            OSError: If the recursive filesystem scan of `directory` fails, for
+                example because a subdirectory is removed mid-scan or cannot be
+                read due to a permissions error. This happens before any
+                individual plugin is loaded, so it is not one of the per-plugin
+                errors collected in the returned error list, it propagates
+                unwrapped to the caller.
         """
         retrieved, skipped, errored = (
             self._plugin_registry_service.get_all_components_from_directory(
@@ -209,6 +227,16 @@ class PluginsService:
                 invalid JSON.
             InvalidPluginManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
+            InvalidPluginPyProjectFileTOMLError: If `pyproject.toml` exists
+                but is not valid TOML.
+            InvalidPluginPyProjectFileDependencyError: If `pyproject.toml`
+                declares a dependency entry that cannot be parsed as a
+                requirement.
+            ThirdPartyDependencyNotFoundError: If a third-party dependency
+                declared in `pyproject.toml` is not installed.
+            IncompatibleThirdPartyDependencyVersionError: If a third-party
+                dependency declared in `pyproject.toml` is installed but its
+                version does not satisfy the required specifier.
             PluginEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
             PluginSymbolNotFoundError: If the symbol specified in the manifest
@@ -267,6 +295,16 @@ class PluginsService:
                 invalid JSON.
             InvalidPluginManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
+            InvalidPluginPyProjectFileTOMLError: If `pyproject.toml` exists
+                but is not valid TOML.
+            InvalidPluginPyProjectFileDependencyError: If `pyproject.toml`
+                declares a dependency entry that cannot be parsed as a
+                requirement.
+            ThirdPartyDependencyNotFoundError: If a third-party dependency
+                declared in `pyproject.toml` is not installed.
+            IncompatibleThirdPartyDependencyVersionError: If a third-party
+                dependency declared in `pyproject.toml` is installed but its
+                version does not satisfy the required specifier.
             PluginEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
             PluginSymbolNotFoundError: If the symbol specified in the manifest
@@ -277,6 +315,8 @@ class PluginsService:
                 with the current framework version.
             InternalPluginError: If an unhandled exception occurs while
                 loading the plugin.
+            PluginAlreadyRegisteredError: If a plugin with the same ID is already
+                registered.
             PluginStartError: If the plugin autostarts but fails to start.
         """
         plugin = await self._plugin_registry_service.load_component_from_directory(
@@ -371,6 +411,16 @@ class PluginsService:
                 invalid JSON.
             InvalidPluginManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
+            InvalidPluginPyProjectFileTOMLError: If `pyproject.toml` exists
+                but is not valid TOML.
+            InvalidPluginPyProjectFileDependencyError: If `pyproject.toml`
+                declares a dependency entry that cannot be parsed as a
+                requirement.
+            ThirdPartyDependencyNotFoundError: If a third-party dependency
+                declared in `pyproject.toml` is not installed.
+            IncompatibleThirdPartyDependencyVersionError: If a third-party
+                dependency declared in `pyproject.toml` is installed but its
+                version does not satisfy the required specifier.
             PluginEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
             PluginSymbolNotFoundError: If the symbol specified in the manifest
@@ -381,6 +431,8 @@ class PluginsService:
                 with the current framework version.
             InternalPluginError: If an unhandled exception occurs while
                 loading the plugin.
+            PluginAlreadyRegisteredError: If a plugin with the same ID is already
+                registered when it is reloaded.
             PluginStartError: If the reloaded plugin autostarts but fails to start.
         """
         plugin = await self._plugin_registry_service.reload_component_by_component_id(
@@ -416,6 +468,13 @@ class PluginsService:
         Args:
             ignore_enabled_flag: When `True`, plugins are loaded even if they are
                 marked as disabled. When `False` (default), disabled plugins are skipped.
+
+        Raises:
+            OSError: If the initial recursive scan of the framework plugins
+                directory fails at the filesystem level. This happens before any
+                individual plugin is loaded, so unlike per-plugin load failures it
+                is not logged and swallowed, it propagates unwrapped to the
+                caller.
         """
         self._logger.info("Loading framework plugins...")
         retrieved, skipped, errored = self.get_all_plugins_from_directory(
@@ -503,6 +562,14 @@ class PluginsService:
                 that plugin's unload to fail.
             timeout: The number of seconds to wait for each plugin to stop before its
                 unload is considered to have timed out. When `None`, waits indefinitely.
+
+        Raises:
+            OSError: If resolving a plugin's root directory or the framework
+                plugins directory fails at the filesystem level while filtering
+                which loaded plugins live under the framework plugins directory.
+                This happens before any individual plugin is unloaded, so unlike
+                per-plugin unload failures it is not logged and swallowed, it
+                propagates unwrapped to the caller.
         """
         self._logger.info("Unloading framework plugins...")
 
@@ -562,6 +629,14 @@ class PluginsService:
             ignore_enabled_flag: When `True`, plugins are loaded even if they are
                 marked as disabled. When `False` (default), disabled plugins are skipped
                 when reloading.
+
+        Raises:
+            OSError: If the recursive scan of the framework plugins directory
+                (used to find plugins that are not already loaded, for example
+                one that failed to unload) fails at the filesystem level. This
+                happens after plugins are unloaded but before any are loaded
+                again, so unlike per-plugin unload and load failures it is not
+                logged and swallowed, it propagates unwrapped to the caller.
         """
         self._logger.info("Reloading framework plugins...")
 

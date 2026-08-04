@@ -1,8 +1,7 @@
-import contextlib
+import functools
 import json
 import os
 import pathlib
-import shutil
 import uuid
 from typing import BinaryIO, Literal, TextIO
 
@@ -15,9 +14,10 @@ from consortium.server.exceptions.object_exceptions.repository_object_exceptions
 )
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
     InvalidRepositoryMetadataDataSchemaError,
+    InvalidRepositoryMetadataFileEncodingError,
     InvalidRepositoryMetadataFileJSONError,
     InvalidRepositoryMetadataFileSchemaError,
-    RepositoryFileSystemError,
+    RepositoryMetadataFileSystemError,
     ResourceIDReservationNotFoundError,
     ResourceNotFoundError,
     UnsyncedRepositoryMetadataFileError,
@@ -31,27 +31,22 @@ from consortium.server.objects.repository_objects import (
     RepositoryDirectory,
     RepositoryFile,
 )
-from consortium.server.utils import format_validation_error, normalize_uuid
+from consortium.server.utils import (
+    format_validation_error,
+    normalize_uuid,
+    wrap_filesystem_errors,
+)
 
-
-@contextlib.contextmanager
-def _wrap_filesystem_errors(operation: str, path: pathlib.Path | str):
-    # Converts the raw `OSError` family into a typed service error. `shutil.Error` is an
-    # `OSError` subclass, so catching `OSError` alone also covers the copy and move
-    # helpers used below.
-    #
-    # The cause is chained with `from exc` rather than suppressed with `from None` as the
-    # expected errors elsewhere in this module are. These are server side faults, and
-    # `log_and_propagate_error_on_service_method` logs a typed error without a traceback,
-    # so the chained cause is the only remaining route back to the original stack.
-    try:
-        yield
-    except OSError as exc:
-        raise RepositoryFileSystemError(
-            operation=operation,
-            path=str(path),
-            underlying_error=f"{type(exc).__name__}: {exc}",
-        ) from exc
+# The metadata file is the only thing this service touches on disk itself. Every operation
+# on a resource's own bytes is delegated to the `RepositoryFile` and `RepositoryDirectory`
+# objects, which report their own failures as `RepositoryResourceFileSystemError`. That
+# keeps the service's filesystem contract to a single question, whether the record of what
+# the repository contains could be read or written, and leaves a caller able to tell a
+# resource that was never placed from one that was placed but not recorded.
+_wrap_metadata_filesystem_errors = functools.partial(
+    wrap_filesystem_errors,
+    RepositoryMetadataFileSystemError,
+)
 
 
 class RepositoryService:
@@ -89,6 +84,8 @@ class RepositoryService:
         disk raise an error rather than being silently skipped.
 
         Raises:
+            InvalidRepositoryMetadataFileEncodingError: If the metadata file's bytes are
+                not valid UTF-8.
             InvalidRepositoryMetadataFileJSONError: If the metadata file contains
                 invalid JSON.
             InvalidRepositoryMetadataFileSchemaError: If the metadata file does not
@@ -98,23 +95,39 @@ class RepositoryService:
             InvalidRepositoryMetadataDataSchemaError: If a `data` field in the metadata
                 file fails validation against the repository's `data_model`. Only raised
                 when the repository was constructed with a `data_model`.
-            RepositoryFileSystemError: If the metadata file cannot be read from disk.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be read from
+                disk.
         """
         if not self._repository_metadata_file_path.exists():
             self.save_repository_metadata()
             return
 
-        with _wrap_filesystem_errors(
+        # The encoding is pinned rather than left to the platform default so that a
+        # metadata file written on one machine reads back identically on another. Reading
+        # the text and parsing it are separated so that bytes which are not valid UTF-8
+        # are reported as a decoding failure rather than surfacing as a JSON syntax error
+        # or, worse, decoding cleanly into different characters under a different default.
+        with _wrap_metadata_filesystem_errors(
             operation="read the repository metadata file",
             path=self._repository_metadata_file_path,
         ):
-            with self._repository_metadata_file_path.open(mode="r") as file:
-                try:
-                    repository_metadata_json = json.load(file)
-                except json.JSONDecodeError:
-                    raise InvalidRepositoryMetadataFileJSONError(
-                        repository_directory=str(self.repository_directory_path),
-                    ) from None
+            try:
+                with self._repository_metadata_file_path.open(
+                    mode="r", encoding="utf-8"
+                ) as file:
+                    repository_metadata_file_content = file.read()
+            except UnicodeDecodeError as exc:
+                raise InvalidRepositoryMetadataFileEncodingError(
+                    repository_directory=str(self.repository_directory_path),
+                    underlying_error=f"{type(exc).__name__}: {exc}",
+                ) from None
+
+        try:
+            repository_metadata_json = json.loads(repository_metadata_file_content)
+        except json.JSONDecodeError:
+            raise InvalidRepositoryMetadataFileJSONError(
+                repository_directory=str(self.repository_directory_path),
+            ) from None
 
         # `PersistentRepositoryMetadataModel` covers the whole file in one pass: the
         # resource IDs keying it, the shape of every resource entry, and the parsing of
@@ -208,7 +221,11 @@ class RepositoryService:
         """Writes the current in-memory repository resource metadata to disk as JSON.
 
         Raises:
-            RepositoryFileSystemError: If the metadata file cannot be written to disk.
+            RepositoryResourceFileSystemError: If a tracked resource's `size` or
+                `datetime_modified` cannot be read from disk while its metadata
+                representation is being built.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk.
             TypeError: If a tracked resource's `data` is not JSON serializable. This is
                 deliberately left unwrapped: it means a caller associated data with a
                 resource that cannot be persisted, which is a defect in that caller
@@ -218,11 +235,16 @@ class RepositoryService:
             resource_id: resource.to_json()
             for resource_id, resource in self._resources.items()
         }
-        with _wrap_filesystem_errors(
+        with _wrap_metadata_filesystem_errors(
             operation="write the repository metadata file",
             path=self._repository_metadata_file_path,
         ):
-            with self._repository_metadata_file_path.open(mode="w") as file:
+            # Pinned for the same reason as the read above. There is no encoding error to
+            # report on this side: `json.dumps` defaults to `ensure_ascii=True`, so the
+            # text handed to the encoder is always pure ASCII and cannot fail to encode.
+            with self._repository_metadata_file_path.open(
+                mode="w", encoding="utf-8"
+            ) as file:
                 data = json.dumps(repository_metadata_json, indent=4)
                 file.write(data)
 
@@ -269,8 +291,9 @@ class RepositoryService:
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
-            RepositoryObjectFileSystemError: If the file cannot be written to disk.
-            RepositoryFileSystemError: If the metadata file cannot be written to disk.
+            RepositoryResourceFileSystemError: If the file cannot be written to disk.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk.
             UnicodeDecodeError: If `content` is a text stream carrying content that
                 cannot be decoded. Left unwrapped as it describes the content the caller
                 supplied rather than a failure of the repository itself.
@@ -344,9 +367,11 @@ class RepositoryService:
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but
                 has no corresponding reservation.
-            RepositoryFileSystemError: If no file exists at `path`, the file cannot be
-                moved or copied into the repository, or the metadata file cannot be
-                written to disk.
+            RepositoryResourceFileSystemError: If no file exists at `path`, or the file
+                cannot be moved or copied into the repository.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk. The file has already been moved or copied into the repository by
+                this point, so the resource exists on disk without being recorded.
         """
         if isinstance(path, str):
             path = pathlib.Path(path)
@@ -366,20 +391,11 @@ class RepositoryService:
         ext = extension if extension is not None else path.suffix
         dest_path = self.repository_directory_path / f"{unique_resource_id}{ext}"
 
-        with _wrap_filesystem_errors(
-            operation="copy the file into the repository"
-            if copy
-            else "move the file into the repository",
-            path=path,
-        ):
-            if copy:
-                shutil.copy2(str(path), dest_path)
-            else:
-                shutil.move(str(path), dest_path)
-
-        repository_file = RepositoryFile(
+        repository_file = RepositoryFile.from_existing_path(
+            source_path=path,
             path=dest_path,
-            name=name if name else path.name,
+            copy=copy,
+            name=name,
             description=description,
             data=data,
         )
@@ -432,9 +448,10 @@ class RepositoryService:
             InvalidRepositoryDirectoryArchiveFileFormatError: If `content` is archive
                 content that cannot be unpacked as `archive_file_format`, or if
                 `archive_file_format` is not set.
-            RepositoryObjectFileSystemError: If the directory cannot be created or the
+            RepositoryResourceFileSystemError: If the directory cannot be created or the
                 source directory or archive cannot be unpacked into it.
-            RepositoryFileSystemError: If the metadata file cannot be written to disk.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk.
         """
         if resource_id is not None:
             resource_id_str = normalize_uuid(resource_id)
@@ -471,10 +488,14 @@ class RepositoryService:
     ) -> RepositoryDirectory:
         """Registers an existing directory on disk into the repository.
 
-        Unlike `create_directory`, no new directory is created. The directory at
-        `path` is moved (or copied when `copy=True`) into the repository directory
-        under a UUID-based name and registered as a resource. Metadata is persisted
-        after registration.
+        Unlike `create_directory`, no new directory content is created: the
+        directory at `path` is moved (or copied when `copy=True`) into the
+        repository directory under a UUID-based name and registered as a resource.
+        When `copy=True`, a new directory is created on disk to hold the copy
+        (via `shutil.copytree`) and the original at `path` is left in place; when
+        `copy=False` (default), the source directory itself is relocated via
+        `shutil.move`, and no copy is made. Metadata is persisted after
+        registration.
 
         Args:
             path: Path to the existing directory to register.
@@ -495,9 +516,12 @@ class RepositoryService:
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but
                 has no corresponding reservation.
-            RepositoryFileSystemError: If no directory exists at `path`, the directory
-                or any file within it cannot be moved or copied into the repository, or
-                the metadata file cannot be written to disk.
+            RepositoryResourceFileSystemError: If no directory exists at `path`, or the
+                directory or any file within it cannot be moved or copied into the
+                repository.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk. The directory has already been moved or copied into the repository
+                by this point, so the resource exists on disk without being recorded.
         """
         if isinstance(path, str):
             path = pathlib.Path(path)
@@ -512,20 +536,12 @@ class RepositoryService:
             unique_resource_id = uuid.uuid4()
 
         dest_path = self.repository_directory_path / str(unique_resource_id)
-        with _wrap_filesystem_errors(
-            operation="copy the directory into the repository"
-            if copy
-            else "move the directory into the repository",
-            path=path,
-        ):
-            if copy:
-                shutil.copytree(str(path), dest_path)
-            else:
-                shutil.move(str(path), dest_path)
 
-        repository_directory = RepositoryDirectory(
+        repository_directory = RepositoryDirectory.from_existing_path(
+            source_path=path,
             path=dest_path,
-            name=name if name else path.name,
+            copy=copy,
+            name=name,
             description=description,
             data=data,
         )
@@ -561,7 +577,8 @@ class RepositoryService:
 
         Raises:
             ResourceNotFoundError: If no resource with the given ID exists.
-            RepositoryFileSystemError: If the metadata file cannot be written to disk.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk.
         """
         resource_id = normalize_uuid(resource_id)
 
@@ -598,8 +615,9 @@ class RepositoryService:
 
         Raises:
             ResourceNotFoundError: If no resource with the given ID exists.
-            RepositoryObjectFileSystemError: If the resource cannot be removed from disk.
-            RepositoryFileSystemError: If the metadata file cannot be written to disk.
+            RepositoryResourceFileSystemError: If the resource cannot be removed from disk.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be written to
+                disk.
         """
         resource_id = normalize_uuid(resource_id)
 

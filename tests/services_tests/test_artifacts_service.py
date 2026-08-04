@@ -6,7 +6,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from consortium.server.exceptions.object_exceptions.repository_object_exceptions import (
+    RepositoryResourceFileSystemError,
+)
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
+    RepositoryMetadataFileSystemError,
     ResourceNotFoundError,
 )
 from consortium.server.services.agents_service import AgentsService
@@ -310,3 +314,41 @@ async def test_get_artifact_by_resource_id_success(service: ArtifactsService):
 def test_get_artifact_by_resource_id_not_found_raises(service: ArtifactsService):
     with pytest.raises(ResourceNotFoundError):
         service.get_artifact_by_resource_id(resource_id=str(uuid.uuid4()))
+
+
+# ---------------------------------------------------------------------------
+# documented filesystem failures actually propagate
+# ---------------------------------------------------------------------------
+# These pin the `Raises:` contracts to real behaviour. The errors always propagated; what
+# regressed before was the documentation claiming they did not exist.
+
+
+async def test_add_artifact_file_missing_source_raises_resource_error(
+    service: ArtifactsService, tmp_path: pathlib.Path
+):
+    with pytest.raises(RepositoryResourceFileSystemError):
+        await service.add_artifact_file(path=tmp_path / "absent.txt")
+
+
+async def test_add_artifact_directory_missing_source_raises_resource_error(
+    service: ArtifactsService, tmp_path: pathlib.Path
+):
+    with pytest.raises(RepositoryResourceFileSystemError):
+        await service.add_artifact_directory(path=tmp_path / "absent_dir")
+
+
+async def test_create_artifact_file_metadata_write_failure_raises_metadata_error(
+    service: ArtifactsService, monkeypatch: pytest.MonkeyPatch
+):
+    def raise_oserror(*args, **kwargs):
+        raise OSError(5, "Input/output error")
+
+    with patch("asyncio.create_task"):
+        artifact = await service.create_artifact_file(content="x", name="x.txt")
+
+    monkeypatch.setattr(pathlib.Path, "open", raise_oserror)
+
+    with pytest.raises(RepositoryMetadataFileSystemError):
+        await service.update_artifact_by_resource_id(
+            resource_id=str(artifact.resource_id), description="updated"
+        )

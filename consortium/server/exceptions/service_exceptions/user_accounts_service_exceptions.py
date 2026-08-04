@@ -7,11 +7,8 @@ Exception hierarchy:
             - [`UserAccountIDNotFoundError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountIDNotFoundError]
             - [`UserAccountUsernameNotFoundError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountUsernameNotFoundError]
         - [`UserAccountsFileError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileError]
-            - [`UserAccountsFileNotFoundError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileNotFoundError]
-            - [`UserAccountsFileAccessError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileAccessError]
-                - [`UserAccountsFileReadAccessError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileReadAccessError]
-                - [`UserAccountsFileWriteAccessError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileWriteAccessError]
-            - [`UserAccountsFilepathIsDirectoryError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFilepathIsDirectoryError]
+            - [`UserAccountsFileSystemError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileSystemError]
+            - [`UserAccountsFileEncodingError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileEncodingError]
             - [`UserAccountsFileIsNotJSONError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileIsNotJSONError]
             - [`UserAccountsFileSchemaError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileSchemaError]
             - [`UserAccountsFileContainsDuplicateUsernamesError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileContainsDuplicateUsernamesError]
@@ -101,82 +98,89 @@ class UserAccountsFileError(UserAccountsServiceError):
     code = "USER_ACCOUNTS_FILE_ERROR"
 
 
-class UserAccountsFileNotFoundError(UserAccountsFileError):
-    """Raised when the user accounts file does not exist at the specified filepath."""
+class UserAccountsFileSystemError(UserAccountsFileError):
+    """Raised when the user accounts file cannot be read from or written to disk.
 
-    code = "USER_ACCOUNTS_FILE_NOT_FOUND_ERROR"
+    This covers every way the filesystem can refuse the operation: the file does not
+    exist, the process lacks the required permissions, the configured path points at a
+    directory, the disk is full. They share one type because no caller can act differently
+    on any of them. All of them mean the operation did not happen, and the specific cause
+    is carried in `message` and `detail` for whoever has to fix it.
 
-    def __init__(
-        self,
-        user_accounts_filepath: str,
-    ):
-        super().__init__(
-            message=(
-                "Failed to access the user accounts file "
-                f"'{user_accounts_filepath}'. The filepath does not appear to exist."
-            ),
-        )
+    These are server side faults or misconfiguration: no user accounts operation takes a
+    filesystem path from a client, so a failure here reflects the state of the machine the
+    server is running on, the path it was configured with, or a bug in the code that
+    supplied that path.
 
-
-class UserAccountsFileAccessError(UserAccountsFileError):
-    """Base exception for all errors that occur when the process lacks the required
-    permissions to access the user accounts file.
+    A file the filesystem hands over successfully but whose contents are wrong is reported
+    separately, through `UserAccountsFileEncodingError`, `UserAccountsFileIsNotJSONError`,
+    `UserAccountsFileSchemaError` or `UserAccountsFileContainsDuplicateUsernamesError`.
     """
 
-    code = "USER_ACCOUNTS_FILE_ACCESS_ERROR"
+    code = "USER_ACCOUNTS_FILE_SYSTEM_ERROR"
 
-
-class UserAccountsFileReadAccessError(UserAccountsFileAccessError):
-    """Raised when the process does not have read permissions for the user accounts file."""
-
-    code = "USER_ACCOUNTS_FILE_READ_ACCESS_ERROR"
-
-    def __init__(
-        self,
-        user_accounts_filepath: str,
-    ):
+    def __init__(self, operation: str, path: str, underlying_error: str):
         super().__init__(
-            message=(
-                "Failed to read the provided user accounts file "
-                f"'{user_accounts_filepath}'. The process does not have the required "
-                "permissions to read the file."
+            message=f"Failed to {operation} at the path '{path}'. {underlying_error}",
+            detail={
+                "operation": operation,
+                "path": path,
+                "underlying_error": underlying_error,
+            },
+        )
+
+    @classmethod
+    def _path_is_a_directory(
+        cls,
+        operation: str,
+        path: str,
+    ) -> UserAccountsFileSystemError:
+        # Checked up front by the service rather than left to `open()`, because the
+        # `OSError` that results does not identify the problem on every platform: Windows
+        # reports opening a directory as `PermissionError: [Errno 13] Permission denied`,
+        # which sends whoever has to fix it looking at file permissions rather than at the
+        # configured path. A missing file needs no such help, since `FileNotFoundError`
+        # already says exactly what is wrong.
+        return cls(
+            operation=operation,
+            path=path,
+            underlying_error=(
+                "The path points to an existing directory where a file was expected."
             ),
         )
 
 
-class UserAccountsFileWriteAccessError(UserAccountsFileAccessError):
-    """Raised when the process does not have write permissions for the user accounts file."""
+class UserAccountsFileEncodingError(UserAccountsFileError):
+    """Raised when the user accounts file's bytes cannot be decoded as UTF-8.
 
-    code = "USER_ACCOUNTS_FILE_WRITE_ACCESS_ERROR"
+    Sits alongside `UserAccountsFileIsNotJSONError` rather than under
+    `UserAccountsFileSystemError` because it describes the file's contents rather than the
+    filesystem operation carrying them: the read itself succeeded, and a human fixes this
+    by correcting the file. Pinning the encoding on the read removes the case where the
+    file was written as UTF-8 elsewhere and read back under a different platform default,
+    but not this one, where the bytes are not valid UTF-8 under any reading.
 
-    def __init__(
-        self,
-        user_accounts_filepath: str,
-    ):
-        super().__init__(
-            message=(
-                "Failed to write to the user accounts file "
-                f"'{user_accounts_filepath}'. The process does not have the required "
-                "permissions to write to the file."
-            ),
-        )
+    There is no encoding counterpart on the write path. The accounts are serialized with
+    `json.dumps`, whose default `ensure_ascii=True` escapes every non-ASCII character, so
+    the text handed to the encoder is always pure ASCII and cannot fail to encode.
+    """
 
-
-class UserAccountsFilepathIsDirectoryError(UserAccountsFileError):
-    """Raised when the user accounts filepath points to a directory instead of a file."""
-
-    code = "USER_ACCOUNTS_FILEPATH_IS_DIRECTORY_ERROR"
+    code = "USER_ACCOUNTS_FILE_ENCODING_ERROR"
 
     def __init__(
         self,
         user_accounts_filepath: str,
+        underlying_error: str,
     ):
         super().__init__(
             message=(
-                "Failed to access the user accounts file "
-                f"'{user_accounts_filepath}'. The provided filepath points to an "
-                "existing directory where a file was expected."
+                f"Failed to read the user accounts file '{user_accounts_filepath}'. The "
+                f"file's contents are not valid UTF-8 text. {underlying_error}"
             ),
+            detail={
+                "user_accounts_filepath": user_accounts_filepath,
+                "underlying_error": underlying_error,
+            },
         )
 
 
@@ -199,21 +203,30 @@ class UserAccountsFileIsNotJSONError(UserAccountsFileError):
 
 
 class UserAccountsFileSchemaError(UserAccountsFileError):
-    """Raised when the user accounts file fails JSON schema validation."""
+    """Raised when the user accounts file does not conform to the expected schema.
+
+    Covers the shape of the file as a whole and of every account entry in it: a top level
+    value that is not an array, an entry missing a required field, an empty username or
+    password, and an entry carrying a field the schema does not define.
+    """
 
     code = "USER_ACCOUNTS_FILE_SCHEMA_ERROR"
 
     def __init__(
         self,
         user_accounts_filepath: str,
-        json_schema_error_message,
+        validation_error_message: str,
     ):
         super().__init__(
             message=(
                 f"Failed to process the user accounts file "
-                f"'{user_accounts_filepath}'. The provided file failed JSON schema "
-                f"validation: {json_schema_error_message}."
+                f"'{user_accounts_filepath}'. The provided file failed validation. "
+                f"{validation_error_message}"
             ),
+            detail={
+                "user_accounts_filepath": user_accounts_filepath,
+                "validation_error_message": validation_error_message,
+            },
         )
 
 
@@ -396,4 +409,24 @@ class InvalidUserAccountRoleError(UserAccountManagementError):
                 f"role '{role}' is not a valid role. Check that the provided role is "
                 f"one of 'ADMIN', 'OPERATOR', or 'SPECTATOR'."
             ),
+        )
+
+    @classmethod
+    def _during_user_accounts_file_loading(
+        cls,
+        user_accounts_filepath: str,
+        username: str,
+        role: str,
+    ) -> InvalidUserAccountRoleError:
+        return cls(
+            message=(
+                f"Failed to load the user account '{username}' from the user accounts "
+                f"file '{user_accounts_filepath}'. The role '{role}' is not a valid "
+                f"role. Check that the role is one defined in the role permissions file."
+            ),
+            detail={
+                "user_accounts_filepath": str(user_accounts_filepath),
+                "username": str(username),
+                "role": str(role),
+            },
         )

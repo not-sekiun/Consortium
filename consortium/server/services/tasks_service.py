@@ -82,7 +82,19 @@ class TasksService:
         agent_id: str | uuid.UUID | None = None,
         status: TaskState | None = None,
     ) -> list[Task]:
-        """Returns global task records filtered by owner and/or state."""
+        """Returns global task records filtered by owner and/or state.
+
+        Args:
+            agent_id: The ID of the agent whose tasks to return. When `None`, tasks
+                are not filtered by owner. A value that is not a valid UUID matches
+                no tasks.
+            status: The task state to filter by. When `None`, tasks are not
+                filtered by state.
+
+        Returns:
+            The matching task records. Empty if none match, or if `agent_id` is not
+            a valid UUID.
+        """
         if agent_id is None:
             normalized_agent_id = None
         else:
@@ -113,7 +125,17 @@ class TasksService:
 
     @log_and_propagate_error_on_service_method
     def get_task_by_task_id(self, task_id: str | uuid.UUID) -> Task:
-        """Returns a global task record by its ID."""
+        """Returns a global task record by its ID.
+
+        Args:
+            task_id: The ID of the task to retrieve.
+
+        Returns:
+            The requested task record.
+
+        Raises:
+            TaskNotFoundError: If no task with the given ID exists.
+        """
         task = self.find_task(task_id=task_id)
         if task is None:
             normalized_task_id = _canonicalize_uuid(value=task_id)
@@ -157,7 +179,15 @@ class TasksService:
 
     @log_and_propagate_error_on_service_method
     async def delete_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
-        """Deletes a task that is not RUNNING and tears down its runtime state."""
+        """Deletes a task that is not RUNNING and tears down its runtime state.
+
+        Args:
+            task_id: The ID of the task to delete.
+
+        Raises:
+            TaskNotFoundError: If no task with the given ID exists.
+            TaskNotDeletableError: If the task is currently RUNNING.
+        """
         task = self.get_task_by_task_id(task_id=task_id)
         # The claim fuses the deletability test with taking ownership, so there is no
         # gap for a reader to promote this task to RUNNING after it was judged
@@ -206,7 +236,20 @@ class TasksService:
         agent_id: str | uuid.UUID | None = None,
         status: TaskState | None = None,
     ) -> Task | None:
-        """Find a task by ID, optionally scoped to an owner and state."""
+        """Find a task by ID, optionally scoped to an owner and state.
+
+        Args:
+            task_id: The ID of the task to find.
+            agent_id: When provided, the task is only returned if it is owned by
+                this agent ID.
+            status: When provided, the task is only returned if it is in this
+                state.
+
+        Returns:
+            The matching task, or `None` if `task_id` is not a valid UUID, no task
+            with that ID exists, or the task does not match the given `agent_id` or
+            `status`.
+        """
         normalized_task_id = _canonicalize_uuid(value=task_id)
         if normalized_task_id is None:
             return None

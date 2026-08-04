@@ -68,6 +68,8 @@ class ListenersService:
             The requested listener.
 
         Raises:
+            ValidationError: Raised by pydantic if `listener_id` fails validation
+                against its declared type.
             ListenerNotFoundError: If no listener with the given ID exists.
         """
         listener_id = normalize_uuid(listener_id)
@@ -106,8 +108,7 @@ class ListenersService:
         Emits a `LISTENER_CREATED` event.
 
         Args:
-            listener_template_id (str | uuid.UUID): The ID of the listener template to
-                use.
+            listener_template_id: The ID of the listener template to use.
             parameters: The parameters to pass to the listener
                 template when creating the listener.
             name: An optional display name for the new listener. If
@@ -403,6 +404,8 @@ class ListenersService:
 
         Raises:
             ListenerNotFoundError: If no listener with the given ID exists.
+            ListenerAlreadyRunningError: If the listener is already in a running state.
+            ListenerStartError: If the listener fails to start due to a lifecycle error.
         """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
@@ -440,6 +443,8 @@ class ListenersService:
 
         Raises:
             ListenerNotFoundError: If no listener with the given ID exists.
+            ListenerNotRunningError: If the listener is not currently running.
+            ListenerStopError: If the listener fails to stop cleanly.
         """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
@@ -478,6 +483,7 @@ class ListenersService:
 
         Raises:
             ListenerNotFoundError: If no listener with the given ID exists.
+            ListenerNotRunningError: If the listener is not currently running.
         """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 

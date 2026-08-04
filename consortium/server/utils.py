@@ -1,10 +1,12 @@
 import asyncio
+import contextlib
 import functools
 import inspect
 import ipaddress
 import json
 import operator
 import os
+import pathlib
 import random
 import socket
 import types
@@ -93,6 +95,32 @@ def format_validation_error(exc: ValidationError) -> str:
     error_count = len(formatted_errors)
     header = f"{error_count} validation error{'s' if error_count != 1 else ''}:"
     return "\n".join([header, *(f"  - {line}" for line in formatted_errors)])
+
+
+FILESYSTEM_ERRORS: tuple[type[Exception], ...] = (OSError,)
+
+
+@contextlib.contextmanager
+def wrap_filesystem_errors(
+    error_type: Callable[..., Exception],
+    operation: str,
+    path: pathlib.Path | str,
+):
+    # Converts a raw filesystem exception into whichever typed domain error the calling
+    # module reports its own failures through. `error_type` is injected rather than fixed
+    # because the same wrapping is wanted from both the service layer
+    # (`RepositoryMetadataFileSystemError`, `UserAccountsFileSystemError`) and the object
+    # layer (`RepositoryResourceFileSystemError`), which sit in separate exception
+    # hierarchies. It must accept `operation`, `path` and `underlying_error` keyword
+    # arguments.
+    try:
+        yield
+    except FILESYSTEM_ERRORS as exc:
+        raise error_type(
+            operation=operation,
+            path=str(path),
+            underlying_error=f"{type(exc).__name__}: {exc}",
+        ) from exc
 
 
 def use_route_name_as_operation_id(route: APIRoute) -> str:

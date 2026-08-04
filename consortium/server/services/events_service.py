@@ -121,6 +121,10 @@ class EventsService:
         Returns:
             A list of event types the handler is subscribed to. Empty if the handler is
             not registered for any event type.
+
+        Raises:
+            ValueError: If a registered event type string does not correspond to a
+                valid `EventType` member.
         """
         handled_events = []
         for event_type, handlers in self._event_handlers.items():
@@ -146,7 +150,8 @@ class EventsService:
         Handlers are called sequentially. If any handler raises an exception, remaining
         handlers still run, and all exceptions are collected and re-raised together as
         an `ExceptionGroup`. Event hooks that raise `EventHookTriggerError` (the
-        framework-level signal from `consortium.framework.exceptions`) from
+        framework-level signal from
+        `consortium.framework.signal_exceptions.event_hooks_signal_exceptions`) from
         `on_triggered()` have that error remapped to the consortium-level
         `EventHookTriggerError` before being collected, preserving the original
         `message` and `detail`.
@@ -158,7 +163,10 @@ class EventsService:
                 empty dict when `None`.
 
         Raises:
-            ExceptionGroup: If one or more event handlers raise exceptions.
+            ExceptionGroup: If one or more event handlers raise exceptions. The group
+                can contain the consortium-level `EventHookTriggerError` (remapped from
+                the framework-level signal raised by a handler's `on_triggered()`)
+                alongside any other exception a handler raised.
         """
         if str(event_type) not in self._event_handlers:
             return

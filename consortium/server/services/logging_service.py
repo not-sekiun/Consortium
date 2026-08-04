@@ -105,7 +105,17 @@ class LoggingService:
             The handler ID returned by `loguru.logger.add`.
 
         Raises:
-            ValueError: If a sink with the given label is already registered.
+            ValueError: If a sink with the given label is already registered (raised
+                by this service before `loguru.logger.add` is ever called), or if
+                `loguru.logger.add` rejects the sink configuration (for example, an
+                invalid level, filter, or format string). The latter propagates
+                unwrapped from loguru.
+            TypeError: If `loguru.logger.add` rejects `sink` or one of the forwarded
+                keyword arguments due to an invalid type. Propagates unwrapped from
+                loguru.
+            OSError: If `sink` is a file path that cannot be opened, for example
+                because the containing directory does not exist. Propagates unwrapped
+                from loguru.
         """
         # Raises ValueError if label already registered to avoid silent double-registration.
         if label in self._sinks:
@@ -135,6 +145,8 @@ class LoggingService:
 
         Raises:
             KeyError: If no sink with the given label is registered.
+            ValueError: If the sink's handler ID is no longer registered with loguru
+                (raised by `loguru.logger.remove`).
         """
         if label not in self._sinks:
             raise KeyError(f"No sink with label '{label}' is registered.")
@@ -142,7 +154,12 @@ class LoggingService:
         logger.remove(sink_info.handler_id)
 
     def remove_all_sinks(self) -> None:
-        """Removes all registered log sinks."""
+        """Removes all registered log sinks.
+
+        Raises:
+            ValueError: If a sink's handler ID is no longer registered with loguru
+                (raised by `loguru.logger.remove` via `remove_sink`).
+        """
         for label in list(self._sinks.keys()):
             self.remove_sink(label)
 
@@ -154,6 +171,11 @@ class LoggingService:
         reconstructed with the merged configuration. Successive calls layer correctly
         because `SinkInfo.sink_kwargs` is kept up to date after each modification.
 
+        The existing handler is removed via `loguru.logger.remove` before the
+        replacement is added via `loguru.logger.add`. If `logger.add` then raises, the
+        sink is left removed: it stops emitting logs even though the label remains
+        registered in this service with a now-stale `handler_id`.
+
         Args:
             label: The label of the sink to modify.
             sink: A replacement sink target. When omitted, the existing sink target is
@@ -163,6 +185,13 @@ class LoggingService:
 
         Raises:
             KeyError: If no sink with the given label is registered.
+            ValueError: If the existing handler's ID is no longer registered with
+                loguru (raised by `loguru.logger.remove`), or if `loguru.logger.add`
+                rejects the merged configuration when rebuilding the sink (for
+                example, an invalid level, filter, or format string).
+            TypeError: If `loguru.logger.add` rejects the replacement sink or one of
+                the merged keyword arguments due to an invalid type.
+            OSError: If the replacement sink is a file path that cannot be opened.
         """
         # Loguru has no update API so we tear down the existing handler and rebuild it
         # with the merged kwargs. sink_kwargs on SinkInfo is kept up to date so
@@ -201,6 +230,17 @@ class LoggingService:
             logging_config: The logging configuration model specifying the log level,
                 colorize flag, and optional log file path, rotation policy, and
                 retention policy.
+
+        Raises:
+            ValueError: If a stale handler ID is encountered while removing the
+                existing server-default sinks (raised by `loguru.logger.remove` via
+                `remove_sink`), if the `stdout` or `file` label collides with an
+                already-registered non-default sink (raised by `add_sink`), or if
+                `loguru.logger.add` rejects a sink configuration (for example, an
+                invalid level or format string).
+            TypeError: If `loguru.logger.add` rejects a sink or one of its keyword
+                arguments due to an invalid type.
+            OSError: If `logging_config.log_file` is a path that cannot be opened.
         """
         self.logging_config = logging_config
 
