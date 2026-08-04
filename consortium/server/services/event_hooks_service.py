@@ -79,20 +79,20 @@ class EventHooksService:
             the enabled check is not overridden.
 
         Raises:
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            EventHookManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidEventHookManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidEventHookManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            EventHookEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            EventHookSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentInterfaceError: If the class does not inherit from the
+            EventHookInterfaceError: If the class does not inherit from the
                 expected base class.
-            IncompatibleComponentFrameworkVersionError: If the event hook is
+            IncompatibleEventHookFrameworkVersionError: If the event hook is
                 incompatible with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            InternalEventHookError: If an unhandled exception occurs while
                 loading the event hook.
         """
         event_hook = self._event_hook_registry_service.get_component_from_directory(
@@ -171,9 +171,9 @@ class EventHooksService:
             The registered event hook instance.
 
         Raises:
-            ComponentAlreadyRegisteredError: If an event hook with the same ID is
+            EventHookAlreadyRegisteredError: If an event hook with the same ID is
                 already registered.
-            DuplicateComponentLabelError: If an event hook with the same label is
+            DuplicateEventHookLabelError: If an event hook with the same label is
                 already registered.
         """
         self._event_hook_registry_service.register_component(
@@ -204,24 +204,24 @@ class EventHooksService:
                 event hook is disabled and the enabled check is not overridden.
 
         Raises:
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            EventHookManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidEventHookManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidEventHookManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            EventHookEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            EventHookSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentInterfaceError: If the class does not inherit from the
+            EventHookInterfaceError: If the class does not inherit from the
                 expected base class.
-            IncompatibleComponentFrameworkVersionError: If the event hook is
+            IncompatibleEventHookFrameworkVersionError: If the event hook is
                 incompatible with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            InternalEventHookError: If an unhandled exception occurs while
                 loading the event hook.
-            ComponentAlreadyRegisteredError: If an event hook with the same ID is
+            EventHookAlreadyRegisteredError: If an event hook with the same ID is
                 already registered.
-            DuplicateComponentLabelError: If an event hook with the same label is
+            DuplicateEventHookLabelError: If an event hook with the same label is
                 already registered.
         """
         event_hook = (
@@ -253,7 +253,7 @@ class EventHooksService:
             The loaded event hook instance.
 
         Raises:
-            ComponentAlreadyRegisteredError: If an event hook with the same ID is
+            EventHookAlreadyRegisteredError: If an event hook with the same ID is
                 already registered.
         """
         event_hook = await self._event_hook_registry_service.load_component(
@@ -284,20 +284,20 @@ class EventHooksService:
             the enabled check is not overridden.
 
         Raises:
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            EventHookManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidEventHookManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidEventHookManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            EventHookEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            EventHookSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentInterfaceError: If the class does not inherit from the
+            EventHookInterfaceError: If the class does not inherit from the
                 expected base class.
-            IncompatibleComponentFrameworkVersionError: If the event hook is
+            IncompatibleEventHookFrameworkVersionError: If the event hook is
                 incompatible with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            InternalEventHookError: If an unhandled exception occurs while
                 loading the event hook.
         """
         event_hook = (
@@ -329,7 +329,7 @@ class EventHooksService:
             event_hook_id: The ID of the event hook to unload.
 
         Raises:
-            ComponentNotFoundError: If no event hook with the given ID is registered.
+            EventHookNotFoundError: If no event hook with the given ID is registered.
         """
         event_hook = (
             await self._event_hook_registry_service.unload_component_by_component_id(
@@ -360,7 +360,7 @@ class EventHooksService:
             and the enabled check was not overridden.
 
         Raises:
-            ComponentNotFoundError: If no event hook with the given ID is registered.
+            EventHookNotFoundError: If no event hook with the given ID is registered.
         """
         event_hook = (
             await self._event_hook_registry_service.reload_component_by_component_id(
@@ -477,7 +477,7 @@ class EventHooksService:
             The requested event hook.
 
         Raises:
-            ComponentNotFoundError: If no event hook with the given ID is registered.
+            EventHookNotFoundError: If no event hook with the given ID is registered.
         """
         event_hook = self._event_hook_registry_service.get_component_by_component_id(
             component_id=event_hook_id,

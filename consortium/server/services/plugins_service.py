@@ -75,20 +75,20 @@ class PluginsService:
             enabled check is not overridden.
 
         Raises:
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            PluginManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidPluginManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidPluginManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            PluginEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            PluginSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentInterfaceError: If the class does not inherit from the
+            PluginInterfaceError: If the class does not inherit from the
                 expected base class.
-            IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
+            IncompatiblePluginFrameworkVersionError: If the plugin is incompatible
                 with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            InternalPluginError: If an unhandled exception occurs while
                 loading the plugin.
         """
         plugin = self._plugin_registry_service.get_component_from_directory(
@@ -169,9 +169,9 @@ class PluginsService:
             plugin: The plugin instance to register.
 
         Raises:
-            ComponentAlreadyRegisteredError: If a plugin with the same ID is already
+            PluginAlreadyRegisteredError: If a plugin with the same ID is already
                 registered.
-            DuplicateComponentLabelError: If a plugin with the same label is already
+            DuplicatePluginLabelError: If a plugin with the same label is already
                 registered.
             ComponentDependencyNotFoundError: If the plugin declares a dependency on
                 another component that is not registered.
@@ -204,24 +204,24 @@ class PluginsService:
             check is not overridden.
 
         Raises:
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            PluginManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidPluginManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidPluginManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            PluginEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            PluginSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentInterfaceError: If the class does not inherit from the
+            PluginInterfaceError: If the class does not inherit from the
                 expected base class.
-            IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
+            IncompatiblePluginFrameworkVersionError: If the plugin is incompatible
                 with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            InternalPluginError: If an unhandled exception occurs while
                 loading the plugin.
-            ComponentAlreadyRegisteredError: If a plugin with the same ID is already
+            PluginAlreadyRegisteredError: If a plugin with the same ID is already
                 registered.
-            DuplicateComponentLabelError: If a plugin with the same label is already
+            DuplicatePluginLabelError: If a plugin with the same label is already
                 registered.
             ComponentDependencyNotFoundError: If the plugin declares a dependency on
                 another component that is not registered.
@@ -262,20 +262,20 @@ class PluginsService:
             check is not overridden.
 
         Raises:
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            PluginManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidPluginManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidPluginManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            PluginEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            PluginSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentInterfaceError: If the class does not inherit from the
+            PluginInterfaceError: If the class does not inherit from the
                 expected base class.
-            IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
+            IncompatiblePluginFrameworkVersionError: If the plugin is incompatible
                 with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            InternalPluginError: If an unhandled exception occurs while
                 loading the plugin.
             PluginStartError: If the plugin autostarts but fails to start.
         """
@@ -311,7 +311,7 @@ class PluginsService:
                 (default), a failure to stop cleanly aborts the unload.
 
         Raises:
-            ComponentNotFoundError: If no plugin with the given ID is registered.
+            PluginNotFoundError: If no plugin with the given ID is registered.
             PluginStopError: If the plugin fails to stop and `force_unload` is `False`.
             PluginStopTimeoutError: If the plugin does not stop within `timeout` and
                 `force_unload` is `False`.
@@ -361,25 +361,25 @@ class PluginsService:
             check is not overridden.
 
         Raises:
-            ComponentNotFoundError: If no plugin with the given ID is registered.
+            PluginNotFoundError: If no plugin with the given ID is registered.
             PluginStopError: If the plugin fails to stop during unload and
                 `force_unload` is `False`.
             PluginStopTimeoutError: If the plugin does not stop within `unload_timeout`
                 and `force_unload` is `False`.
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            PluginManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidPluginManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidPluginManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            PluginEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            PluginSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentInterfaceError: If the class does not inherit from the
+            PluginInterfaceError: If the class does not inherit from the
                 expected base class.
-            IncompatibleComponentFrameworkVersionError: If the plugin is incompatible
+            IncompatiblePluginFrameworkVersionError: If the plugin is incompatible
                 with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            InternalPluginError: If an unhandled exception occurs while
                 loading the plugin.
             PluginStartError: If the reloaded plugin autostarts but fails to start.
         """
@@ -635,7 +635,7 @@ class PluginsService:
                 `False` (default), returns immediately after starting the plugin.
 
         Raises:
-            ComponentNotFoundError: If no plugin with the given ID is registered.
+            PluginNotFoundError: If no plugin with the given ID is registered.
             PluginAlreadyRunningError: If the plugin is already running.
             PluginStartError: If the plugin fails to start.
         """
@@ -661,7 +661,7 @@ class PluginsService:
                 `False` (default), returns immediately after stopping the plugin.
 
         Raises:
-            ComponentNotFoundError: If no plugin with the given ID is registered.
+            PluginNotFoundError: If no plugin with the given ID is registered.
             PluginNotRunningError: If the plugin is not running.
             PluginStopError: If the plugin fails to stop.
         """
@@ -692,7 +692,7 @@ class PluginsService:
                 and returns immediately.
 
         Raises:
-            ComponentNotFoundError: If no plugin with the given ID is registered.
+            PluginNotFoundError: If no plugin with the given ID is registered.
             PluginNotRunningError: If `blocking` is `True` and the plugin is not running
                 when the restart attempts to stop it.
             PluginStopError: If `blocking` is `True` and the plugin fails to stop.
@@ -732,7 +732,7 @@ class PluginsService:
                 `False` (default), returns immediately after cancelling the plugin.
 
         Raises:
-            ComponentNotFoundError: If no plugin with the given ID is registered.
+            PluginNotFoundError: If no plugin with the given ID is registered.
             PluginNotRunningError: If the plugin is not running.
         """
         plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
@@ -754,7 +754,7 @@ class PluginsService:
             The requested plugin.
 
         Raises:
-            ComponentNotFoundError: If no plugin with the given ID is registered.
+            PluginNotFoundError: If no plugin with the given ID is registered.
         """
         plugin = self._plugin_registry_service.get_component_by_component_id(
             component_id=plugin_id,

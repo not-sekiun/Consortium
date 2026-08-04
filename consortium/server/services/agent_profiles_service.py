@@ -79,20 +79,20 @@ class AgentProfilesService:
                 profile is disabled and the enabled check is not overridden.
 
         Raises:
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            AgentProfileManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidAgentProfileManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidAgentProfileManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            AgentProfileEntryPointModuleNotFoundError: If the entry-point module
                 specified in the manifest cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            AgentProfileSymbolNotFoundError: If the symbol specified in the manifest
                 is not found in the entry-point module.
-            ComponentInterfaceError: If the agent profile class does not
+            AgentProfileInterfaceError: If the agent profile class does not
                 correctly inherit from the expected base class.
-            IncompatibleComponentFrameworkVersionError: If the profile is incompatible
-                with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            IncompatibleAgentProfileFrameworkVersionError: If the profile is
+                incompatible with the current framework version.
+            InternalAgentProfileError: If an unhandled exception occurs while
                 loading the profile.
         """
         agent_profile = (
@@ -197,20 +197,20 @@ class AgentProfilesService:
                 disabled and the enabled check is not overridden.
 
         Raises:
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            AgentProfileManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidAgentProfileManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidAgentProfileManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            AgentProfileEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            AgentProfileSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentInterfaceError: If the class does not inherit from the
+            AgentProfileInterfaceError: If the class does not inherit from the
                 expected base class.
-            IncompatibleComponentFrameworkVersionError: If the profile is incompatible
-                with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            IncompatibleAgentProfileFrameworkVersionError: If the profile is
+                incompatible with the current framework version.
+            InternalAgentProfileError: If an unhandled exception occurs while
                 loading the profile.
         """
         agent_profile = (
@@ -247,7 +247,8 @@ class AgentProfilesService:
             agent_profile_id: The ID of the agent profile to unload.
 
         Raises:
-            ComponentNotFoundError: If no agent profile with the given ID is registered.
+            AgentProfileNotFoundError: If no agent profile with the given ID is
+                registered.
         """
         agent_profile = await (
             self._agent_profile_registry_service.unload_component_by_component_id(
@@ -281,7 +282,8 @@ class AgentProfilesService:
                 was disabled and the enabled check was not overridden.
 
         Raises:
-            ComponentNotFoundError: If no agent profile with the given ID is registered.
+            AgentProfileNotFoundError: If no agent profile with the given ID is
+                registered.
         """
         agent_profile = await (
             self._agent_profile_registry_service.reload_component_by_component_id(
@@ -413,7 +415,8 @@ class AgentProfilesService:
             The requested agent profile.
 
         Raises:
-            ComponentNotFoundError: If no agent profile with the given ID is registered.
+            AgentProfileNotFoundError: If no agent profile with the given ID is
+                registered.
         """
         agent_profile_id = normalize_uuid(agent_profile_id)
 

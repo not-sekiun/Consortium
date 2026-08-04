@@ -76,20 +76,20 @@ class ListenerProfilesService:
                 profile is disabled and the enabled check is not overridden.
 
         Raises:
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            ListenerProfileManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidListenerProfileManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidListenerProfileManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            ListenerProfileEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            ListenerProfileSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentInterfaceError: If the class does not inherit from the
+            ListenerProfileInterfaceError: If the class does not inherit from the
                 expected base class.
-            IncompatibleComponentFrameworkVersionError: If the profile is incompatible
-                with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            IncompatibleListenerProfileFrameworkVersionError: If the profile is
+                incompatible with the current framework version.
+            InternalListenerProfileError: If an unhandled exception occurs while
                 loading the profile.
         """
         listener_profile = (
@@ -197,20 +197,20 @@ class ListenerProfilesService:
                 profile is disabled and the enabled check is not overridden.
 
         Raises:
-            ComponentManifestFileNotFoundError: If `manifest.json` is missing.
-            InvalidComponentManifestFileJSONError: If `manifest.json` contains
+            ListenerProfileManifestFileNotFoundError: If `manifest.json` is missing.
+            InvalidListenerProfileManifestFileJSONError: If `manifest.json` contains
                 invalid JSON.
-            InvalidComponentManifestFileSchemaError: If `manifest.json` does not
+            InvalidListenerProfileManifestFileSchemaError: If `manifest.json` does not
                 follow the expected schema.
-            ComponentEntryPointModuleNotFoundError: If the entry-point module
+            ListenerProfileEntryPointModuleNotFoundError: If the entry-point module
                 cannot be found.
-            ComponentSymbolNotFoundError: If the symbol specified in the manifest
+            ListenerProfileSymbolNotFoundError: If the symbol specified in the manifest
                 is not found.
-            ComponentInterfaceError: If the class does not inherit from the
+            ListenerProfileInterfaceError: If the class does not inherit from the
                 expected base class.
-            IncompatibleComponentFrameworkVersionError: If the profile is incompatible
-                with the current framework version.
-            InternalComponentError: If an unhandled exception occurs while
+            IncompatibleListenerProfileFrameworkVersionError: If the profile is
+                incompatible with the current framework version.
+            InternalListenerProfileError: If an unhandled exception occurs while
                 loading the profile.
         """
         listener_profile = (
@@ -246,7 +246,7 @@ class ListenerProfilesService:
                 unload.
 
         Raises:
-            ComponentNotFoundError: If no listener profile with the given ID is
+            ListenerProfileNotFoundError: If no listener profile with the given ID is
                 registered.
         """
         listener_profile = await (
@@ -279,7 +279,7 @@ class ListenerProfilesService:
                 profile was disabled and the enabled check was not overridden.
 
         Raises:
-            ComponentNotFoundError: If no listener profile with the given ID is
+            ListenerProfileNotFoundError: If no listener profile with the given ID is
                 registered.
         """
         listener_profile = await (
@@ -415,7 +415,7 @@ class ListenerProfilesService:
             The requested listener profile.
 
         Raises:
-            ComponentNotFoundError: If no listener profile with the given ID is
+            ListenerProfileNotFoundError: If no listener profile with the given ID is
                 registered.
         """
         listener_profile = (
