@@ -26,6 +26,7 @@ from consortium.server.exceptions.api_exceptions import (
     user_accounts_api_exceptions,
 )
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
+    InternalServerError,
     UnprocessableEntityError,
 )
 from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
@@ -276,12 +277,26 @@ _directory_file_not_archive_file_error = (
     repository_api_exceptions.RepositoryDirectoryFileNotArchiveFileError()
 )
 
+# Downloading a repository resource whose content has gone missing from the repository
+# directory, alongside the generic server error every route already declares.
+_unsynced_repository_resource_error = (
+    repository_api_exceptions.UnsyncedRepositoryResourceError()
+)
+_internal_server_error = InternalServerError()
+
 
 # Shared: a malformed UUID path parameter or an unprocessable request body. Declared on
 # nearly every read/update/delete/lifecycle endpoint that takes a UUID path parameter.
 RequestValidationErrorResponse = create_union_response_model(
     "RequestValidationErrorResponse",
     (_invalid_uuid_error, _unprocessable_entity_error),
+)
+
+# Downloading a repository resource: the content may be missing from the repository
+# directory, which is reported with its own code rather than as a bare server error.
+RepositoryDownloadServerErrorResponse = create_union_response_model(
+    "RepositoryDownloadServerErrorResponse",
+    (_internal_server_error, _unsynced_repository_resource_error),
 )
 
 # Tasking an agent: capability and option validation on top of the shared request errors.

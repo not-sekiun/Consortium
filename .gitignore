@@ -6,11 +6,15 @@ workspace/*
 !workspace/.gitkeep
 
 data/server/artifacts/**
+!data/server/artifacts/.gitkeep
 data/server/assets/**
+!data/server/assets/.gitkeep
 data/server/payloads/**
+!data/server/payloads/.gitkeep
 data/server/logs/**
+!data/server/logs/.gitkeep
 data/client/logs/**
-!data/**/.gitkeep
+!data/client/logs/.gitkeep
 
 consortium/components/plugins/persistent_agent_generators/persistent_agent_generators.json
 consortium/components/plugins/persistent_listeners/persistent_listeners.json
@@ -22,6 +26,7 @@ tools/defaults.txt
 .hypothesis/
 
 .idea/
+.vscode/
 .claude/
 CLAUDE.md
 AGENTS.md
@@ -36,3 +41,4 @@ test_agents/
 /test*.py
 /TODO.md
 /HANDOFF*.md
+PROBLEMS.md

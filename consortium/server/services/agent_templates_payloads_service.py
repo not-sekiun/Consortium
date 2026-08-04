@@ -260,7 +260,7 @@ class AgentTemplatesPayloadsService:
             Nothing.
 
         Raises:
-            RepositoryResourceNotFoundError: If no payload with the given ID exists.
+            ResourceNotFoundError: If no payload with the given ID exists.
         """
         await self._payloads_service.delete_payload_by_resource_id(
             resource_id=payload_id,

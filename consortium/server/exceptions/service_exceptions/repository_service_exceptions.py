@@ -3,9 +3,10 @@ Exception hierarchy:
 
 - [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
     - [`RepositoryServiceError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryServiceError]
-        - [`RepositoryResourceNotFoundError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryResourceNotFoundError]
-        - [`RepositoryResourceAlreadyExistsError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryResourceAlreadyExistsError]
+        - [`ResourceNotFoundError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.ResourceNotFoundError]
+        - [`ResourceAlreadyExistsError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.ResourceAlreadyExistsError]
         - [`ResourceIDReservationNotFoundError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.ResourceIDReservationNotFoundError]
+        - [`RepositoryFileSystemError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryFileSystemError]
         - [`InvalidRepositoryMetadataFileError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileError]
             - [`InvalidRepositoryMetadataFileJSONError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileJSONError]
             - [`InvalidRepositoryMetadataFileSchemaError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileSchemaError]
@@ -85,6 +86,37 @@ class ResourceIDReservationNotFoundError(RepositoryServiceError):
         )
 
 
+class RepositoryFileSystemError(RepositoryServiceError):
+    """Raised when a filesystem operation performed by the repository service fails.
+
+    This covers every underlying `OSError` the service can encounter while operating on
+    the repository directory: reading and writing the repository metadata file, and
+    moving, copying or removing a resource's file or directory. The specific failure is
+    reported through `message` and `detail` rather than through separate exception types,
+    because a caller cannot act differently on a missing source path than it can on a
+    full disk. Both mean the operation did not happen and the repository is unchanged.
+
+    These are server side faults: no repository operation takes a filesystem path from a
+    client, so a failure here reflects the state of the machine the server is running on
+    or a bug in the code that supplied the path.
+    """
+
+    code = "REPOSITORY_FILE_SYSTEM_ERROR"
+
+    def __init__(self, operation: str, path: str, underlying_error: str):
+        super().__init__(
+            message=(
+                f"Failed to {operation} at the path '{path}'. The underlying filesystem "
+                f"operation failed. {underlying_error}"
+            ),
+            detail={
+                "operation": operation,
+                "path": path,
+                "underlying_error": underlying_error,
+            },
+        )
+
+
 class InvalidRepositoryMetadataFileError(RepositoryServiceError):
     """Base exception for all errors that occur due to an invalid repository metadata
     `.repository.json` file.
@@ -123,17 +155,17 @@ class InvalidRepositoryMetadataFileSchemaError(
 
     code = "INVALID_REPOSITORY_METADATA_FILE_SCHEMA_ERROR"
 
-    def __init__(self, repository_directory: str, json_schema_error_message: str):
+    def __init__(self, repository_directory: str, validation_error_message: str):
         super().__init__(
             message=(
                 "Failed to load the repository metadata file "
                 "`.repository.json` from the repository directory "
                 f"'{repository_directory}'. The repository metadata file does not "
-                f"conform to the expected JSON schema. {json_schema_error_message}"
+                f"conform to the expected JSON schema. {validation_error_message}"
             ),
             detail={
                 "repository_directory": repository_directory,
-                "json_schema_error_message": json_schema_error_message,
+                "validation_error_message": validation_error_message,
             },
         )
 

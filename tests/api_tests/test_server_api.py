@@ -22,6 +22,8 @@ SERVER_CONFIG_JSON_SCHEMA = {
         "remote_host_whitelist": {"type": "array", "items": {"type": "string"}},
         "remote_host_blacklist": {"type": "array", "items": {"type": "string"}},
         "server_header": {"type": ["string", "null"]},
+        "ssl_certfile": {"type": ["string", "null"]},
+        "ssl_keyfile": {"type": ["string", "null"]},
     },
     "required": [
         "local_host",
@@ -29,6 +31,8 @@ SERVER_CONFIG_JSON_SCHEMA = {
         "remote_host_whitelist",
         "remote_host_blacklist",
         "server_header",
+        "ssl_certfile",
+        "ssl_keyfile",
     ],
     "additionalProperties": False,
 }

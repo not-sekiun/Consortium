@@ -46,7 +46,7 @@ class AgentFileManagerService:
             The requested asset resource.
 
         Raises:
-            RepositoryResourceNotFoundError: If no asset with the given ID exists.
+            ResourceNotFoundError: If no asset with the given ID exists.
         """
         return self._assets_service.get_asset_by_resource_id(
             resource_id=asset_id,
@@ -73,7 +73,7 @@ class AgentFileManagerService:
             The requested artifact resource.
 
         Raises:
-            RepositoryResourceNotFoundError: If no artifact with the given ID exists.
+            ResourceNotFoundError: If no artifact with the given ID exists.
         """
         return self._artifacts_service.get_artifact_by_resource_id(
             resource_id=artifact_id,
@@ -109,7 +109,7 @@ class AgentFileManagerService:
                 `None`, otherwise a generator yielding successive `str` or `bytes` chunks.
 
         Raises:
-            RepositoryResourceNotFoundError: If no asset with the given ID exists.
+            ResourceNotFoundError: If no asset with the given ID exists.
             IsADirectoryError: If the asset is a directory, which has no readable file
                 content.
             RepositoryFileDoesNotExistError: If the asset is a file but no longer exists
@@ -199,19 +199,22 @@ class AgentFileManagerService:
         name: str | None = None,
         description: str = "",
     ) -> Artifact:
-        """Creates a new artifact directory, optionally populated from an archive.
+        """Creates a new artifact directory, optionally populated from existing content.
 
-        An empty directory is created in the artifacts repository, or, when `content` and
-        `archive_file_format` are provided, the archive content is extracted into it. The
-        directory is attributed to the owning agent.
+        An empty directory is created in the artifacts repository, or, when `content` is
+        provided, it is populated from that content. How `content` is interpreted depends
+        on its type: raw bytes and open binary streams are unpacked as archive content
+        using `archive_file_format`, while a `str` or `pathlib.Path` is treated as a path
+        to an existing source directory whose tree is copied in. The directory is
+        attributed to the owning agent.
 
         Args:
-            content: Archive content to extract into the new directory, supplied as raw
-                bytes, an open binary stream, or a path to an archive file. When `None`,
-                an empty directory is created.
+            content: Archive content to unpack into the new directory, supplied as raw
+                bytes or an open binary stream, or a path to an existing source directory
+                to copy in. When `None`, an empty directory is created.
             archive_file_format: The archive format used to interpret `content` when
-                extracting. Must be set whenever `content` is provided; ignored when
-                `content` is `None`.
+                unpacking. Must be set whenever `content` is archive content; ignored
+                when `content` is a source directory path or `None`.
             name: A human-readable display name for the artifact. When `None`, the
                 artifact's generated UUID is used as its name.
             description: A short human-readable description of the artifact. Defaults to
@@ -220,6 +223,11 @@ class AgentFileManagerService:
         Returns:
             The newly created artifact directory resource, attributed to the owning
                 agent.
+
+        Raises:
+            InvalidRepositoryDirectoryArchiveFileFormatError: If `content` is archive
+                content that cannot be unpacked as `archive_file_format`, or if
+                `archive_file_format` is not set.
         """
         return await self._artifacts_service.create_artifact_directory(
             content=content,

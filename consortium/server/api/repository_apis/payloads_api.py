@@ -25,6 +25,7 @@ from consortium.server.exceptions.service_exceptions import (
 )
 from consortium.server.models.repository_models import PayloadModel
 from consortium.server.models.union_response_models import (
+    RepositoryDownloadServerErrorResponse,
     RequestValidationErrorResponse,
 )
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -137,6 +138,7 @@ router.add_api_route(
         422: {
             "model": _invalid_uuid_error.to_pydantic_model(),
         },
+        500: {"model": RepositoryDownloadServerErrorResponse},
     },
     name="Download Payload By Resource ID",
 )

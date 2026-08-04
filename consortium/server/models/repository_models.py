@@ -1,6 +1,14 @@
+import uuid
 from datetime import datetime
 
-from pydantic import UUID4, BaseModel, JsonValue
+from pydantic import (
+    UUID4,
+    BaseModel,
+    ConfigDict,
+    JsonValue,
+    RootModel,
+    model_validator,
+)
 
 from consortium.server.models.agent_models import AgentModel
 from consortium.server.models.agent_template_models import (
@@ -24,10 +32,65 @@ class RepositoryResourceModel(BaseModel):
     extension: str | None
     exists_on_disk: bool
     datetime_created: datetime
-    datetime_modified: datetime
+    # `datetime_modified` is read from the resource's mtime on disk, so it is null for
+    # exactly the same reason `size` is: the resource is tracked by the repository but
+    # its file or directory is not present on disk to stat.
+    datetime_modified: datetime | None
     md5_checksum: str | None
     is_directory: bool
     data: dict[str, JsonValue]
+
+
+# The persisted form of a repository resource, validating the entries of a repository's
+# `.repository.json` metadata file as it is read back off disk. This is deliberately a
+# sibling of `RepositoryResourceModel` rather than a subclass: the persisted form
+# differs from the API form in two ways. `md5_checksum` is never stored (computing it is
+# expensive and it is only used client side for download integrity), and `data` holds
+# the persistent shape (e.g. `PersistentArtifactDataModel`) where the API models hold
+# the resolved shape. `data` is left as free-form JSON here because the repository
+# service validates it separately against its own configured data model, which lets a
+# bad `data` field be reported against the specific resource that carries it.
+class PersistentRepositoryResourceModel(BaseModel):
+    # Rejects unknown keys, mirroring the metadata file being written solely by
+    # `RepositoryFile.to_json`/`RepositoryDirectory.to_json`. A stray key means the file
+    # was hand edited or written by an incompatible version.
+    model_config = ConfigDict(extra="forbid")
+
+    # Any UUID version is accepted. Canonically we use UUIDv4 but may consider migrating
+    # to v7 in the future, so this is deliberately not `UUID4`.
+    resource_id: uuid.UUID
+    name: str | None
+    description: str
+    size: int | None
+    # Always null for directories, and required to be non-null for files by the
+    # validator below.
+    extension: str | None
+    exists_on_disk: bool
+    md5_checksum: None
+    datetime_created: datetime
+    datetime_modified: datetime | None
+    is_directory: bool
+    data: dict[str, JsonValue]
+
+    @model_validator(mode="after")
+    def _validate_file_resource_has_extension(self):
+        # A file resource's on-disk path is reconstructed as `<resource_id><extension>`,
+        # so a null extension leaves the repository service unable to locate the file at
+        # all. Directories are stored under their bare resource ID and carry no
+        # extension.
+        if not self.is_directory and self.extension is None:
+            raise ValueError(
+                "a file resource must have a non-null extension, only directory "
+                "resources may have a null extension"
+            )
+        return self
+
+
+class PersistentRepositoryMetadataModel(
+    RootModel[dict[uuid.UUID, PersistentRepositoryResourceModel]]
+):
+    """The full contents of a repository's `.repository.json` metadata file, keyed by
+    resource ID."""
 
 
 # This data model is what is actually stored on disk in the asset services

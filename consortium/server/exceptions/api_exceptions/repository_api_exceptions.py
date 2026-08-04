@@ -3,12 +3,46 @@
 # defined here are used for the uploading endpoint if it is used.
 
 from consortium.server.exceptions.api_exceptions.http_exceptions import (
+    InternalServerError,
     NotFoundError,
     UnsupportedMediaTypeError,
 )
 
 
 class RepositoryResourceNotFoundError(NotFoundError): ...
+
+
+class UnsyncedRepositoryResourceError(InternalServerError):
+    """Raised when a resource's content is requested but the file or directory it is
+    recorded against no longer exists in the repository directory.
+
+    This is a server side fault rather than a client one, so it is a 500. The resource is
+    known to the repository, is listed by its collection endpoint and serves its metadata
+    normally, and the server simply cannot produce content it advertises. Nothing about
+    the request is wrong and no change to it would succeed.
+
+    It is deliberately neither a 404, which is already used on these endpoints for a
+    resource ID the repository does not know and would make the two indistinguishable,
+    nor a 410, which asserts a permanence the server has no way to determine: the content
+    may yet be restored from a backup or a remounted volume.
+
+    Note that a resource in this state can still be deleted. Deletion tolerates missing
+    content because the caller's intent is already satisfied, whereas a read cannot be
+    satisfied at all.
+    """
+
+    code = "UNSYNCED_REPOSITORY_RESOURCE_ERROR"
+
+    def __init__(self, resource_id: str = "<resource_id>") -> None:
+        super().__init__(
+            message=(
+                "Failed to read the content of the repository resource with the "
+                f"resource ID '{resource_id}'. The resource is recorded in the "
+                "repository metadata but its content no longer exists in the repository "
+                "directory, which has been modified outside of the server."
+            ),
+            detail={"resource_id": resource_id},
+        )
 
 
 class RepositoryDirectoryArchiveFileFormatNotSpecifiedError(UnsupportedMediaTypeError):

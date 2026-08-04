@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
+from loguru import logger
 from pydantic import BaseModel, RootModel, ValidationError, create_model
 
 from consortium.framework._core.framework_exceptions.base_framework_exception import (
@@ -27,6 +28,7 @@ from consortium.server.exceptions.object_exceptions.base_object_exception import
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceError,
 )
+from consortium.server.models.logging_models import LoggerType
 
 if TYPE_CHECKING:
     from fastapi.routing import APIRoute
@@ -149,11 +151,24 @@ def utc_now() -> datetime:
     return datetime.now(UTC)
 
 
+def is_domain_error(exc: BaseException) -> bool:
+    # `EventsService.trigger_event` collects handler failures into an `ExceptionGroup`,
+    # so the group itself is never a domain error even when every exception inside it is
+    # one. Classifying by the contents keeps a group of expected event hook failures from
+    # being reported as an overlooked exception. Groups can nest, so this recurses, and an
+    # empty group is treated as unexpected since it carries nothing to classify.
+    if isinstance(exc, BaseExceptionGroup):
+        return bool(exc.exceptions) and all(
+            is_domain_error(sub_exception) for sub_exception in exc.exceptions
+        )
+    return isinstance(exc, (BaseServiceError, BaseFrameworkError, BaseObjectError))
+
+
 def log_and_propagate_error_on_service_method(func) -> Callable:
     def _log_service_method_error(
         logger: Logger, instance: Any, func_name: str, exc: Exception
     ) -> None:
-        if isinstance(exc, (BaseServiceError, BaseFrameworkError, BaseObjectError)):
+        if is_domain_error(exc):
             logger.error(
                 "Error in `{}.{}`. {}: {}",
                 type(instance).__name__,
@@ -260,13 +275,51 @@ def clamp_event_log_limit(limit: int) -> int:
 
 _background_tasks = set()
 
+_background_task_logger = logger.bind(
+    logger_name="Background Task", logger_type=LoggerType.SERVER_LOGGER
+)
+
+
+def _log_background_task_error(task: asyncio.Task) -> None:
+    # Fire and forget tasks have no caller left to propagate to, so this is the only
+    # place their failures can be reported. Calling `task.exception()` is also what marks
+    # the exception as retrieved: without it asyncio reports the failure itself as
+    # "Task exception was never retrieved", at an arbitrary later point during garbage
+    # collection and outside the server's own logging.
+    if task.cancelled():
+        return
+    exception = task.exception()
+    if exception is None:
+        return
+
+    # Mirrors `log_and_propagate_error_on_service_method`: an anticipated framework error
+    # is an ordinary error, anything else is an exception nobody accounted for and is
+    # logged with its traceback so it can be tracked down.
+    if is_domain_error(exception):
+        _background_task_logger.error(
+            "Error in background task `{}`. {}: {}",
+            task.get_name(),
+            type(exception).__name__,
+            exception,
+        )
+    else:
+        _background_task_logger.opt(colors=True, exception=exception).critical(
+            "<white><RED><bold>Unhandled exception in background task `{}`. {}: {}</></></>",
+            task.get_name(),
+            type(exception).__name__,
+            exception,
+        )
+
 
 # Running fire and forget background tasks safely. The _coroutine set is needed since
 # tasks are only held onto by a weak reference and may be GCed at any time.
 def run_async_background_task(coroutine: Coroutine) -> None:
-    task = asyncio.create_task(coroutine)
+    # The task is named after the coroutine so a failure can be traced back to what was
+    # launched, rather than to asyncio's positional `Task-<n>` default.
+    task = asyncio.create_task(coroutine, name=getattr(coroutine, "__qualname__", None))
     _background_tasks.add(task)
     task.add_done_callback(_background_tasks.discard)
+    task.add_done_callback(_log_background_task_error)
 
 
 def wrap_function_with_exception_reraising(

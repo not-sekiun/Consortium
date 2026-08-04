@@ -477,7 +477,7 @@ class PayloadsService:
             The updated payload.
 
         Raises:
-            RepositoryResourceNotFoundError: If no payload with the given ID exists.
+            ResourceNotFoundError: If no payload with the given ID exists.
             AgentTemplateNotFoundError: If `agent_template_id` is provided but no agent
                 template with that ID exists.
         """
@@ -536,8 +536,12 @@ class PayloadsService:
         Args:
             resource_id: The ID of the payload to delete.
 
+        A payload whose file or directory is already missing from the repository
+        directory is deleted successfully: the record is deregistered and the event is
+        still emitted.
+
         Raises:
-            RepositoryResourceNotFoundError: If no payload with the given ID exists.
+            ResourceNotFoundError: If no payload with the given ID exists.
         """
         resource_id = normalize_uuid(resource_id)
 
@@ -576,7 +580,7 @@ class PayloadsService:
             The requested payload.
 
         Raises:
-            RepositoryResourceNotFoundError: If no payload with the given ID exists.
+            ResourceNotFoundError: If no payload with the given ID exists.
         """
         resource_id = normalize_uuid(resource_id)
 

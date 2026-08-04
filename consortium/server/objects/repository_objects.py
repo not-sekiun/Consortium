@@ -1,3 +1,4 @@
+import contextlib
 import hashlib
 import os
 import pathlib
@@ -18,10 +19,49 @@ from consortium.server.exceptions.object_exceptions.repository_object_exceptions
     RepositoryDirectoryRelativePathNotContainedError,
     RepositoryFileAlreadyExistsError,
     RepositoryFileDoesNotExistError,
+    RepositoryObjectFileSystemError,
 )
 from consortium.server.utils import utc_now
 
 _DEFAULT_CHUNK_SIZE = 64000  # 64 KB, mimics shutil.copyfileobj default chunk size
+
+
+# The errors that mean "this resource is not on disk". Checking existence and then
+# acting on the result cannot be made atomic, so a resource removed in between surfaces
+# as one of these. That is the same condition the existence check itself tests for, so
+# the read-only accessors below report it the way they already report a missing
+# resource, as `None`, instead of raising on a race they can answer.
+_RESOURCE_MISSING_ERRORS = (FileNotFoundError, NotADirectoryError)
+
+
+def _filesystem_error(
+    operation: str, path: pathlib.Path | str, exc: OSError
+) -> RepositoryObjectFileSystemError:
+    return RepositoryObjectFileSystemError(
+        operation=operation,
+        path=str(path),
+        underlying_error=f"{type(exc).__name__}: {exc}",
+    )
+
+
+@contextlib.contextmanager
+def _wrap_filesystem_errors(operation: str, path: pathlib.Path | str):
+    try:
+        yield
+    except OSError as exc:
+        raise _filesystem_error(operation=operation, path=path, exc=exc) from exc
+
+
+def _stat_or_none(path: pathlib.Path, operation: str) -> os.stat_result | None:
+    # Replaces the check-then-stat pattern these accessors used to use. `stat()` is
+    # itself the existence check, so this is both one syscall rather than two and free of
+    # the window between them.
+    try:
+        return path.stat()
+    except _RESOURCE_MISSING_ERRORS:
+        return None
+    except OSError as exc:
+        raise _filesystem_error(operation=operation, path=path, exc=exc) from exc
 
 
 class RepositoryFile:
@@ -75,15 +115,17 @@ class RepositoryFile:
     def size(self) -> int | None:
         # The size of the file is denoted as `None` rather than `0` to indicate that the
         # file is not written to disk yet.
-        if not self.exists_on_disk:
-            return None
-        return self.path.stat().st_size
+        stat_result = _stat_or_none(self.path, operation="read the size of the file")
+        return stat_result.st_size if stat_result is not None else None
 
     @property
     def datetime_modified(self) -> datetime | None:
-        if not self.exists_on_disk:
+        stat_result = _stat_or_none(
+            self.path, operation="read the modification time of the file"
+        )
+        if stat_result is None:
             return None
-        return datetime.fromtimestamp(self.path.stat().st_mtime, UTC)
+        return datetime.fromtimestamp(stat_result.st_mtime, UTC)
 
     def compute_md5_checksum(self, force_checksum_refresh: bool = False) -> str | None:
         current_fingerprint = (self.size, self.datetime_modified)
@@ -93,15 +135,23 @@ class RepositoryFile:
         ):
             return self._cached_md5_checksum
 
-        if not self.exists_on_disk:
+        try:
+            with self.path.open(mode="rb") as file:
+                md5_hash = hashlib.md5()
+                while chunk := file.read(_DEFAULT_CHUNK_SIZE):
+                    md5_hash.update(chunk)
+        except _RESOURCE_MISSING_ERRORS:
+            # A file with no content on disk has no checksum, which is the same answer
+            # this gave before the read was attempted at all.
             self._cached_md5_checksum = None
             self._cached_modified_fingerprint = current_fingerprint
             return None
-
-        with self.path.open(mode="rb") as file:
-            md5_hash = hashlib.md5()
-            while chunk := file.read(_DEFAULT_CHUNK_SIZE):
-                md5_hash.update(chunk)
+        except OSError as exc:
+            raise _filesystem_error(
+                operation="read the file to compute its checksum",
+                path=self.path,
+                exc=exc,
+            ) from exc
 
         self._cached_md5_checksum = md5_hash.hexdigest()
         self._cached_modified_fingerprint = current_fingerprint
@@ -124,27 +174,28 @@ class RepositoryFile:
         if path.exists() and not exist_ok:
             raise RepositoryFileAlreadyExistsError(repository_file_str=str(path))
 
-        path.parent.mkdir(parents=True, exist_ok=True)
+        with _wrap_filesystem_errors(operation="create the file", path=path):
+            path.parent.mkdir(parents=True, exist_ok=True)
 
-        if hasattr(content, "read"):
-            first_chunk = content.read(_DEFAULT_CHUNK_SIZE)
-            is_binary = isinstance(first_chunk, bytes)
-            mode = "wb" if is_binary else "w"
-            enc = None if is_binary else encoding
-            with path.open(mode=mode, encoding=enc) as file:
-                if first_chunk:
-                    file.write(first_chunk)
-                while chunk := content.read(_DEFAULT_CHUNK_SIZE):
-                    file.write(chunk)
-        elif isinstance(content, bytes):
-            with path.open(mode="wb") as file:
-                file.write(content)
-        elif isinstance(content, str):
-            with path.open(mode="w", encoding=encoding) as file:
-                file.write(content)
-        else:
-            # content is None (or unsupported type) -> empty file, text mode
-            path.touch()
+            if hasattr(content, "read"):
+                first_chunk = content.read(_DEFAULT_CHUNK_SIZE)
+                is_binary = isinstance(first_chunk, bytes)
+                mode = "wb" if is_binary else "w"
+                enc = None if is_binary else encoding
+                with path.open(mode=mode, encoding=enc) as file:
+                    if first_chunk:
+                        file.write(first_chunk)
+                    while chunk := content.read(_DEFAULT_CHUNK_SIZE):
+                        file.write(chunk)
+            elif isinstance(content, bytes):
+                with path.open(mode="wb") as file:
+                    file.write(content)
+            elif isinstance(content, str):
+                with path.open(mode="w", encoding=encoding) as file:
+                    file.write(content)
+            else:
+                # content is None (or unsupported type) -> empty file, text mode
+                path.touch()
 
         return cls(path=path, name=name, description=description, data=data)
 
@@ -166,14 +217,20 @@ class RepositoryFile:
             size = chunk_size
 
             def chunk_iterator():
-                with self.path.open(mode=mode, encoding=encoding) as file:
-                    while chunk := file.read(size):
-                        yield chunk
+                # The wrapping lives inside the generator body rather than around the
+                # call that builds it, because the file is not opened until the first
+                # chunk is pulled. Wrapping the enclosing method would leave the open and
+                # every subsequent read unguarded.
+                with _wrap_filesystem_errors(operation="read the file", path=self.path):
+                    with self.path.open(mode=mode, encoding=encoding) as file:
+                        while chunk := file.read(size):
+                            yield chunk
 
             return chunk_iterator()
         else:
-            with self.path.open(mode=mode, encoding=encoding) as file:
-                return file.read()
+            with _wrap_filesystem_errors(operation="read the file", path=self.path):
+                with self.path.open(mode=mode, encoding=encoding) as file:
+                    return file.read()
 
     def write(
         self,
@@ -188,13 +245,15 @@ class RepositoryFile:
             mode = "a" if append else "w"
         encoding = None if isinstance(data, bytes) else encoding
 
-        with self.path.open(mode=mode, encoding=encoding) as file:
-            return file.write(data)
+        with _wrap_filesystem_errors(operation="write to the file", path=self.path):
+            with self.path.open(mode=mode, encoding=encoding) as file:
+                return file.write(data)
 
     def delete(self):
         if not self.path.exists():
             raise RepositoryFileDoesNotExistError(repository_file_str=str(self))
-        self.path.unlink()
+        with _wrap_filesystem_errors(operation="delete the file", path=self.path):
+            self.path.unlink()
 
     def to_json(
         self, include_checksum: bool = False, force_checksum_refresh: bool = False
@@ -308,59 +367,92 @@ class RepositoryDirectory:
 
     @property
     def size(self) -> int | None:
-        if not self.exists_on_disk:
-            return None
-
         # Manually walk directories non recursively with a stack using os.scandir since
         # pathlib.glob() adds significant overhead creating `Path` objects
         total = 0
         stack = deque([str(self.path)])
-        while stack:
-            current = stack.pop()
-            with os.scandir(current) as it:
-                for entry in it:
-                    if entry.is_dir():
-                        stack.append(entry.path)
-                    else:
-                        total += entry.stat().st_size
+        try:
+            while stack:
+                current = stack.pop()
+                with os.scandir(current) as it:
+                    for entry in it:
+                        if entry.is_dir():
+                            stack.append(entry.path)
+                        else:
+                            total += entry.stat().st_size
+        except _RESOURCE_MISSING_ERRORS:
+            # Either the directory itself is not on disk, or part of the tree was
+            # removed while it was being walked. A total that counts only the entries
+            # that happened to be visited before the removal would be a number nobody
+            # can act on, so both report as `None`.
+            return None
+        except OSError as exc:
+            raise _filesystem_error(
+                operation="read the size of the directory", path=self.path, exc=exc
+            ) from exc
         return total
 
     @property
     def datetime_modified(self) -> datetime | None:
-        if not self.exists_on_disk:
+        stat_result = _stat_or_none(
+            self.path, operation="read the modification time of the directory"
+        )
+        if stat_result is None:
             return None
-        return datetime.fromtimestamp(self.path.stat().st_mtime, UTC)
+        return datetime.fromtimestamp(stat_result.st_mtime, UTC)
 
     def compute_md5_checksum(self, force_checksum_refresh: bool = False) -> str | None:
-        if not self.exists_on_disk:
-            self._file_hash_cache = {}
-            self._cached_md5_checksum = None
-            return None
-
         overall_hash = hashlib.md5()
         seen_paths: set[str] = set()
 
         # Single walk: stat every entry once. Only files whose (size, mtime) have
         # actually changed since last time get their content re-read and re-hashed;
         # everything else reuses its cached per-file hash.
-        for rel_path, entry, is_file in self._walk_entries():
+        try:
+            walked_entries = self._walk_entries()
+        except _RESOURCE_MISSING_ERRORS:
+            self._file_hash_cache = {}
+            self._cached_md5_checksum = None
+            return None
+        except OSError as exc:
+            raise _filesystem_error(
+                operation="walk the directory to compute its checksum",
+                path=self.path,
+                exc=exc,
+            ) from exc
+
+        for rel_path, entry, is_file in walked_entries:
             seen_paths.add(rel_path)
 
             if is_file:
-                stat_result = entry.stat()
-                size, mtime = stat_result.st_size, stat_result.st_mtime
+                try:
+                    stat_result = entry.stat()
+                    size, mtime = stat_result.st_size, stat_result.st_mtime
 
-                cached = self._file_hash_cache.get(rel_path)
-                if (
-                    not force_checksum_refresh
-                    and cached is not None
-                    and cached[0] == size
-                    and cached[1] == mtime
-                ):
-                    file_hash = cached[2]
-                else:
-                    file_hash = self._hash_file_content(entry.path)
-                    self._file_hash_cache[rel_path] = (size, mtime, file_hash)
+                    cached = self._file_hash_cache.get(rel_path)
+                    if (
+                        not force_checksum_refresh
+                        and cached is not None
+                        and cached[0] == size
+                        and cached[1] == mtime
+                    ):
+                        file_hash = cached[2]
+                    else:
+                        file_hash = self._hash_file_content(entry.path)
+                        self._file_hash_cache[rel_path] = (size, mtime, file_hash)
+                except _RESOURCE_MISSING_ERRORS:
+                    # The entry was removed between the walk and being read. A checksum
+                    # over a tree that is changing underneath cannot be made meaningful,
+                    # so this reports the same `None` as a directory that is not there.
+                    self._file_hash_cache = {}
+                    self._cached_md5_checksum = None
+                    return None
+                except OSError as exc:
+                    raise _filesystem_error(
+                        operation="read a file in the directory to compute its checksum",
+                        path=entry.path,
+                        exc=exc,
+                    ) from exc
 
                 overall_hash.update(rel_path.encode())
                 overall_hash.update(file_hash.encode())
@@ -393,7 +485,8 @@ class RepositoryDirectory:
             content = pathlib.Path(content)
 
         if not path.exists():
-            path.mkdir()
+            with _wrap_filesystem_errors(operation="create the directory", path=path):
+                path.mkdir()
         else:
             if not exist_ok:
                 raise RepositoryDirectoryAlreadyExistsError(
@@ -405,41 +498,54 @@ class RepositoryDirectory:
             # mkdir(), or it pre-existed and exist_ok let us past the check) — so
             # copytree must always be told the destination exists, regardless of
             # `exist_ok`, which governs a different question (was pre-existing OK).
-            shutil.copytree(
-                src=content,
-                dst=path,
-                dirs_exist_ok=True,
-            )
+            with _wrap_filesystem_errors(
+                operation="copy the source directory into the directory", path=path
+            ):
+                shutil.copytree(
+                    src=content,
+                    dst=path,
+                    dirs_exist_ok=True,
+                )
         elif hasattr(content, "read"):
-            try:
-                with tempfile.TemporaryDirectory() as temp_dir_path:
-                    temp_file = pathlib.Path(temp_dir_path) / "archive"
-                    with temp_file.open("wb") as file:
-                        while chunk := content.read(_DEFAULT_CHUNK_SIZE):
-                            file.write(chunk)
-                    shutil.unpack_archive(
-                        filename=temp_file,
-                        extract_dir=path,
-                        format=archive_file_format,
-                    )
-            except shutil.ReadError, ValueError:
-                raise InvalidRepositoryDirectoryArchiveFileFormatError(
-                    archive_file_format=archive_file_format
-                ) from None
+            # The archive format check stays innermost so that an unreadable or
+            # mismatched archive keeps reporting as an invalid archive format rather
+            # than being swallowed by the surrounding filesystem error wrapping
+            # (`shutil.ReadError` is itself an `OSError` subclass).
+            with _wrap_filesystem_errors(
+                operation="unpack the archive into the directory", path=path
+            ):
+                try:
+                    with tempfile.TemporaryDirectory() as temp_dir_path:
+                        temp_file = pathlib.Path(temp_dir_path) / "archive"
+                        with temp_file.open("wb") as file:
+                            while chunk := content.read(_DEFAULT_CHUNK_SIZE):
+                                file.write(chunk)
+                        shutil.unpack_archive(
+                            filename=temp_file,
+                            extract_dir=path,
+                            format=archive_file_format,
+                        )
+                except shutil.ReadError, ValueError:
+                    raise InvalidRepositoryDirectoryArchiveFileFormatError(
+                        archive_file_format=archive_file_format
+                    ) from None
         elif isinstance(content, bytes):
-            try:
-                with tempfile.TemporaryDirectory() as temp_dir_path:
-                    temp_file = pathlib.Path(temp_dir_path) / "archive"
-                    temp_file.write_bytes(content)
-                    shutil.unpack_archive(
-                        filename=temp_file,
-                        extract_dir=path,
-                        format=archive_file_format,
-                    )
-            except shutil.ReadError, ValueError:
-                raise InvalidRepositoryDirectoryArchiveFileFormatError(
-                    archive_file_format=archive_file_format
-                ) from None
+            with _wrap_filesystem_errors(
+                operation="unpack the archive into the directory", path=path
+            ):
+                try:
+                    with tempfile.TemporaryDirectory() as temp_dir_path:
+                        temp_file = pathlib.Path(temp_dir_path) / "archive"
+                        temp_file.write_bytes(content)
+                        shutil.unpack_archive(
+                            filename=temp_file,
+                            extract_dir=path,
+                            format=archive_file_format,
+                        )
+                except shutil.ReadError, ValueError:
+                    raise InvalidRepositoryDirectoryArchiveFileFormatError(
+                        archive_file_format=archive_file_format
+                    ) from None
 
         return cls(path=path, name=name, description=description, data=data)
 
@@ -448,7 +554,8 @@ class RepositoryDirectory:
             raise RepositoryDirectoryDoesNotExistError(
                 repository_directory_str=str(self),
             )
-        shutil.rmtree(self.path)
+        with _wrap_filesystem_errors(operation="delete the directory", path=self.path):
+            shutil.rmtree(self.path)
 
     def resolve_relative_path(
         self,

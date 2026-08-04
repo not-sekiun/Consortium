@@ -1,7 +1,6 @@
 import asyncio
 import uuid
 from collections.abc import AsyncGenerator
-from enum import StrEnum
 from typing import TYPE_CHECKING, Any, get_type_hints
 
 from loguru import logger
@@ -54,6 +53,7 @@ from consortium.server.exceptions.service_exceptions.repository_service_exceptio
 from consortium.server.exceptions.service_exceptions.tasks_service_exceptions import (
     TaskNotFoundError,
 )
+from consortium.server.models.agent_models import AgentStatus
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.task_objects import Task, TaskState
 from consortium.server.objects.task_runtime import TaskRuntime
@@ -66,19 +66,6 @@ from consortium.server.utils import (
 if TYPE_CHECKING:
     from consortium.server.services.task_runtime_service import TaskRuntimeService
     from consortium.server.services.tasks_service import TasksService
-
-
-class AgentStatus(StrEnum):
-    # Capabilities are responsible for marking agents as ACTIVE or INACTIVE based on
-    # whether the agent is connected or not. An agent can only be marked as ACTIVE or
-    # INACTIVE for a listener that is currently running.
-    ACTIVE = "ACTIVE"  # Running normally, attached to running listener
-    INACTIVE = "INACTIVE"  # Agent was told explicitly to go inactive or lost connection
-
-    # ORPHANED and UNREACHABLE are states inferred from the state of the attached
-    # listener of an agent, the framework manages these states.
-    ORPHANED = "ORPHANED"  # Attached listener temporarily not running but not deleted. For example, ERRORED or STOPPED
-    UNREACHABLE = "UNREACHABLE"  # Attached listener was explicitly deleted, even if a new listener is created with the same parameters it will not recognize that agent
 
 
 class _AgentParametersModel(BaseModel):

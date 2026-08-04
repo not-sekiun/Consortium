@@ -116,6 +116,16 @@ def create_download_resource_by_resource_id_endpoint(
                 consortium_exception=exc,
             ) from None
 
+        # Checked before any content is touched. Without this a resource whose file or
+        # directory was removed from the repository directory out of band fails deeper
+        # in: `shutil.make_archive` raises while packing a directory that is not there,
+        # and `FileResponse` raises inside Starlette once the response is already being
+        # sent, past the point where this handler could report anything at all.
+        if not repository_resource.exists_on_disk:
+            raise api_excs.UnsyncedRepositoryResourceError(
+                resource_id=str(resource_id),
+            )
+
         if repository_resource.is_directory:
             temp_dir = tempfile.TemporaryDirectory()
             temp_archive_file = pathlib.Path(temp_dir.name, repository_resource.name)

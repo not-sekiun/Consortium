@@ -22,6 +22,7 @@ from consortium.server.exceptions.service_exceptions import (
 )
 from consortium.server.models.repository_models import ArtifactModel
 from consortium.server.models.union_response_models import (
+    RepositoryDownloadServerErrorResponse,
     RequestValidationErrorResponse,
 )
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -123,6 +124,7 @@ router.add_api_route(
             "model": _resource_not_found_error.to_pydantic_model(),
         },
         422: {"model": RequestValidationErrorResponse},
+        500: {"model": RepositoryDownloadServerErrorResponse},
     },
     name="Download Artifact By Resource ID",
 )

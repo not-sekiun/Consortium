@@ -76,34 +76,22 @@ class AssetsService:
             "user_account": user_account_reference.model_dump(mode="json"),
         }
 
+    # @wraps copies function docstring information over to avoid rewriting it, used for
+    # boilerplate forwarding methods that don't do anything meaningfully different. We
+    # still need to include some docstring pointing to the forwarded method since
+    # mkdocstrings' griffe analyzer only does static analysis when generating
+    # documentation
     @wraps(RepositoryService.load_repository_metadata)
     @log_and_propagate_error_on_service_method
     def load_repository_metadata(self) -> None:
-        """Loads the assets repository metadata from disk into memory.
-
-        Delegates to the underlying repository service, reconstructing the in-memory
-        record of every tracked asset from the repository metadata file. If the metadata
-        file does not yet exist an empty one is created.
-
-        Raises:
-            InvalidRepositoryMetadataFileJSONError: If the metadata file contains
-                invalid JSON.
-            InvalidRepositoryMetadataFileSchemaError: If the metadata file does not
-                follow the expected schema.
-            UnsyncedRepositoryMetadataFileError: If a resource recorded in the metadata
-                file does not exist on disk.
-        """
+        """See [`RepositoryService.load_repository_metadata`][consortium.server.services.repository_service.RepositoryService.load_repository_metadata]."""
         self._repository_service.load_repository_metadata()
         self._logger.debug("Loaded assets repository metadata")
 
     @wraps(RepositoryService.save_repository_metadata)
     @log_and_propagate_error_on_service_method
     def save_repository_metadata(self) -> None:
-        """Persists the current in-memory assets repository metadata to disk.
-
-        Delegates to the underlying repository service, writing the metadata for every
-        tracked asset to the repository metadata file as JSON.
-        """
+        """See [`RepositoryService.save_repository_metadata`][consortium.server.services.repository_service.RepositoryService.save_repository_metadata]."""
         self._repository_service.save_repository_metadata()
 
     @log_and_propagate_error_on_service_method
@@ -250,20 +238,23 @@ class AssetsService:
         resource_id: str | uuid.UUID | None = None,
         user_account_id: str | uuid.UUID | None = None,
     ) -> Asset:
-        """Creates a new asset directory, optionally populated from an archive.
+        """Creates a new asset directory, optionally populated from existing content.
 
         An empty directory is created on disk in the assets repository, or, when
-        `content` and `archive_file_format` are provided, the archive content is
-        extracted into it. An `ASSET_CREATED` event is emitted. When a `user_account_id`
-        is supplied the uploading user account is resolved and recorded for attribution.
+        `content` is provided, it is populated from that content. How `content` is
+        interpreted depends on its type: raw bytes and open binary streams are unpacked
+        as archive content using `archive_file_format`, while a `str` or `pathlib.Path`
+        is treated as a path to an existing source directory whose tree is copied in. An
+        `ASSET_CREATED` event is emitted. When a `user_account_id` is supplied the
+        uploading user account is resolved and recorded for attribution.
 
         Args:
-            content: Archive content to extract into the new directory, supplied as raw
-                bytes, an open binary stream, or a path to an archive file. When `None`,
-                an empty directory is created.
+            content: Archive content to unpack into the new directory, supplied as raw
+                bytes or an open binary stream, or a path to an existing source directory
+                to copy in. When `None`, an empty directory is created.
             archive_file_format: The archive format used to interpret `content` when
-                extracting. Must be set whenever `content` is provided; ignored when
-                `content` is `None`.
+                unpacking. Must be set whenever `content` is archive content; ignored
+                when `content` is a source directory path or `None`.
             name: A human-readable display name for the asset. When `None`, the asset's
                 generated UUID is used as its name.
             description: A short human-readable description of the asset. Defaults to an
@@ -282,6 +273,9 @@ class AssetsService:
                 account with that ID exists.
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            InvalidRepositoryDirectoryArchiveFileFormatError: If `content` is archive
+                content that cannot be unpacked as `archive_file_format`, or if
+                `archive_file_format` is not set.
         """
         asset = await asyncio.to_thread(
             self._repository_service.create_directory,
@@ -393,7 +387,7 @@ class AssetsService:
             The updated asset resource.
 
         Raises:
-            RepositoryResourceNotFoundError: If no asset with the given ID exists.
+            ResourceNotFoundError: If no asset with the given ID exists.
             UserAccountIDNotFoundError: If `user_account_id` is provided but no user
                 account with that ID exists.
         """
@@ -429,8 +423,12 @@ class AssetsService:
         Args:
             resource_id: The ID of the asset to delete.
 
+        An asset whose file or directory is already missing from the repository directory
+        is deleted successfully: the record is deregistered and the event is still
+        emitted.
+
         Raises:
-            RepositoryResourceNotFoundError: If no asset with the given ID exists.
+            ResourceNotFoundError: If no asset with the given ID exists.
         """
         # Snapshot JSON before deletion since to_json() reads from disk
         asset = self._repository_service.get_resource_by_resource_id(
@@ -483,7 +481,7 @@ class AssetsService:
                 it was created.
 
         Raises:
-            RepositoryResourceNotFoundError: If no asset with the given ID exists.
+            ResourceNotFoundError: If no asset with the given ID exists.
         """
         asset = self._repository_service.get_resource_by_resource_id(
             resource_id=resource_id

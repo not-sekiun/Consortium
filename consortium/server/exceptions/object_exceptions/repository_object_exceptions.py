@@ -18,6 +18,33 @@ class RepositoryObjectError(BaseObjectError):
     code = "REPOSITORY_OBJECT_ERROR"
 
 
+class RepositoryObjectFileSystemError(RepositoryObjectError):
+    """Raised when a filesystem operation performed on a repository object fails.
+
+    This is the object level counterpart of the repository service's
+    `RepositoryFileSystemError`, covering the underlying `OSError` raised while creating,
+    reading, writing or deleting a repository file or directory on disk. It exists
+    separately so that callers reaching a repository object directly, without going
+    through the repository service, still receive a typed error rather than a raw
+    `OSError`.
+    """
+
+    code = "REPOSITORY_OBJECT_FILE_SYSTEM_ERROR"
+
+    def __init__(self, operation: str, path: str, underlying_error: str) -> None:
+        super().__init__(
+            message=(
+                f"Failed to {operation} at the path '{path}'. The underlying filesystem "
+                f"operation failed. {underlying_error}"
+            ),
+            detail={
+                "operation": operation,
+                "path": path,
+                "underlying_error": underlying_error,
+            },
+        )
+
+
 class RepositoryFileError(RepositoryObjectError):
     """Base exception for all errors that occur when performing operations on a repository
     file.

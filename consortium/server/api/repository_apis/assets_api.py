@@ -24,6 +24,7 @@ from consortium.server.exceptions.service_exceptions import (
 from consortium.server.models.repository_models import AssetModel
 from consortium.server.models.union_response_models import (
     AssetUploadArchiveFormatErrorResponse,
+    RepositoryDownloadServerErrorResponse,
     RequestValidationErrorResponse,
 )
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -125,6 +126,7 @@ router.add_api_route(
             "model": _resource_not_found_error.to_pydantic_model(),
         },
         422: {"model": RequestValidationErrorResponse},
+        500: {"model": RepositoryDownloadServerErrorResponse},
     },
     name="Download Asset By Resource ID",
 )
