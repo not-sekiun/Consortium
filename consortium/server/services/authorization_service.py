@@ -5,6 +5,7 @@ import jsonschema
 from loguru import logger
 
 from consortium.server.exceptions.service_exceptions.authorization_service_exceptions import (
+    InvalidRolePermissionsFileEncodingError,
     InvalidRolePermissionsFileJSONError,
     InvalidRolePermissionsFilePermissionValueError,
     InvalidRolePermissionsFileSchemaError,
@@ -12,9 +13,11 @@ from consortium.server.exceptions.service_exceptions.authorization_service_excep
     PermissionNotInRoleError,
     RoleAlreadyExistsError,
     RoleNotFoundError,
+    RolePermissionsFileSystemError,
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.user_account_objects import UserPermissions
+from consortium.server.utils import wrap_filesystem_errors
 
 
 class AuthorizationService:
@@ -65,31 +68,45 @@ class AuthorizationService:
             The validated role-to-permissions mapping.
 
         Raises:
+            RolePermissionsFileSystemError: If `path` cannot be opened or read, for
+                example it does not exist, read permission is denied, or the path
+                points to a directory.
+            InvalidRolePermissionsFileEncodingError: If the file's contents cannot
+                be decoded as UTF-8 text.
             InvalidRolePermissionsFileJSONError: If the file is not valid JSON.
             InvalidRolePermissionsFileSchemaError: If the file does not conform
                 to the expected JSON schema.
             InvalidRolePermissionsFilePermissionValueError: If any permission
                 string is not a recognised UserPermissions value.
-            OSError: If `path` cannot be opened or read (for example it does not
-                exist, or read permission is denied). Left unwrapped: it
-                describes a filesystem problem with the supplied path rather
-                than a defect in the loaded data.
-            UnicodeDecodeError: If the file's contents cannot be decoded as
-                text. Left unwrapped for the same reason as OSError above.
         """
         valid_permissions = {p.value for p in UserPermissions}
-        with path.open(mode="r") as file:
+        with wrap_filesystem_errors(
+            RolePermissionsFileSystemError,
+            operation="read the role permissions file",
+            path=path,
+        ):
             try:
-                data: dict[str, list[str]] = json.load(file)
+                # The encoding is pinned rather than left to the platform default, so a
+                # file written as UTF-8 reads back identically everywhere. Without it,
+                # bytes that are not valid UTF-8 are silently decoded as whatever the
+                # locale encoding happens to be (cp1252 on Windows) and surface later as
+                # a confusing JSON parse failure rather than as an encoding problem.
+                with path.open(mode="r", encoding="utf-8") as file:
+                    data: dict[str, list[str]] = json.load(file)
+            except UnicodeDecodeError as exc:
+                raise InvalidRolePermissionsFileEncodingError(
+                    file_path=str(path),
+                    underlying_error=f"{type(exc).__name__}: {exc}",
+                ) from None
             except json.JSONDecodeError:
                 raise InvalidRolePermissionsFileJSONError(file_path=str(path)) from None
-            try:
-                jsonschema.validate(data, self._ROLE_PERMISSIONS_JSON_SCHEMA)
-            except jsonschema.ValidationError as exc:
-                raise InvalidRolePermissionsFileSchemaError(
-                    file_path=str(path),
-                    json_schema_error_message=str(exc),
-                ) from None
+        try:
+            jsonschema.validate(data, self._ROLE_PERMISSIONS_JSON_SCHEMA)
+        except jsonschema.ValidationError as exc:
+            raise InvalidRolePermissionsFileSchemaError(
+                file_path=str(path),
+                json_schema_error_message=str(exc),
+            ) from None
         for role, permissions in data.items():
             for permission in permissions:
                 if permission not in valid_permissions:
@@ -114,18 +131,21 @@ class AuthorizationService:
                 to persist.
 
         Raises:
-            TypeError: If `role_permissions` contains a value that is not JSON
-                serialisable. Left unwrapped: it indicates a caller supplied
-                data that cannot be persisted.
-            ValueError: If `role_permissions` contains a circular reference.
-                Left unwrapped for the same reason as TypeError above.
-            OSError: If `path` cannot be opened or written to (for example the
-                parent directory does not exist, or write permission is
-                denied).
+            RolePermissionsFileSystemError: If `path` cannot be opened or written to,
+                for example the parent directory does not exist, write permission is
+                denied, or the disk is full.
         """
-        with path.open(mode="w") as file:
-            data = json.dumps(role_permissions, indent=4)
-            file.write(data)
+        # `role_permissions` is built by this service at `save_server_role_permissions`
+        # as `dict[str, sorted(set[str])]`, which is unconditionally JSON serialisable
+        # and cannot contain a circular reference, so `json.dumps` cannot fail here.
+        data = json.dumps(role_permissions, indent=4)
+        with wrap_filesystem_errors(
+            RolePermissionsFileSystemError,
+            operation="write the role permissions file",
+            path=path,
+        ):
+            with path.open(mode="w", encoding="utf-8") as file:
+                file.write(data)
         self._logger.debug(
             "Saved role permissions to '{}' ({} byte(s) written)",
             path,
@@ -140,12 +160,12 @@ class AuthorizationService:
         with the loaded data.
 
         Raises:
+            RolePermissionsFileSystemError: Propagated from the base loader.
+            InvalidRolePermissionsFileEncodingError: Propagated from the base loader.
             InvalidRolePermissionsFileJSONError: Propagated from the base loader.
             InvalidRolePermissionsFileSchemaError: Propagated from the base loader.
             InvalidRolePermissionsFilePermissionValueError: Propagated from the
                 base loader.
-            OSError: Propagated from the base loader.
-            UnicodeDecodeError: Propagated from the base loader.
         """
         data = self.load_role_permissions_from_path(self._role_permissions_json_file)
         self._role_permissions = {
@@ -163,9 +183,7 @@ class AuthorizationService:
         construction time and the current in-memory state.
 
         Raises:
-            TypeError: Propagated from the base writer.
-            ValueError: Propagated from the base writer.
-            OSError: Propagated from the base writer.
+            RolePermissionsFileSystemError: Propagated from the base writer.
         """
         serialisable = {
             role: sorted(permissions)
