@@ -8,6 +8,7 @@ from consortium.framework._core.framework_exceptions.agent_templates_framework_e
     AgentTemplatesFrameworkError,
 )
 from consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions import (
+    AgentProfileDiscoveryFileSystemError,
     AgentProfileLoadingError,
     AgentProfilesServiceError,
 )
@@ -24,6 +25,7 @@ from consortium.server.services.release_service import ReleaseService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
     normalize_uuid,
+    wrap_filesystem_errors,
 )
 
 
@@ -140,13 +142,26 @@ class AgentProfilesService:
             profiles, (2) a list of paths skipped because the profile was disabled,
             and (3) a list of `(path, error)` tuples for profiles that failed to
             load.
+
+        Raises:
+            AgentProfileDiscoveryFileSystemError: If the recursive filesystem scan
+                of `directory` fails, for example because a subdirectory is
+                removed mid-scan or cannot be read due to a permissions error.
+                This happens before any individual agent profile is loaded, so it
+                is not one of the per-profile errors collected in the returned
+                error list, it propagates to the caller.
         """
-        retrieved, skipped, errored = (
-            self._agent_profile_registry_service.get_all_components_from_directory(
-                directory=directory,
-                ignore_enabled_component_flag=ignore_enabled_flag,
+        with wrap_filesystem_errors(
+            error_type=AgentProfileDiscoveryFileSystemError,
+            operation="recursively scan for agent profiles",
+            path=directory,
+        ):
+            retrieved, skipped, errored = (
+                self._agent_profile_registry_service.get_all_components_from_directory(
+                    directory=directory,
+                    ignore_enabled_component_flag=ignore_enabled_flag,
+                )
             )
-        )
         self._logger.debug(
             "Retrieved agent profiles from '{}' ({} agent profile(s) retrieved, "
             "{} agent profile(s) skipped, {} agent profile(s) failed to load)",
@@ -383,9 +398,9 @@ class AgentProfilesService:
                 `enabled` check in each profile's manifest. Defaults to `False`.
 
         Raises:
-            OSError: If the framework agent profiles directory cannot be scanned (for
-                example, due to a permissions error) while discovering candidate
-                agent profile directories.
+            AgentProfileDiscoveryFileSystemError: If the framework agent profiles
+                directory cannot be scanned (for example, due to a permissions
+                error) while discovering candidate agent profile directories.
             DuplicateAgentTypeNameError: If a loaded profile's agent type name
                 collides with a distinct agent type already registered under the same
                 name while agent type references are resolved. Per-profile loading
@@ -452,8 +467,6 @@ class AgentProfilesService:
         Raises:
             AgentProfileNotFoundError: If an agent profile is deregistered between
                 being listed and being unloaded.
-            OSError: If `Path.resolve()` fails while resolving an agent profile's
-                root directory or the framework agents directory for comparison.
         """
         self._logger.info("Unloading framework agent profiles...")
         unloaded_agent_profiles = 0
@@ -477,9 +490,8 @@ class AgentProfilesService:
         Raises:
             AgentProfileNotFoundError: If an agent profile is deregistered between
                 being listed and being unloaded, during the unload half.
-            OSError: If `Path.resolve()` fails while comparing agent profile
-                directories during the unload half, or if the framework agent
-                profiles directory cannot be scanned during the load half.
+            AgentProfileDiscoveryFileSystemError: If the framework agent profiles
+                directory cannot be scanned during the load half.
             DuplicateAgentTypeNameError: If a loaded profile's agent type name
                 collides with a distinct agent type already registered under the same
                 name while agent type references are resolved, during the load half.

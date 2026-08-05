@@ -10,6 +10,7 @@ from consortium.framework._core.framework_exceptions.plugins_framework_exception
 )
 from consortium.framework.plugins.base_plugin import BasePlugin
 from consortium.server.exceptions.service_exceptions.plugins_service_exceptions import (
+    PluginDiscoveryFileSystemError,
     PluginLoadingError,
     PluginsServiceError,
     PluginUnloadingError,
@@ -23,7 +24,10 @@ from consortium.server.services.component_registry_services.plugin_registry_serv
 )
 from consortium.server.services.paths_service import PathsService
 from consortium.server.services.release_service import ReleaseService
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    wrap_filesystem_errors,
+)
 
 
 class PluginsService:
@@ -145,19 +149,24 @@ class PluginsService:
             `(path, error)` tuples for plugins that failed to load.
 
         Raises:
-            OSError: If the recursive filesystem scan of `directory` fails, for
-                example because a subdirectory is removed mid-scan or cannot be
-                read due to a permissions error. This happens before any
-                individual plugin is loaded, so it is not one of the per-plugin
-                errors collected in the returned error list, it propagates
-                unwrapped to the caller.
+            PluginDiscoveryFileSystemError: If the recursive filesystem scan of
+                `directory` fails, for example because a subdirectory is removed
+                mid-scan or cannot be read due to a permissions error. This
+                happens before any individual plugin is loaded, so it is not one
+                of the per-plugin errors collected in the returned error list, it
+                propagates to the caller.
         """
-        retrieved, skipped, errored = (
-            self._plugin_registry_service.get_all_components_from_directory(
-                directory=directory,
-                ignore_enabled_component_flag=ignore_enabled_flag,
+        with wrap_filesystem_errors(
+            error_type=PluginDiscoveryFileSystemError,
+            operation="recursively scan for plugins",
+            path=directory,
+        ):
+            retrieved, skipped, errored = (
+                self._plugin_registry_service.get_all_components_from_directory(
+                    directory=directory,
+                    ignore_enabled_component_flag=ignore_enabled_flag,
+                )
             )
-        )
         self._logger.debug(
             "Retrieved plugins from '{}' ({} plugin(s) retrieved, {} plugin(s) "
             "skipped, {} plugin(s) failed to load)",
@@ -470,11 +479,11 @@ class PluginsService:
                 marked as disabled. When `False` (default), disabled plugins are skipped.
 
         Raises:
-            OSError: If the initial recursive scan of the framework plugins
-                directory fails at the filesystem level. This happens before any
-                individual plugin is loaded, so unlike per-plugin load failures it
-                is not logged and swallowed, it propagates unwrapped to the
-                caller.
+            PluginDiscoveryFileSystemError: If the initial recursive scan of the
+                framework plugins directory fails at the filesystem level. This
+                happens before any individual plugin is loaded, so unlike
+                per-plugin load failures it is not logged and swallowed, it
+                propagates to the caller.
         """
         self._logger.info("Loading framework plugins...")
         retrieved, skipped, errored = self.get_all_plugins_from_directory(
@@ -562,14 +571,6 @@ class PluginsService:
                 that plugin's unload to fail.
             timeout: The number of seconds to wait for each plugin to stop before its
                 unload is considered to have timed out. When `None`, waits indefinitely.
-
-        Raises:
-            OSError: If resolving a plugin's root directory or the framework
-                plugins directory fails at the filesystem level while filtering
-                which loaded plugins live under the framework plugins directory.
-                This happens before any individual plugin is unloaded, so unlike
-                per-plugin unload failures it is not logged and swallowed, it
-                propagates unwrapped to the caller.
         """
         self._logger.info("Unloading framework plugins...")
 
@@ -631,12 +632,13 @@ class PluginsService:
                 when reloading.
 
         Raises:
-            OSError: If the recursive scan of the framework plugins directory
-                (used to find plugins that are not already loaded, for example
-                one that failed to unload) fails at the filesystem level. This
-                happens after plugins are unloaded but before any are loaded
-                again, so unlike per-plugin unload and load failures it is not
-                logged and swallowed, it propagates unwrapped to the caller.
+            PluginDiscoveryFileSystemError: If the recursive scan of the framework
+                plugins directory (used to find plugins that are not already
+                loaded, for example one that failed to unload) fails at the
+                filesystem level. This happens after plugins are unloaded but
+                before any are loaded again, so unlike per-plugin unload and load
+                failures it is not logged and swallowed, it propagates to the
+                caller.
         """
         self._logger.info("Reloading framework plugins...")
 
@@ -667,23 +669,28 @@ class PluginsService:
         # Recursively search through the framework's plugins directory to find all
         # plugins. If a plugin is found that is not already loaded (it failed to
         # unload), load it.
-        for path in self._plugins_directory.rglob("*"):
-            if path.name != "manifest.json":
-                continue
-            plugin_loaded = False
-            for plugin in self.get_all_plugins():
-                if plugin.root_directory.parent == path.parent:
-                    plugin_loaded = True
-                    break
-            if not plugin_loaded:
-                load_plugin_tasks.append(
-                    asyncio.create_task(
-                        self.load_plugin_from_directory(
-                            directory=path.parent,
-                            ignore_enabled_flag=ignore_enabled_flag,
+        with wrap_filesystem_errors(
+            error_type=PluginDiscoveryFileSystemError,
+            operation="recursively scan for plugin manifest files",
+            path=self._plugins_directory,
+        ):
+            for path in self._plugins_directory.rglob("*"):
+                if path.name != "manifest.json":
+                    continue
+                plugin_loaded = False
+                for plugin in self.get_all_plugins():
+                    if plugin.root_directory.parent == path.parent:
+                        plugin_loaded = True
+                        break
+                if not plugin_loaded:
+                    load_plugin_tasks.append(
+                        asyncio.create_task(
+                            self.load_plugin_from_directory(
+                                directory=path.parent,
+                                ignore_enabled_flag=ignore_enabled_flag,
+                            ),
                         ),
-                    ),
-                )
+                    )
         load_plugin_tasks_results = await asyncio.gather(
             *load_plugin_tasks,
             return_exceptions=True,

@@ -30,12 +30,16 @@ Exception hierarchy:
             - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.ComponentDependencyNotRunningError]
         - [`PluginUnloadingError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginUnloadingError]
             - [`PluginStopTimeoutError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginStopTimeoutError]
+        - [`PluginDiscoveryFileSystemError`][consortium.server.exceptions.service_exceptions.plugins_service_exceptions.PluginDiscoveryFileSystemError]
 
 The loading, dependency, and registry exceptions below carry no `__init__` of their own: they
 are constructed by the shared component loader/registry pipeline with the generic component
 keyword arguments (`component_directory`, `component_str`, `component_id`, ...) inherited from
 their `components_service_exceptions` base. Only the unloading errors, which are raised directly
 by the plugin registry with a bespoke message, define their own constructor.
+`PluginDiscoveryFileSystemError` also carries no `__init__` of its own: it inherits the
+`operation`/`path`/`underlying_error` constructor from `ComponentDiscoveryFileSystemError` so
+it plugs directly into the shared `wrap_filesystem_errors` helper.
 """
 
 from consortium.server.exceptions.service_exceptions import (
@@ -354,3 +358,12 @@ class PluginStopTimeoutError(PluginUnloadingError):
                 f"attempting to stop it before unloading."
             ),
         )
+
+
+class PluginDiscoveryFileSystemError(
+    PluginsServiceError,
+    comp_excs.ComponentDiscoveryFileSystemError,
+):
+    """Raised when a recursive filesystem scan for plugins fails at the filesystem level."""
+
+    code = "PLUGIN_DISCOVERY_FILE_SYSTEM_ERROR"

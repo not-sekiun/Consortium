@@ -10,6 +10,7 @@ from consortium.framework.event_hooks._event import Event
 from consortium.framework.event_hooks.base_event_hook import BaseEventHook
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions import (
+    EventHookDiscoveryFileSystemError,
     EventHookLoadingError,
     EventHooksServiceError,
 )
@@ -25,6 +26,7 @@ from consortium.server.services.paths_service import PathsService
 from consortium.server.services.release_service import ReleaseService
 from consortium.server.utils import (
     log_and_propagate_error_on_service_method,
+    wrap_filesystem_errors,
 )
 
 
@@ -143,13 +145,26 @@ class EventHooksService:
             hooks, (2) a list of paths skipped because the event hook was disabled,
             and (3) a list of `(path, error)` tuples for event hooks that failed to
             load.
+
+        Raises:
+            EventHookDiscoveryFileSystemError: If the recursive filesystem scan
+                of `directory` fails, for example because a subdirectory is
+                removed mid-scan or cannot be read due to a permissions error.
+                This happens before any individual event hook is loaded, so it is
+                not one of the per-event-hook errors collected in the returned
+                error list, it propagates to the caller.
         """
-        retrieved, skipped, errored = (
-            self._event_hook_registry_service.get_all_components_from_directory(
-                directory=directory,
-                ignore_enabled_component_flag=ignore_enabled_flag,
+        with wrap_filesystem_errors(
+            error_type=EventHookDiscoveryFileSystemError,
+            operation="recursively scan for event hooks",
+            path=directory,
+        ):
+            retrieved, skipped, errored = (
+                self._event_hook_registry_service.get_all_components_from_directory(
+                    directory=directory,
+                    ignore_enabled_component_flag=ignore_enabled_flag,
+                )
             )
-        )
         self._logger.debug(
             "Retrieved event hooks from '{}' ({} event hook(s) retrieved, {} event hook(s) "
             "skipped, {} event hook(s) failed to load)",
@@ -443,6 +458,10 @@ class EventHooksService:
             ignore_enabled_flag: When `True`, bypasses the `enabled`
                 check in each event hook's manifest. Defaults to `False`.
 
+        Raises:
+            EventHookDiscoveryFileSystemError: If the framework event hooks
+                directory cannot be scanned (for example, due to a permissions
+                error) while discovering candidate event hook directories.
         """
         self._logger.info("Loading framework event hooks...")
         retrieved, skipped, errored = self.get_all_event_hooks_from_directory(
@@ -491,10 +510,6 @@ class EventHooksService:
                 longer registered by the time its unload is attempted.
             EventHookTeardownError: If an error occurs while an event hook is
                 tearing down.
-            OSError: If resolving an event hook's root directory fails while
-                filtering for hooks under the framework's event hooks directory.
-                Left unwrapped as it originates from `pathlib.Path.resolve`, not
-                from event hook loading or teardown.
         """
         self._logger.info("Unloading framework event hooks...")
         unloaded_event_hooks = 0
@@ -518,19 +533,17 @@ class EventHooksService:
     ) -> None:
         """Unloads all framework event hooks then reloads them from the event hooks directory.
 
-        Reloading itself does not raise: `load_framework_event_hooks` catches and logs
-        errors for each individual event hook that fails to load rather than
-        propagating them. Everything below is surfaced by the unload phase.
+        Per-event-hook load failures during the load half are caught and logged rather
+        than propagated, so a single bad event hook does not abort loading the rest.
 
         Raises:
             EventHookNotFoundError: If an event hook selected for unloading is no
-                longer registered by the time its unload is attempted.
+                longer registered by the time its unload is attempted, during the
+                unload half.
             EventHookTeardownError: If an error occurs while an event hook is
-                tearing down.
-            OSError: If resolving an event hook's root directory fails while
-                filtering for hooks under the framework's event hooks directory.
-                Left unwrapped as it originates from `pathlib.Path.resolve`, not
-                from event hook loading or teardown.
+                tearing down, during the unload half.
+            EventHookDiscoveryFileSystemError: If the framework event hooks
+                directory cannot be scanned during the load half.
         """
         self._logger.info("Reloading framework event hooks...")
         await self.unload_framework_event_hooks()

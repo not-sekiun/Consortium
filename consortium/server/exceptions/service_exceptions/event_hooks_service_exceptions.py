@@ -32,12 +32,16 @@ Exception hierarchy:
             - [`EventHookSetupError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookSetupError]
             - [`EventHookTriggerError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookTriggerError]
             - [`EventHookTeardownError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookTeardownError]
+        - [`EventHookDiscoveryFileSystemError`][consortium.server.exceptions.service_exceptions.event_hooks_service_exceptions.EventHookDiscoveryFileSystemError]
 
 The loading, dependency, and registry exceptions below carry no `__init__` of their own: they
 are constructed by the shared component loader/registry pipeline with the generic component
 keyword arguments (`component_directory`, `component_str`, `component_id`, ...) inherited from
 their `components_service_exceptions` base. Only the operation errors, which are raised directly
 by the event hook registry with a bespoke message, define their own constructor.
+`EventHookDiscoveryFileSystemError` also carries no `__init__` of its own: it inherits the
+`operation`/`path`/`underlying_error` constructor from `ComponentDiscoveryFileSystemError` so it
+plugs directly into the shared `wrap_filesystem_errors` helper.
 """
 
 from pydantic import JsonValue
@@ -406,3 +410,12 @@ class EventHookTeardownError(EventHookOperationError):
             ),
             detail=detail,
         )
+
+
+class EventHookDiscoveryFileSystemError(
+    EventHooksServiceError,
+    comp_excs.ComponentDiscoveryFileSystemError,
+):
+    """Raised when a recursive filesystem scan for event hooks fails at the filesystem level."""
+
+    code = "EVENT_HOOK_DISCOVERY_FILE_SYSTEM_ERROR"

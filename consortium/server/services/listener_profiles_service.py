@@ -8,6 +8,7 @@ from consortium.framework._core.framework_exceptions.listener_templates_framewor
     ListenerTemplatesFrameworkError,
 )
 from consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions import (
+    ListenerProfileDiscoveryFileSystemError,
     ListenerProfileLoadingError,
     ListenerProfilesServiceError,
 )
@@ -21,7 +22,10 @@ from consortium.server.services.component_registry_services.listener_profile_reg
 )
 from consortium.server.services.paths_service import PathsService
 from consortium.server.services.release_service import ReleaseService
-from consortium.server.utils import log_and_propagate_error_on_service_method
+from consortium.server.utils import (
+    log_and_propagate_error_on_service_method,
+    wrap_filesystem_errors,
+)
 
 
 # The listener profiles service is an internal service that is meant to only be
@@ -138,13 +142,26 @@ class ListenerProfilesService:
             profiles, (2) a list of paths skipped because the profile was disabled,
             and (3) a list of `(path, error)` tuples for profiles that failed to
             load.
+
+        Raises:
+            ListenerProfileDiscoveryFileSystemError: If the recursive filesystem
+                scan of `directory` fails, for example because a subdirectory is
+                removed mid-scan or cannot be read due to a permissions error.
+                This happens before any individual listener profile is loaded, so
+                it is not one of the per-profile errors collected in the returned
+                error list, it propagates to the caller.
         """
-        retrieved, skipped, errored = (
-            self._listener_profile_registry_service.get_all_components_from_directory(
-                directory=directory,
-                ignore_enabled_component_flag=ignore_enabled_flag,
+        with wrap_filesystem_errors(
+            error_type=ListenerProfileDiscoveryFileSystemError,
+            operation="recursively scan for listener profiles",
+            path=directory,
+        ):
+            retrieved, skipped, errored = (
+                self._listener_profile_registry_service.get_all_components_from_directory(
+                    directory=directory,
+                    ignore_enabled_component_flag=ignore_enabled_flag,
+                )
             )
-        )
         self._logger.debug(
             "Retrieved listener profiles from '{}' ({} listener profile(s) "
             "retrieved, {} listener profile(s) skipped, {} listener profile(s) "
@@ -350,6 +367,12 @@ class ListenerProfilesService:
         Args:
             ignore_enabled_flag: When `True`, bypasses the
                 `enabled` check in each profile's manifest. Defaults to `False`.
+
+        Raises:
+            ListenerProfileDiscoveryFileSystemError: If the framework listener
+                profiles directory cannot be scanned (for example, due to a
+                permissions error) while discovering candidate listener profile
+                directories.
         """
         self._logger.info("Loading framework listener profiles...")
         retrieved, skipped, errored = self.get_all_listener_profiles_from_directory(
@@ -399,8 +422,6 @@ class ListenerProfilesService:
         Raises:
             ListenerProfileNotFoundError: If a listener profile is deregistered
                 between being listed and being unloaded.
-            OSError: If `Path.resolve()` fails while resolving a listener profile's
-                root directory or the framework listeners directory for comparison.
         """
         self._logger.info("Unloading framework listener profiles...")
         unloaded_listener_profiles = 0
@@ -424,8 +445,7 @@ class ListenerProfilesService:
         Raises:
             ListenerProfileNotFoundError: If a listener profile is deregistered
                 between being listed and being unloaded, during the unload half.
-            OSError: If `Path.resolve()` fails while comparing listener profile
-                directories during the unload half, or if the framework listener
+            ListenerProfileDiscoveryFileSystemError: If the framework listener
                 profiles directory cannot be scanned during the load half.
         """
         self._logger.info("Reloading framework listener profiles...")

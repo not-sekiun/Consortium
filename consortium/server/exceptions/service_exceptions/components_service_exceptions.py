@@ -28,6 +28,7 @@ Exception hierarchy:
             - [`ComponentDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentDependsOnInvalidComponentDependencyError]
             - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentDependencyNotRunningError]
         - [`ComponentNotFoundError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentNotFoundError]
+        - [`ComponentDiscoveryFileSystemError`][consortium.server.exceptions.service_exceptions.components_service_exceptions.ComponentDiscoveryFileSystemError]
 """
 
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
@@ -547,3 +548,38 @@ class ComponentNotFoundError(ComponentsServiceError):
 
     def __init__(self, component_id: str):
         super().__init__(component_id=component_id)
+
+
+class ComponentDiscoveryFileSystemError(ComponentsServiceError):
+    """Raised when a recursive filesystem scan for components fails at the filesystem level.
+
+    Covers the whole-directory scan performed while discovering components (for
+    example, scanning a framework components directory to find every plugin,
+    agent profile, event hook, or listener profile living under it), not the
+    loading of an individual component that has already been found. A scan
+    failure aborts discovery entirely, so it is never one of the per-component
+    errors collected while a directory is being loaded.
+    """
+
+    code = "COMPONENT_DISCOVERY_FILE_SYSTEM_ERROR"
+
+    def __init__(self, operation: str, path: str, underlying_error: str):
+        # Bypasses ComponentsServiceError's templated $COMPONENT_TYPE$ message
+        # construction (calls BaseServiceError.__init__ directly) because this error
+        # is not about a single component, it is about the directory scan itself, and
+        # it needs a populated `detail` which the templated pattern does not build.
+        # This also plugs it into the shared `wrap_filesystem_errors` context manager
+        # in `consortium.server.utils`, which calls `error_type(operation=, path=,
+        # underlying_error=)`.
+        BaseServiceError.__init__(
+            self,
+            message=(
+                f"Failed to {operation} at the path '{path}'. The underlying "
+                f"filesystem operation failed. {underlying_error}"
+            ),
+            detail={
+                "operation": operation,
+                "path": path,
+                "underlying_error": underlying_error,
+            },
+        )

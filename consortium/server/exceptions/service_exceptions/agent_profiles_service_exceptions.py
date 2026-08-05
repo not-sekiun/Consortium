@@ -28,11 +28,15 @@ Exception hierarchy:
             - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.IncompatibleComponentDependencyVersionError]
             - [`AgentProfileDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileDependsOnInvalidComponentDependencyError]
             - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.ComponentDependencyNotRunningError]
+        - [`AgentProfileDiscoveryFileSystemError`][consortium.server.exceptions.service_exceptions.agent_profiles_service_exceptions.AgentProfileDiscoveryFileSystemError]
 
 The loading, dependency, and registry exceptions below carry no `__init__` of their own: they
 are constructed by the shared component loader/registry pipeline with the generic component
 keyword arguments (`component_directory`, `component_str`, `component_id`, ...) inherited from
-their `components_service_exceptions` base.
+their `components_service_exceptions` base. `AgentProfileDiscoveryFileSystemError` also carries
+no `__init__` of its own: it inherits the `operation`/`path`/`underlying_error` constructor from
+`ComponentDiscoveryFileSystemError` so it plugs directly into the shared
+`wrap_filesystem_errors` helper.
 """
 
 from consortium.server.exceptions.service_exceptions import (
@@ -334,3 +338,12 @@ class ComponentDependencyNotRunningError(
     """
 
     code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
+
+
+class AgentProfileDiscoveryFileSystemError(
+    AgentProfilesServiceError,
+    comp_excs.ComponentDiscoveryFileSystemError,
+):
+    """Raised when a recursive filesystem scan for agent profiles fails at the filesystem level."""
+
+    code = "AGENT_PROFILE_DISCOVERY_FILE_SYSTEM_ERROR"

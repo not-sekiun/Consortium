@@ -28,11 +28,15 @@ Exception hierarchy:
             - [`IncompatibleComponentDependencyVersionError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.IncompatibleComponentDependencyVersionError]
             - [`ListenerProfileDependsOnInvalidComponentDependencyError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileDependsOnInvalidComponentDependencyError]
             - [`ComponentDependencyNotRunningError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ComponentDependencyNotRunningError]
+        - [`ListenerProfileDiscoveryFileSystemError`][consortium.server.exceptions.service_exceptions.listener_profiles_service_exceptions.ListenerProfileDiscoveryFileSystemError]
 
 The loading, dependency, and registry exceptions below carry no `__init__` of their own: they
 are constructed by the shared component loader/registry pipeline with the generic component
 keyword arguments (`component_directory`, `component_str`, `component_id`, ...) inherited from
-their `components_service_exceptions` base.
+their `components_service_exceptions` base. `ListenerProfileDiscoveryFileSystemError` also
+carries no `__init__` of its own: it inherits the `operation`/`path`/`underlying_error`
+constructor from `ComponentDiscoveryFileSystemError` so it plugs directly into the shared
+`wrap_filesystem_errors` helper.
 """
 
 from consortium.server.exceptions.service_exceptions import (
@@ -334,3 +338,12 @@ class ComponentDependencyNotRunningError(
     """
 
     code = "COMPONENT_DEPENDENCY_NOT_RUNNING_ERROR"
+
+
+class ListenerProfileDiscoveryFileSystemError(
+    ListenerProfilesServiceError,
+    comp_excs.ComponentDiscoveryFileSystemError,
+):
+    """Raised when a recursive filesystem scan for listener profiles fails at the filesystem level."""
+
+    code = "LISTENER_PROFILE_DISCOVERY_FILE_SYSTEM_ERROR"
