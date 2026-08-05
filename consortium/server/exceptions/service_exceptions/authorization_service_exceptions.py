@@ -3,12 +3,13 @@ Exception hierarchy:
 
 - [`BaseServiceError`][consortium.server.exceptions.service_exceptions.base_service_exception.BaseServiceError]
     - [`AuthorizationServiceError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.AuthorizationServiceError]
-        - [`RolePermissionsFileSystemError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RolePermissionsFileSystemError]
-        - [`InvalidRolePermissionsFileError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.InvalidRolePermissionsFileError]
-            - [`InvalidRolePermissionsFileEncodingError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.InvalidRolePermissionsFileEncodingError]
-            - [`InvalidRolePermissionsFileJSONError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.InvalidRolePermissionsFileJSONError]
-            - [`InvalidRolePermissionsFileSchemaError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.InvalidRolePermissionsFileSchemaError]
-            - [`InvalidRolePermissionsFilePermissionValueError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.InvalidRolePermissionsFilePermissionValueError]
+        - [`RolePermissionsFileError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RolePermissionsFileError]
+            - [`RolePermissionsFileSystemError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RolePermissionsFileSystemError]
+            - [`RolePermissionsFileContentError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RolePermissionsFileContentError]
+                - [`RolePermissionsFileEncodingError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RolePermissionsFileEncodingError]
+                - [`RolePermissionsFileJSONError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RolePermissionsFileJSONError]
+                - [`RolePermissionsFileSchemaError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RolePermissionsFileSchemaError]
+                - [`RolePermissionsFilePermissionValueError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RolePermissionsFilePermissionValueError]
         - [`RoleNotFoundError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RoleNotFoundError]
         - [`RoleAlreadyExistsError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RoleAlreadyExistsError]
         - [`PermissionNotInRoleError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.PermissionNotInRoleError]
@@ -34,7 +35,19 @@ class AuthorizationServiceError(BaseServiceError):
     code = "AUTHORIZATION_SERVICE_ERROR"
 
 
-class RolePermissionsFileSystemError(AuthorizationServiceError):
+class RolePermissionsFileError(AuthorizationServiceError):
+    """Base exception for every failure to get the role permissions file's data on or
+    off disk.
+
+    Catch this to handle "the role permissions did not make it in or out" without caring
+    why. To distinguish a filesystem fault from a bad file, catch
+    `RolePermissionsFileSystemError` or `RolePermissionsFileContentError` instead.
+    """
+
+    code = "ROLE_PERMISSIONS_FILE_ERROR"
+
+
+class RolePermissionsFileSystemError(RolePermissionsFileError):
     """Raised when the role permissions file cannot be read from or written to disk.
 
     This covers every way the filesystem can refuse the operation: the file does not
@@ -53,9 +66,7 @@ class RolePermissionsFileSystemError(AuthorizationServiceError):
     immediately the failure is about the file, not about a role's permissions.
 
     A file the filesystem hands over successfully but whose contents are wrong is reported
-    separately, through `InvalidRolePermissionsFileEncodingError`,
-    `InvalidRolePermissionsFileJSONError`, `InvalidRolePermissionsFileSchemaError` or
-    `InvalidRolePermissionsFilePermissionValueError`.
+    separately, through `RolePermissionsFileContentError`.
     """
 
     code = "ROLE_PERMISSIONS_FILE_SYSTEM_ERROR"
@@ -71,77 +82,83 @@ class RolePermissionsFileSystemError(AuthorizationServiceError):
         )
 
 
-class InvalidRolePermissionsFileError(AuthorizationServiceError):
-    """Base exception for errors when reading or writing a role permissions file."""
+class RolePermissionsFileContentError(RolePermissionsFileError):
+    """Base exception for all errors that occur when a role permissions file's contents
+    are wrong.
 
-    code = "INVALID_ROLE_PERMISSIONS_FILE_ERROR"
+    The filesystem handed the file's bytes over successfully, so this is fixed by
+    correcting the file rather than by changing the state of the machine or the
+    configured path.
+    """
+
+    code = "ROLE_PERMISSIONS_FILE_CONTENT_ERROR"
 
 
-class InvalidRolePermissionsFileEncodingError(InvalidRolePermissionsFileError):
+class RolePermissionsFileEncodingError(RolePermissionsFileContentError):
     """Raised when a role permissions file's bytes cannot be decoded as UTF-8."""
 
-    code = "INVALID_ROLE_PERMISSIONS_FILE_ENCODING_ERROR"
+    code = "ROLE_PERMISSIONS_FILE_ENCODING_ERROR"
 
-    def __init__(self, file_path: str, underlying_error: str):
+    def __init__(self, path: str, underlying_error: str):
         super().__init__(
             message=(
-                f"Failed to load the role permissions file '{file_path}'. "
+                f"Failed to load the role permissions file '{path}'. "
                 f"The file's contents are not valid UTF-8 text. {underlying_error}"
             ),
             detail={
-                "file_path": file_path,
+                "path": path,
                 "underlying_error": underlying_error,
             },
         )
 
 
-class InvalidRolePermissionsFileJSONError(InvalidRolePermissionsFileError):
+class RolePermissionsFileJSONError(RolePermissionsFileContentError):
     """Raised when a role permissions file cannot be parsed as valid JSON."""
 
-    code = "INVALID_ROLE_PERMISSIONS_FILE_JSON_ERROR"
+    code = "ROLE_PERMISSIONS_FILE_JSON_ERROR"
 
-    def __init__(self, file_path: str):
+    def __init__(self, path: str):
         super().__init__(
             message=(
-                f"Failed to load the role permissions file '{file_path}'. "
+                f"Failed to load the role permissions file '{path}'. "
                 f"The file is not valid JSON."
             ),
-            detail={"file_path": file_path},
+            detail={"path": path},
         )
 
 
-class InvalidRolePermissionsFileSchemaError(InvalidRolePermissionsFileError):
+class RolePermissionsFileSchemaError(RolePermissionsFileContentError):
     """Raised when a role permissions file does not conform to the expected JSON schema."""
 
-    code = "INVALID_ROLE_PERMISSIONS_FILE_SCHEMA_ERROR"
+    code = "ROLE_PERMISSIONS_FILE_SCHEMA_ERROR"
 
-    def __init__(self, file_path: str, json_schema_error_message: str):
+    def __init__(self, path: str, json_schema_error_message: str):
         super().__init__(
             message=(
-                f"Failed to load the role permissions file '{file_path}'. "
+                f"Failed to load the role permissions file '{path}'. "
                 f"The file does not conform to the expected JSON schema. "
                 f"{json_schema_error_message}"
             ),
             detail={
-                "file_path": file_path,
+                "path": path,
                 "json_schema_error_message": json_schema_error_message,
             },
         )
 
 
-class InvalidRolePermissionsFilePermissionValueError(InvalidRolePermissionsFileError):
+class RolePermissionsFilePermissionValueError(RolePermissionsFileContentError):
     """Raised when a role permissions file contains an unrecognised permission value."""
 
-    code = "INVALID_ROLE_PERMISSIONS_FILE_PERMISSION_VALUE_ERROR"
+    code = "ROLE_PERMISSIONS_FILE_PERMISSION_VALUE_ERROR"
 
-    def __init__(self, file_path: str, role: str, permission: str):
+    def __init__(self, path: str, role: str, permission: str):
         super().__init__(
             message=(
-                f"Failed to load the role permissions file '{file_path}'. "
+                f"Failed to load the role permissions file '{path}'. "
                 f"The permission '{permission}' assigned to role '{role}' is not a "
                 f"recognised UserPermissions value."
             ),
-            detail={"file_path": file_path, "role": role, "permission": permission},
+            detail={"path": path, "role": role, "permission": permission},
         )
 
 

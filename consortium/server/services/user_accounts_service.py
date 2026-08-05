@@ -13,9 +13,9 @@ from consortium.server.exceptions.service_exceptions.user_accounts_service_excep
     InvalidUserAccountRoleError,
     UserAccountAuthenticationError,
     UserAccountIDNotFoundError,
-    UserAccountsFileContainsDuplicateUsernamesError,
+    UserAccountsFileDuplicateUsernamesError,
     UserAccountsFileEncodingError,
-    UserAccountsFileIsNotJSONError,
+    UserAccountsFileJSONError,
     UserAccountsFileSchemaError,
     UserAccountsFileSystemError,
     UserAccountsServiceError,
@@ -335,7 +335,7 @@ class UserAccountsService:
                 it does not exist, the process lacks read permission, or the path points
                 to a directory.
             UserAccountsFileEncodingError: If the file's bytes are not valid UTF-8.
-            UserAccountsFileIsNotJSONError: If the file is not valid JSON.
+            UserAccountsFileJSONError: If the file is not valid JSON.
             UserAccountsFileSchemaError: If the JSON does not follow the expected schema,
                 including when an entry is missing a required field, carries an empty
                 username or password, or carries an unrecognised field.
@@ -343,7 +343,7 @@ class UserAccountsService:
                 currently registered with the authorization service.
             UserAccountUsernameAlreadyExistsError: If a username from the file conflicts
                 with an already-registered account.
-            UserAccountsFileContainsDuplicateUsernamesError: If the file itself contains
+            UserAccountsFileDuplicateUsernamesError: If the file itself contains
                 duplicate usernames.
         """
         new_user_accounts = self.read_user_accounts_from_user_accounts_file(
@@ -376,7 +376,7 @@ class UserAccountsService:
                 it does not exist, the process lacks read permission, or the path points
                 to a directory.
             UserAccountsFileEncodingError: If the file's bytes are not valid UTF-8.
-            UserAccountsFileIsNotJSONError: If the file is not valid JSON.
+            UserAccountsFileJSONError: If the file is not valid JSON.
             UserAccountsFileSchemaError: If the JSON does not follow the expected schema,
                 including when an entry is missing a required field, carries an empty
                 username or password, or carries an unrecognised field.
@@ -384,7 +384,7 @@ class UserAccountsService:
                 currently registered with the authorization service.
             UserAccountUsernameAlreadyExistsError: If a username from the file conflicts
                 with an already-registered account.
-            UserAccountsFileContainsDuplicateUsernamesError: If the file itself contains
+            UserAccountsFileDuplicateUsernamesError: If the file itself contains
                 duplicate usernames.
         """
         # A missing file is deliberately left to `open()` below: `FileNotFoundError` is
@@ -412,15 +412,15 @@ class UserAccountsService:
                     data = file.read()
             except UnicodeDecodeError as exc:
                 raise UserAccountsFileEncodingError(
-                    user_accounts_filepath=str(user_accounts_filepath),
+                    path=str(user_accounts_filepath),
                     underlying_error=f"{type(exc).__name__}: {exc}",
                 ) from None
 
         try:
             json_data = json.loads(data)
         except json.JSONDecodeError:
-            raise UserAccountsFileIsNotJSONError(
-                user_accounts_filepath=str(user_accounts_filepath),
+            raise UserAccountsFileJSONError(
+                path=str(user_accounts_filepath),
             ) from None
 
         # One validation pass covers the top level array, every entry in it and the
@@ -434,7 +434,7 @@ class UserAccountsService:
             ).root
         except ValidationError as exc:
             raise UserAccountsFileSchemaError(
-                user_accounts_filepath=str(user_accounts_filepath),
+                path=str(user_accounts_filepath),
                 validation_error_message=format_validation_error(exc),
             ) from None
 
@@ -453,7 +453,7 @@ class UserAccountsService:
         for persistent_user_account in persistent_user_accounts:
             if persistent_user_account.role not in valid_roles:
                 raise InvalidUserAccountRoleError._during_user_accounts_file_loading(
-                    user_accounts_filepath=str(user_accounts_filepath),
+                    path=str(user_accounts_filepath),
                     username=persistent_user_account.username,
                     role=persistent_user_account.role,
                 )
@@ -467,7 +467,7 @@ class UserAccountsService:
             if new_user_account.username in existing_usernames:
                 raise UserAccountUsernameAlreadyExistsError._during_user_accounts_file_loading(
                     username=new_user_account.username,
-                    user_accounts_filepath=str(user_accounts_filepath),
+                    path=str(user_accounts_filepath),
                 )
             # Known defect, tracked as H4 in HIGH_DIFF.md and left unchanged here:
             # `new_usernames` is never appended to, so this check cannot fire and a file
@@ -475,8 +475,8 @@ class UserAccountsService:
             # share it. Deliberately not fixed alongside the validation rework, because
             # making it fire can stop a server that boots today from booting.
             if new_user_account.username in new_usernames:
-                raise UserAccountsFileContainsDuplicateUsernamesError(
-                    user_accounts_filepath=user_accounts_filepath,
+                raise UserAccountsFileDuplicateUsernamesError(
+                    path=str(user_accounts_filepath),
                     duplicate_username=new_user_account.username,
                 )
             self._logger.debug("Read user account: {}", new_user_account)

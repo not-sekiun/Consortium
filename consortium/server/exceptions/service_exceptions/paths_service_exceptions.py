@@ -32,13 +32,6 @@ class ConsortiumUserAccountsFileSystemError(PathsServiceError):
     """Raised when the paths service cannot confirm the user accounts file is present
     on disk as a preflight check at server startup.
 
-    This covers every way the filesystem can refuse the check: the file does not
-    exist, the process lacks the required permissions, the configured path points at a
-    directory, resolving the path fails. They share one type because no caller can act
-    differently on any of them: whatever the cause, the user accounts file is not
-    usable, and the specific cause is carried in `message` and `detail` for whoever has
-    to fix it.
-
     This is distinct from
     [`UserAccountsFileSystemError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileSystemError],
     which the user accounts service raises when it later reads or writes the file. This
@@ -67,19 +60,6 @@ class ConsortiumUserAccountsFileSystemError(PathsServiceError):
 class ConsortiumRolePermissionsFileSystemError(PathsServiceError):
     """Raised when the paths service cannot confirm the role permissions file is
     present on disk as a preflight check at server startup.
-
-    This covers every way the filesystem can refuse the check: the file does not
-    exist, the process lacks the required permissions, the configured path points at a
-    directory, resolving the path fails. They share one type because no caller can act
-    differently on any of them: whatever the cause, the role permissions file is not
-    usable, and the specific cause is carried in `message` and `detail` for whoever has
-    to fix it.
-
-    Catching this at startup matters more here than for most other paths: a missing or
-    unreadable role permissions file does not fail loudly on its own, it leaves every
-    permission check the authorization service performs silently returning False, so
-    the server appears to start successfully while every authorization decision is
-    wrong.
 
     This is distinct from
     [`RolePermissionsFileSystemError`][consortium.server.exceptions.service_exceptions.authorization_service_exceptions.RolePermissionsFileSystemError],
@@ -110,18 +90,6 @@ class ConsortiumReleaseFileSystemError(PathsServiceError):
     """Raised when the paths service cannot confirm the release JSON file is present
     on disk as a preflight check at server startup.
 
-    This covers every way the filesystem can refuse the check: the file does not
-    exist, the process lacks the required permissions, the configured path points at a
-    directory, resolving the path fails. They share one type because no caller can act
-    differently on any of them: whatever the cause, the release file is not usable, and
-    the specific cause is carried in `message` and `detail` for whoever has to fix it.
-
-    Catching this at startup matters more here than for most other paths: the release
-    service exposes the parsed file through a `cached_property`, so without this
-    preflight a missing or unreadable release file would surface late, at whatever
-    unrelated moment something first accesses release information, rather than
-    immediately at boot.
-
     This is distinct from
     [`ReleaseFileSystemError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseFileSystemError],
     which the release service raises when it later reads the file. This error is raised
@@ -149,15 +117,7 @@ class ConsortiumReleaseFileSystemError(PathsServiceError):
 
 class ConsortiumDirectoryFileSystemError(PathsServiceError):
     """Raised when the paths service cannot confirm or create one of the directories
-    it expects to exist, as a preflight check at server startup.
-
-    This covers every way the filesystem can refuse the check: a file sits where a
-    directory is expected, the process lacks the permissions required to create the
-    directory, the underlying storage fails. They share one type because no caller can
-    act differently on any of them: whatever the cause, the directory is not usable,
-    and the specific cause, including the offending directory path, is carried in both
-    `message` and `detail` for whoever has to fix it.
-    """
+    it expects to exist, as a preflight check at server startup."""
 
     code = "CONSORTIUM_DIRECTORY_FILE_SYSTEM_ERROR"
 

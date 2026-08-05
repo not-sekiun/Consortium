@@ -9,13 +9,13 @@ from consortium.server.exceptions.object_exceptions.repository_object_exceptions
     RepositoryResourceFileSystemError,
 )
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    InvalidRepositoryMetadataFileEncodingError,
-    InvalidRepositoryMetadataFileJSONError,
-    InvalidRepositoryMetadataFileSchemaError,
+    RepositoryMetadataFileEncodingError,
+    RepositoryMetadataFileJSONError,
+    RepositoryMetadataFileSchemaError,
     RepositoryMetadataFileSystemError,
+    RepositoryMetadataFileUnsyncedError,
     ResourceIDReservationNotFoundError,
     ResourceNotFoundError,
-    UnsyncedRepositoryMetadataFileError,
 )
 from consortium.server.services.repository_service import RepositoryService
 
@@ -101,7 +101,7 @@ def test_load_repository_metadata_invalid_json_raises(
     service: RepositoryService, repo_dir: pathlib.Path
 ):
     (repo_dir / ".repository.json").write_text("not json {{{{")
-    with pytest.raises(InvalidRepositoryMetadataFileJSONError):
+    with pytest.raises(RepositoryMetadataFileJSONError):
         service.load_repository_metadata()
 
 
@@ -115,7 +115,7 @@ def test_load_repository_metadata_invalid_schema_raises(
 ):
     # Write valid JSON but that doesn't match the schema (value is string not object)
     (repo_dir / ".repository.json").write_text(json.dumps({"abc123": "not an object"}))
-    with pytest.raises(InvalidRepositoryMetadataFileSchemaError):
+    with pytest.raises(RepositoryMetadataFileSchemaError):
         service.load_repository_metadata()
 
 
@@ -146,7 +146,7 @@ def test_load_repository_metadata_unsynced_file_raises(
         }
     }
     (repo_dir / ".repository.json").write_text(json.dumps(metadata))
-    with pytest.raises(UnsyncedRepositoryMetadataFileError):
+    with pytest.raises(RepositoryMetadataFileUnsyncedError):
         service.load_repository_metadata()
 
 
@@ -498,7 +498,7 @@ def test_load_repository_metadata_invalid_utf8_raises_encoding_error(
     # never became text, so the file was never parsed.
     (repo_dir / ".repository.json").write_bytes(b'{"\xff\xfe": {}}')
 
-    with pytest.raises(InvalidRepositoryMetadataFileEncodingError):
+    with pytest.raises(RepositoryMetadataFileEncodingError):
         service.load_repository_metadata()
 
 

@@ -54,8 +54,8 @@ class UserIDNotFoundError(UserNotFoundError):
 
 
 class UserAccessTokenNotFoundError(UserNotFoundError):
-    """Raised when the requested user with the provided user access value was not found in
-    the users service
+    """Raised when the requested user with the provided user access token was not found
+    in the users service
     """
 
     code = "USER_ACCESS_TOKEN_NOT_FOUND_ERROR"
@@ -67,7 +67,7 @@ class UserAccessTokenNotFoundError(UserNotFoundError):
         super().__init__(
             message=(
                 "Failed to find the requested user. No user found with the provided "
-                f"access value '{access_token}'."
+                f"access token '{access_token}'."
             ),
             detail={"access_token": access_token},
         )

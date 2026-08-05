@@ -194,16 +194,16 @@ class PathsService:
             operation="confirm the file exists",
             path=path,
         ):
-            file_exists = path.exists()
-            file_is_a_file = path.is_file() if file_exists else False
+            path_exists = path.exists()
+            path_is_a_file = path.is_file() if path_exists else False
 
-        if not file_exists:
+        if not path_exists:
             raise error_type(
                 operation="confirm the file exists",
                 path=str(path),
                 underlying_error="No file exists at this path.",
             )
-        if not file_is_a_file:
+        if not path_is_a_file:
             raise error_type(
                 operation="confirm the file exists",
                 path=str(path),

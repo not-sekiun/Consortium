@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from consortium.server.exceptions.service_exceptions.release_service_exceptions import (
     ReleaseFileEncodingError,
-    ReleaseFileIsNotJSONError,
+    ReleaseFileJSONError,
     ReleaseFileSchemaError,
     ReleaseFileSystemError,
 )
@@ -41,7 +41,7 @@ class ReleaseService:
                 from disk.
             ReleaseFileEncodingError: If the release JSON file's content cannot be
                 decoded as UTF-8 text.
-            ReleaseFileIsNotJSONError: If the release JSON file does not contain valid
+            ReleaseFileJSONError: If the release JSON file does not contain valid
                 JSON.
             ReleaseFileSchemaError: If the parsed JSON does not match the
                 `ReleaseModel` schema.
@@ -57,21 +57,21 @@ class ReleaseService:
             raw_text = raw_bytes.decode("utf-8")
         except UnicodeDecodeError as exc:
             raise ReleaseFileEncodingError(
-                release_json_filepath=str(self._release_json_file),
+                path=str(self._release_json_file),
                 underlying_error=f"{type(exc).__name__}: {exc}",
             ) from exc
 
         try:
             parsed_json = json.loads(raw_text)
         except json.JSONDecodeError as exc:
-            raise ReleaseFileIsNotJSONError(
-                release_json_filepath=str(self._release_json_file),
+            raise ReleaseFileJSONError(
+                path=str(self._release_json_file),
             ) from exc
 
         try:
             return ReleaseModel.model_validate(parsed_json)
         except ValidationError as exc:
             raise ReleaseFileSchemaError(
-                release_json_filepath=str(self._release_json_file),
+                path=str(self._release_json_file),
                 validation_error_message=format_validation_error(exc),
             ) from exc

@@ -8,10 +8,11 @@ Exception hierarchy:
             - [`UserAccountUsernameNotFoundError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountUsernameNotFoundError]
         - [`UserAccountsFileError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileError]
             - [`UserAccountsFileSystemError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileSystemError]
-            - [`UserAccountsFileEncodingError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileEncodingError]
-            - [`UserAccountsFileIsNotJSONError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileIsNotJSONError]
-            - [`UserAccountsFileSchemaError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileSchemaError]
-            - [`UserAccountsFileContainsDuplicateUsernamesError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileContainsDuplicateUsernamesError]
+            - [`UserAccountsFileContentError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileContentError]
+                - [`UserAccountsFileEncodingError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileEncodingError]
+                - [`UserAccountsFileJSONError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileJSONError]
+                - [`UserAccountsFileSchemaError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileSchemaError]
+                - [`UserAccountsFileDuplicateUsernamesError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountsFileDuplicateUsernamesError]
         - [`UserAccountAuthenticationError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountAuthenticationError]
         - [`UserAccountManagementError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountManagementError]
             - [`UserAccountUsernameAlreadyExistsError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.UserAccountUsernameAlreadyExistsError]
@@ -19,8 +20,6 @@ Exception hierarchy:
             - [`EmptyUserAccountPasswordError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.EmptyUserAccountPasswordError]
             - [`InvalidUserAccountRoleError`][consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions.InvalidUserAccountRoleError]
 """
-
-from pathlib import Path
 
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
     BaseServiceError,
@@ -87,12 +86,19 @@ class UserAccountUsernameNotFoundError(UserAccountNotFoundError):
                 "Failed to find the requested user account. No user account could "
                 f"be found with the provided username '{username}'."
             ),
+            detail={
+                "username": username,
+            },
         )
 
 
 class UserAccountsFileError(UserAccountsServiceError):
-    """Base exception for all errors that occur when accessing or processing the user
-    accounts file.
+    """Base exception for every failure to get the user accounts file's data on or off
+    disk.
+
+    Catch this to handle "the user accounts did not make it in or out" without caring
+    why. To distinguish a filesystem fault from a bad file, catch
+    `UserAccountsFileSystemError` or `UserAccountsFileContentError` instead.
     """
 
     code = "USER_ACCOUNTS_FILE_ERROR"
@@ -113,8 +119,7 @@ class UserAccountsFileSystemError(UserAccountsFileError):
     supplied that path.
 
     A file the filesystem hands over successfully but whose contents are wrong is reported
-    separately, through `UserAccountsFileEncodingError`, `UserAccountsFileIsNotJSONError`,
-    `UserAccountsFileSchemaError` or `UserAccountsFileContainsDuplicateUsernamesError`.
+    separately, through `UserAccountsFileContentError`.
     """
 
     code = "USER_ACCOUNTS_FILE_SYSTEM_ERROR"
@@ -150,15 +155,24 @@ class UserAccountsFileSystemError(UserAccountsFileError):
         )
 
 
-class UserAccountsFileEncodingError(UserAccountsFileError):
+class UserAccountsFileContentError(UserAccountsFileError):
+    """Base exception for all errors that occur when the user accounts file's contents
+    are wrong.
+
+    The filesystem handed the file's bytes over successfully, so this is fixed by
+    correcting the file rather than by changing the state of the machine or the
+    configured path.
+    """
+
+    code = "USER_ACCOUNTS_FILE_CONTENT_ERROR"
+
+
+class UserAccountsFileEncodingError(UserAccountsFileContentError):
     """Raised when the user accounts file's bytes cannot be decoded as UTF-8.
 
-    Sits alongside `UserAccountsFileIsNotJSONError` rather than under
-    `UserAccountsFileSystemError` because it describes the file's contents rather than the
-    filesystem operation carrying them: the read itself succeeded, and a human fixes this
-    by correcting the file. Pinning the encoding on the read removes the case where the
-    file was written as UTF-8 elsewhere and read back under a different platform default,
-    but not this one, where the bytes are not valid UTF-8 under any reading.
+    Pinning the encoding on the read removes the case where the file was written as UTF-8
+    elsewhere and read back under a different platform default, but not this one, where
+    the bytes are not valid UTF-8 under any reading.
 
     There is no encoding counterpart on the write path. The accounts are serialized with
     `json.dumps`, whose default `ensure_ascii=True` escapes every non-ASCII character, so
@@ -169,40 +183,40 @@ class UserAccountsFileEncodingError(UserAccountsFileError):
 
     def __init__(
         self,
-        user_accounts_filepath: str,
+        path: str,
         underlying_error: str,
     ):
         super().__init__(
             message=(
-                f"Failed to read the user accounts file '{user_accounts_filepath}'. The "
-                f"file's contents are not valid UTF-8 text. {underlying_error}"
+                f"Failed to read the user accounts file '{path}'. The file's contents "
+                f"are not valid UTF-8 text. {underlying_error}"
             ),
             detail={
-                "user_accounts_filepath": user_accounts_filepath,
+                "path": path,
                 "underlying_error": underlying_error,
             },
         )
 
 
-class UserAccountsFileIsNotJSONError(UserAccountsFileError):
+class UserAccountsFileJSONError(UserAccountsFileContentError):
     """Raised when the user accounts file does not contain valid JSON data."""
 
-    code = "USER_ACCOUNTS_FILE_IS_NOT_JSON_ERROR"
+    code = "USER_ACCOUNTS_FILE_JSON_ERROR"
 
     def __init__(
         self,
-        user_accounts_filepath: str,
+        path: str,
     ):
         super().__init__(
             message=(
-                "Failed to process the user accounts file "
-                f"'{user_accounts_filepath}'. The provided file does not contain "
-                "valid JSON data."
+                f"Failed to process the user accounts file '{path}'. The provided file "
+                "does not contain valid JSON data."
             ),
+            detail={"path": path},
         )
 
 
-class UserAccountsFileSchemaError(UserAccountsFileError):
+class UserAccountsFileSchemaError(UserAccountsFileContentError):
     """Raised when the user accounts file does not conform to the expected schema.
 
     Covers the shape of the file as a whole and of every account entry in it: a top level
@@ -214,42 +228,43 @@ class UserAccountsFileSchemaError(UserAccountsFileError):
 
     def __init__(
         self,
-        user_accounts_filepath: str,
+        path: str,
         validation_error_message: str,
     ):
         super().__init__(
             message=(
-                f"Failed to process the user accounts file "
-                f"'{user_accounts_filepath}'. The provided file failed validation. "
-                f"{validation_error_message}"
+                f"Failed to process the user accounts file '{path}'. The provided file "
+                f"failed validation. {validation_error_message}"
             ),
             detail={
-                "user_accounts_filepath": user_accounts_filepath,
+                "path": path,
                 "validation_error_message": validation_error_message,
             },
         )
 
 
-class UserAccountsFileContainsDuplicateUsernamesError(
-    UserAccountsFileError,
-):
+class UserAccountsFileDuplicateUsernamesError(UserAccountsFileContentError):
     """Raised when the user accounts file contains multiple user account entries with
     the same username.
     """
 
-    code = "USER_ACCOUNTS_FILE_CONTAINS_DUPLICATE_USERNAMES_ERROR"
+    code = "USER_ACCOUNTS_FILE_DUPLICATE_USERNAMES_ERROR"
 
     def __init__(
         self,
-        user_accounts_filepath: str | Path,
+        path: str,
         duplicate_username: str,
     ):
         super().__init__(
             message=(
-                "Failed to process the user accounts file "
-                f"'{user_accounts_filepath}'. The user accounts file contains user "
-                f"account entries with the duplicate username '{duplicate_username}'."
+                f"Failed to process the user accounts file '{path}'. The user accounts "
+                f"file contains user account entries with the duplicate username "
+                f"'{duplicate_username}'."
             ),
+            detail={
+                "path": path,
+                "duplicate_username": duplicate_username,
+            },
         )
 
 
@@ -310,17 +325,17 @@ class UserAccountUsernameAlreadyExistsError(UserAccountManagementError):
     @classmethod
     def _during_user_accounts_file_loading(
         cls,
-        user_accounts_filepath: str,
+        path: str,
         username: str,
     ) -> UserAccountUsernameAlreadyExistsError:
         return cls(
             message=(
                 f"Failed to load the user account from the user accounts file "
-                f"'{user_accounts_filepath}'. The username '{username}' is already in "
+                f"'{path}'. The username '{username}' is already in "
                 f"use by another user account."
             ),
             detail={
-                "user_accounts_filepath": str(user_accounts_filepath),
+                "path": str(path),
                 "username": str(username),
             },
         )
@@ -414,18 +429,18 @@ class InvalidUserAccountRoleError(UserAccountManagementError):
     @classmethod
     def _during_user_accounts_file_loading(
         cls,
-        user_accounts_filepath: str,
+        path: str,
         username: str,
         role: str,
     ) -> InvalidUserAccountRoleError:
         return cls(
             message=(
                 f"Failed to load the user account '{username}' from the user accounts "
-                f"file '{user_accounts_filepath}'. The role '{role}' is not a valid "
+                f"file '{path}'. The role '{role}' is not a valid "
                 f"role. Check that the role is one defined in the role permissions file."
             ),
             detail={
-                "user_accounts_filepath": str(user_accounts_filepath),
+                "path": str(path),
                 "username": str(username),
                 "role": str(role),
             },

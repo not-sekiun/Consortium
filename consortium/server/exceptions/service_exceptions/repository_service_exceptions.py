@@ -6,13 +6,14 @@ Exception hierarchy:
         - [`ResourceNotFoundError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.ResourceNotFoundError]
         - [`ResourceAlreadyExistsError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.ResourceAlreadyExistsError]
         - [`ResourceIDReservationNotFoundError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.ResourceIDReservationNotFoundError]
-        - [`RepositoryMetadataFileSystemError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryMetadataFileSystemError]
-        - [`InvalidRepositoryMetadataFileError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileError]
-            - [`InvalidRepositoryMetadataFileEncodingError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileEncodingError]
-            - [`InvalidRepositoryMetadataFileJSONError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileJSONError]
-            - [`InvalidRepositoryMetadataFileSchemaError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataFileSchemaError]
-            - [`UnsyncedRepositoryMetadataFileError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.UnsyncedRepositoryMetadataFileError]
-            - [`InvalidRepositoryMetadataDataSchemaError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.InvalidRepositoryMetadataDataSchemaError]
+        - [`RepositoryMetadataFileError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryMetadataFileError]
+            - [`RepositoryMetadataFileSystemError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryMetadataFileSystemError]
+            - [`RepositoryMetadataFileContentError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryMetadataFileContentError]
+                - [`RepositoryMetadataFileEncodingError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryMetadataFileEncodingError]
+                - [`RepositoryMetadataFileJSONError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryMetadataFileJSONError]
+                - [`RepositoryMetadataFileSchemaError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryMetadataFileSchemaError]
+                - [`RepositoryMetadataFileResourceDataSchemaError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryMetadataFileResourceDataSchemaError]
+                - [`RepositoryMetadataFileUnsyncedError`][consortium.server.exceptions.service_exceptions.repository_service_exceptions.RepositoryMetadataFileUnsyncedError]
 """
 
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
@@ -87,17 +88,36 @@ class ResourceIDReservationNotFoundError(RepositoryServiceError):
         )
 
 
-class RepositoryMetadataFileSystemError(RepositoryServiceError):
-    """Raised when a filesystem operation on the repository metadata file fails."""
+class RepositoryMetadataFileError(RepositoryServiceError):
+    """Base exception for every failure to get the repository metadata file's data on or
+    off disk.
+
+    Catch this to handle "the repository metadata did not make it in or out" without
+    caring why. To distinguish a filesystem fault from a bad file, catch
+    `RepositoryMetadataFileSystemError` or `RepositoryMetadataFileContentError` instead.
+    """
+
+    code = "REPOSITORY_METADATA_FILE_ERROR"
+
+
+class RepositoryMetadataFileSystemError(RepositoryMetadataFileError):
+    """Raised when a filesystem operation on the repository metadata file fails.
+
+    This covers every way the filesystem can refuse the operation: the file does not
+    exist, the process lacks the required permissions, the path points at a directory,
+    the disk is full. They share one type because no caller can act differently on any of
+    them. All of them mean the operation did not happen, and the specific cause is
+    carried in `message` and `detail` for whoever has to fix it.
+
+    A file the filesystem hands over successfully but whose contents are wrong is
+    reported separately, through `RepositoryMetadataFileContentError`.
+    """
 
     code = "REPOSITORY_METADATA_FILE_SYSTEM_ERROR"
 
     def __init__(self, operation: str, path: str, underlying_error: str):
         super().__init__(
-            message=(
-                f"Failed to {operation} at the path '{path}'. The underlying filesystem "
-                f"operation failed. {underlying_error}"
-            ),
+            message=f"Failed to {operation} at the path '{path}'. {underlying_error}",
             detail={
                 "operation": operation,
                 "path": path,
@@ -106,133 +126,132 @@ class RepositoryMetadataFileSystemError(RepositoryServiceError):
         )
 
 
-class InvalidRepositoryMetadataFileError(RepositoryServiceError):
-    """Base exception for all errors that occur due to an invalid repository metadata
-    `.repository.json` file.
+class RepositoryMetadataFileContentError(RepositoryMetadataFileError):
+    """Base exception for all errors that occur when the repository metadata
+    `.repository.json` file's contents are wrong.
+
+    The filesystem handed the file's bytes over successfully, so this is fixed by
+    correcting the file rather than by changing the state of the machine or the
+    configured path.
     """
 
-    code = "INVALID_REPOSITORY_METADATA_FILE_ERROR"
+    code = "REPOSITORY_METADATA_FILE_CONTENT_ERROR"
 
 
-class InvalidRepositoryMetadataFileEncodingError(
-    InvalidRepositoryMetadataFileError,
-):
+class RepositoryMetadataFileEncodingError(RepositoryMetadataFileContentError):
     """Raised when the repository metadata file's bytes cannot be decoded as UTF-8."""
 
-    code = "INVALID_REPOSITORY_METADATA_FILE_ENCODING_ERROR"
+    code = "REPOSITORY_METADATA_FILE_ENCODING_ERROR"
 
-    def __init__(self, repository_directory: str, underlying_error: str):
+    def __init__(self, path: str, underlying_error: str):
         super().__init__(
             message=(
                 "Failed to load the repository metadata file "
-                "`.repository.json` from the repository directory "
-                f"'{repository_directory}'. The repository metadata file's bytes could "
-                f"not be decoded as UTF-8. {underlying_error}"
+                f"`.repository.json` from the repository directory '{path}'. The "
+                f"repository metadata file's bytes could not be decoded as UTF-8. "
+                f"{underlying_error}"
             ),
             detail={
-                "repository_directory": repository_directory,
+                "path": path,
                 "underlying_error": underlying_error,
             },
         )
 
 
-class InvalidRepositoryMetadataFileJSONError(
-    InvalidRepositoryMetadataFileError,
-):
+class RepositoryMetadataFileJSONError(RepositoryMetadataFileContentError):
     """Raised when the repository metadata file is not valid JSON during repository
     metadata loading.
     """
 
-    code = "INVALID_REPOSITORY_METADATA_FILE_JSON_ERROR"
+    code = "REPOSITORY_METADATA_FILE_JSON_ERROR"
 
-    def __init__(self, repository_directory: str):
+    def __init__(self, path: str):
         super().__init__(
             message=(
                 "Failed to load the repository metadata file "
-                "`.repository.json` from the repository directory "
-                f"'{repository_directory}'. The repository metadata file is not "
-                f"a valid JSON file."
+                f"`.repository.json` from the repository directory '{path}'. The "
+                f"repository metadata file is not a valid JSON file."
             ),
-            detail={"repository_directory": repository_directory},
+            detail={"path": path},
         )
 
 
-class InvalidRepositoryMetadataFileSchemaError(
-    InvalidRepositoryMetadataFileError,
-):
+class RepositoryMetadataFileSchemaError(RepositoryMetadataFileContentError):
     """Raised when the repository metadata file does not conform to the expected JSON
     schema during repository metadata loading.
     """
 
-    code = "INVALID_REPOSITORY_METADATA_FILE_SCHEMA_ERROR"
+    code = "REPOSITORY_METADATA_FILE_SCHEMA_ERROR"
 
-    def __init__(self, repository_directory: str, validation_error_message: str):
+    def __init__(self, path: str, validation_error_message: str):
         super().__init__(
             message=(
                 "Failed to load the repository metadata file "
-                "`.repository.json` from the repository directory "
-                f"'{repository_directory}'. The repository metadata file does not "
-                f"conform to the expected JSON schema. {validation_error_message}"
+                f"`.repository.json` from the repository directory '{path}'. The "
+                f"repository metadata file does not conform to the expected JSON "
+                f"schema. {validation_error_message}"
             ),
             detail={
-                "repository_directory": repository_directory,
+                "path": path,
                 "validation_error_message": validation_error_message,
             },
         )
 
 
-class UnsyncedRepositoryMetadataFileError(InvalidRepositoryMetadataFileError):
-    """Raised when the repository metadata file is out of sync with the actual contents
-    of the repository directory.
-    """
-
-    code = "UNSYNCED_REPOSITORY_METADATA_FILE_ERROR"
-
-    def __init__(
-        self,
-        repository_directory_path: str,
-        unsynced_resource_ids: list[str],
-    ):
-        super().__init__(
-            message=(
-                "The repository metadata file `.repository.json` in the "
-                f"repository directory '{repository_directory_path}' is out of sync "
-                f"with the actual contents of the repository. The following resource "
-                f"IDs are recorded in the metadata but do not exist on disk: "
-                f"{unsynced_resource_ids}."
-            ),
-            detail={
-                "repository_directory_path": repository_directory_path,
-                "unsynced_resource_ids": unsynced_resource_ids,
-            },
-        )
-
-
-class InvalidRepositoryMetadataDataSchemaError(InvalidRepositoryMetadataFileError):
+class RepositoryMetadataFileResourceDataSchemaError(RepositoryMetadataFileContentError):
     """Raised when the `data` field of a repository resource in the repository metadata
     file does not conform to the expected JSON schema during repository metadata
     loading.
     """
 
-    code = "INVALID_REPOSITORY_METADATA_DATA_SCHEMA_ERROR"
+    code = "REPOSITORY_METADATA_FILE_RESOURCE_DATA_SCHEMA_ERROR"
 
     def __init__(
         self,
-        repository_directory: str,
+        path: str,
         resource_id: str,
         validation_error_message: str,
     ):
         super().__init__(
             message=(
                 "Failed to load the repository metadata file "
-                "`.repository.json` from the repository directory "
-                f"'{repository_directory}'. The `data` field of the repository "
-                f"resource with resource ID '{resource_id}' failed validation. "
-                f"{validation_error_message}"
+                f"`.repository.json` from the repository directory '{path}'. The `data` "
+                f"field of the repository resource with resource ID '{resource_id}' "
+                f"failed validation. {validation_error_message}"
             ),
             detail={
-                "repository_directory": repository_directory,
+                "path": path,
                 "resource_id": resource_id,
                 "validation_error_message": validation_error_message,
+            },
+        )
+
+
+class RepositoryMetadataFileUnsyncedError(RepositoryMetadataFileContentError):
+    """Raised when the repository metadata file is out of sync with the actual contents
+    of the repository directory.
+
+    The file parses and validates: what is wrong is that it disagrees with the
+    directory. It sits under `RepositoryMetadataFileContentError` because the remedy is
+    still to the file's contents rather than to the state of the machine.
+    """
+
+    code = "REPOSITORY_METADATA_FILE_UNSYNCED_ERROR"
+
+    def __init__(
+        self,
+        path: str,
+        unsynced_resource_ids: list[str],
+    ):
+        super().__init__(
+            message=(
+                "The repository metadata file `.repository.json` in the "
+                f"repository directory '{path}' is out of sync with the actual contents "
+                f"of the repository. The following resource IDs are recorded in the "
+                f"metadata but do not exist on disk: {unsynced_resource_ids}."
+            ),
+            detail={
+                "path": path,
+                "unsynced_resource_ids": unsynced_resource_ids,
             },
         )

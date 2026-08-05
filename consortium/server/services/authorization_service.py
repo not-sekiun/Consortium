@@ -5,14 +5,14 @@ import jsonschema
 from loguru import logger
 
 from consortium.server.exceptions.service_exceptions.authorization_service_exceptions import (
-    InvalidRolePermissionsFileEncodingError,
-    InvalidRolePermissionsFileJSONError,
-    InvalidRolePermissionsFilePermissionValueError,
-    InvalidRolePermissionsFileSchemaError,
     PermissionAlreadyInRoleError,
     PermissionNotInRoleError,
     RoleAlreadyExistsError,
     RoleNotFoundError,
+    RolePermissionsFileEncodingError,
+    RolePermissionsFileJSONError,
+    RolePermissionsFilePermissionValueError,
+    RolePermissionsFileSchemaError,
     RolePermissionsFileSystemError,
 )
 from consortium.server.models.logging_models import LoggerType
@@ -71,12 +71,12 @@ class AuthorizationService:
             RolePermissionsFileSystemError: If `path` cannot be opened or read, for
                 example it does not exist, read permission is denied, or the path
                 points to a directory.
-            InvalidRolePermissionsFileEncodingError: If the file's contents cannot
+            RolePermissionsFileEncodingError: If the file's contents cannot
                 be decoded as UTF-8 text.
-            InvalidRolePermissionsFileJSONError: If the file is not valid JSON.
-            InvalidRolePermissionsFileSchemaError: If the file does not conform
+            RolePermissionsFileJSONError: If the file is not valid JSON.
+            RolePermissionsFileSchemaError: If the file does not conform
                 to the expected JSON schema.
-            InvalidRolePermissionsFilePermissionValueError: If any permission
+            RolePermissionsFilePermissionValueError: If any permission
                 string is not a recognised UserPermissions value.
         """
         valid_permissions = {p.value for p in UserPermissions}
@@ -94,24 +94,24 @@ class AuthorizationService:
                 with path.open(mode="r", encoding="utf-8") as file:
                     data: dict[str, list[str]] = json.load(file)
             except UnicodeDecodeError as exc:
-                raise InvalidRolePermissionsFileEncodingError(
-                    file_path=str(path),
+                raise RolePermissionsFileEncodingError(
+                    path=str(path),
                     underlying_error=f"{type(exc).__name__}: {exc}",
                 ) from None
             except json.JSONDecodeError:
-                raise InvalidRolePermissionsFileJSONError(file_path=str(path)) from None
+                raise RolePermissionsFileJSONError(path=str(path)) from None
         try:
             jsonschema.validate(data, self._ROLE_PERMISSIONS_JSON_SCHEMA)
         except jsonschema.ValidationError as exc:
-            raise InvalidRolePermissionsFileSchemaError(
-                file_path=str(path),
+            raise RolePermissionsFileSchemaError(
+                path=str(path),
                 json_schema_error_message=str(exc),
             ) from None
         for role, permissions in data.items():
             for permission in permissions:
                 if permission not in valid_permissions:
-                    raise InvalidRolePermissionsFilePermissionValueError(
-                        file_path=str(path),
+                    raise RolePermissionsFilePermissionValueError(
+                        path=str(path),
                         role=role,
                         permission=permission,
                     )
@@ -161,10 +161,10 @@ class AuthorizationService:
 
         Raises:
             RolePermissionsFileSystemError: Propagated from the base loader.
-            InvalidRolePermissionsFileEncodingError: Propagated from the base loader.
-            InvalidRolePermissionsFileJSONError: Propagated from the base loader.
-            InvalidRolePermissionsFileSchemaError: Propagated from the base loader.
-            InvalidRolePermissionsFilePermissionValueError: Propagated from the
+            RolePermissionsFileEncodingError: Propagated from the base loader.
+            RolePermissionsFileJSONError: Propagated from the base loader.
+            RolePermissionsFileSchemaError: Propagated from the base loader.
+            RolePermissionsFilePermissionValueError: Propagated from the
                 base loader.
         """
         data = self.load_role_permissions_from_path(self._role_permissions_json_file)

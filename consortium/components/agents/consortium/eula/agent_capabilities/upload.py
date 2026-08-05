@@ -95,13 +95,13 @@ class UploadCapability(BaseAgentCapability):
         except ResourceNotFoundError:
             raise AgentCapabilityLaunchError(
                 message=(
-                    f"Failed to start upload. Asset with ID '{source_asset_id}' not "
-                    "found. Hint: Check that the `source_asset` ID is correct and "
-                    "that an asset with that ID exists on the server."
+                    f"Asset with ID '{source_asset_id}' not found. Hint: Check that "
+                    f"the `source_asset` ID is correct and that an asset with that ID "
+                    f"exists on the server."
                 )
             ) from None
 
-        # Strip server-side-only args before sending to agent
+        # Strip server-side-only arguments before sending to agent
         task_launch_message.arguments = {
             "destination": task_launch_message.arguments["destination"],
             "expand": task_launch_message.arguments["expand"],
@@ -110,14 +110,10 @@ class UploadCapability(BaseAgentCapability):
         return task_launch_message
 
     async def on_execute(self) -> Success | Failure | None:
-        # self.task_launch_message is always populated with the initial launch message
-        # and contains the task arguments
-        source_asset_id = self.task_launch_message.arguments.get("source_asset")
-        recursive = self.task_launch_message.arguments.get("recursive", True)
-        chunk_size = self.task_launch_message.arguments.get("chunk_size", 1024 * 1024)
-        compression_level = self.task_launch_message.arguments.get(
-            "compression_level", 0
-        )
+        source_asset_id = self.task_launch_message.arguments["source_asset"]
+        recursive = self.task_launch_message.arguments["recursive"]
+        chunk_size = self.task_launch_message.arguments["chunk_size"]
+        compression_level = self.task_launch_message.arguments["compression_level"]
 
         try:
             asset = self.agent_file_manager_service.get_asset_by_asset_id(
@@ -126,9 +122,9 @@ class UploadCapability(BaseAgentCapability):
         except ResourceNotFoundError:
             raise AgentCapabilityExecutionError(
                 message=(
-                    f"Failed to execute upload. Asset with ID '{source_asset_id}' not "
-                    "found. Hint: The pre capability execution validation passed so the "
-                    "asset may have been deleted between tasking and execution."
+                    f"Asset with ID '{source_asset_id}' not found. Hint: The "
+                    f"pre-capability execution validation passed so the asset may have "
+                    f"been deleted between tasking and execution."
                 )
             ) from None
 

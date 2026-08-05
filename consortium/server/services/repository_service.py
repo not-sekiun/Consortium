@@ -13,14 +13,14 @@ from consortium.server.exceptions.object_exceptions.repository_object_exceptions
     RepositoryFileDoesNotExistError,
 )
 from consortium.server.exceptions.service_exceptions.repository_service_exceptions import (
-    InvalidRepositoryMetadataDataSchemaError,
-    InvalidRepositoryMetadataFileEncodingError,
-    InvalidRepositoryMetadataFileJSONError,
-    InvalidRepositoryMetadataFileSchemaError,
+    RepositoryMetadataFileEncodingError,
+    RepositoryMetadataFileJSONError,
+    RepositoryMetadataFileResourceDataSchemaError,
+    RepositoryMetadataFileSchemaError,
     RepositoryMetadataFileSystemError,
+    RepositoryMetadataFileUnsyncedError,
     ResourceIDReservationNotFoundError,
     ResourceNotFoundError,
-    UnsyncedRepositoryMetadataFileError,
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.models.repository_models import (
@@ -84,17 +84,17 @@ class RepositoryService:
         disk raise an error rather than being silently skipped.
 
         Raises:
-            InvalidRepositoryMetadataFileEncodingError: If the metadata file's bytes are
+            RepositoryMetadataFileEncodingError: If the metadata file's bytes are
                 not valid UTF-8.
-            InvalidRepositoryMetadataFileJSONError: If the metadata file contains
+            RepositoryMetadataFileJSONError: If the metadata file contains
                 invalid JSON.
-            InvalidRepositoryMetadataFileSchemaError: If the metadata file does not
+            RepositoryMetadataFileSchemaError: If the metadata file does not
                 follow the expected schema.
-            UnsyncedRepositoryMetadataFileError: If a resource recorded in the metadata
+            RepositoryMetadataFileUnsyncedError: If a resource recorded in the metadata
                 file does not exist on disk.
-            InvalidRepositoryMetadataDataSchemaError: If a `data` field in the metadata
-                file fails validation against the repository's `data_model`. Only raised
-                when the repository was constructed with a `data_model`.
+            RepositoryMetadataFileResourceDataSchemaError: If a `data` field in the
+                metadata file fails validation against the repository's `data_model`.
+                Only raised when the repository was constructed with a `data_model`.
             RepositoryMetadataFileSystemError: If the metadata file cannot be read from
                 disk.
         """
@@ -117,16 +117,16 @@ class RepositoryService:
                 ) as file:
                     repository_metadata_file_content = file.read()
             except UnicodeDecodeError as exc:
-                raise InvalidRepositoryMetadataFileEncodingError(
-                    repository_directory=str(self.repository_directory_path),
+                raise RepositoryMetadataFileEncodingError(
+                    path=str(self.repository_directory_path),
                     underlying_error=f"{type(exc).__name__}: {exc}",
                 ) from None
 
         try:
             repository_metadata_json = json.loads(repository_metadata_file_content)
         except json.JSONDecodeError:
-            raise InvalidRepositoryMetadataFileJSONError(
-                repository_directory=str(self.repository_directory_path),
+            raise RepositoryMetadataFileJSONError(
+                path=str(self.repository_directory_path),
             ) from None
 
         # `PersistentRepositoryMetadataModel` covers the whole file in one pass: the
@@ -139,8 +139,8 @@ class RepositoryService:
                 repository_metadata_json,
             ).root
         except ValidationError as exc:
-            raise InvalidRepositoryMetadataFileSchemaError(
-                repository_directory=str(self.repository_directory_path),
+            raise RepositoryMetadataFileSchemaError(
+                path=str(self.repository_directory_path),
                 validation_error_message=format_validation_error(exc),
             ) from None
 
@@ -152,8 +152,8 @@ class RepositoryService:
                 try:
                     self._data_model.model_validate(resource_metadata.data)
                 except ValidationError as exc:
-                    raise InvalidRepositoryMetadataDataSchemaError(
-                        repository_directory=str(self.repository_directory_path),
+                    raise RepositoryMetadataFileResourceDataSchemaError(
+                        path=str(self.repository_directory_path),
                         resource_id=str(resource_id),
                         validation_error_message=format_validation_error(exc),
                     ) from None
@@ -185,8 +185,8 @@ class RepositoryService:
                     resource_metadata,
                 )
         if unsynced_resource_ids:
-            raise UnsyncedRepositoryMetadataFileError(
-                repository_directory_path=str(self.repository_directory_path),
+            raise RepositoryMetadataFileUnsyncedError(
+                path=str(self.repository_directory_path),
                 unsynced_resource_ids=unsynced_resource_ids,
             )
 

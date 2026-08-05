@@ -5,9 +5,10 @@ Exception hierarchy:
     - [`ReleaseServiceError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseServiceError]
         - [`ReleaseFileError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseFileError]
             - [`ReleaseFileSystemError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseFileSystemError]
-            - [`ReleaseFileEncodingError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseFileEncodingError]
-            - [`ReleaseFileIsNotJSONError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseFileIsNotJSONError]
-            - [`ReleaseFileSchemaError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseFileSchemaError]
+            - [`ReleaseFileContentError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseFileContentError]
+                - [`ReleaseFileEncodingError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseFileEncodingError]
+                - [`ReleaseFileJSONError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseFileJSONError]
+                - [`ReleaseFileSchemaError`][consortium.server.exceptions.service_exceptions.release_service_exceptions.ReleaseFileSchemaError]
 """
 
 from consortium.server.exceptions.service_exceptions.base_service_exception import (
@@ -30,8 +31,11 @@ class ReleaseServiceError(BaseServiceError):
 
 
 class ReleaseFileError(ReleaseServiceError):
-    """Base exception for all errors that occur when accessing or processing the
-    release JSON file.
+    """Base exception for every failure to get the release JSON file's data off disk.
+
+    Catch this to handle "the release information could not be loaded" without caring
+    why. To distinguish a filesystem fault from a bad file, catch
+    `ReleaseFileSystemError` or `ReleaseFileContentError` instead.
     """
 
     code = "RELEASE_FILE_ERROR"
@@ -53,8 +57,7 @@ class ReleaseFileSystemError(ReleaseFileError):
     bug in the code that supplied that path.
 
     A file the filesystem hands over successfully but whose contents are wrong is
-    reported separately, through `ReleaseFileEncodingError`, `ReleaseFileIsNotJSONError`
-    or `ReleaseFileSchemaError`.
+    reported separately, through `ReleaseFileContentError`.
     """
 
     code = "RELEASE_FILE_SYSTEM_ERROR"
@@ -70,52 +73,64 @@ class ReleaseFileSystemError(ReleaseFileError):
         )
 
 
-class ReleaseFileEncodingError(ReleaseFileError):
+class ReleaseFileContentError(ReleaseFileError):
+    """Base exception for all errors that occur when the release JSON file's contents
+    are wrong.
+
+    The filesystem handed the file's bytes over successfully, so this is fixed by
+    correcting the file rather than by changing the state of the machine or the
+    configured path.
+    """
+
+    code = "RELEASE_FILE_CONTENT_ERROR"
+
+
+class ReleaseFileEncodingError(ReleaseFileContentError):
     """Raised when the release JSON file's bytes cannot be decoded as UTF-8."""
 
     code = "RELEASE_FILE_ENCODING_ERROR"
 
-    def __init__(self, release_json_filepath: str, underlying_error: str):
+    def __init__(self, path: str, underlying_error: str):
         super().__init__(
             message=(
-                f"Failed to read the release JSON file '{release_json_filepath}'. The "
-                f"file's contents are not valid UTF-8 text. {underlying_error}"
+                f"Failed to read the release JSON file '{path}'. The file's contents "
+                f"are not valid UTF-8 text. {underlying_error}"
             ),
             detail={
-                "release_json_filepath": release_json_filepath,
+                "path": path,
                 "underlying_error": underlying_error,
             },
         )
 
 
-class ReleaseFileIsNotJSONError(ReleaseFileError):
+class ReleaseFileJSONError(ReleaseFileContentError):
     """Raised when the release JSON file does not contain valid JSON data."""
 
-    code = "RELEASE_FILE_IS_NOT_JSON_ERROR"
+    code = "RELEASE_FILE_JSON_ERROR"
 
-    def __init__(self, release_json_filepath: str):
+    def __init__(self, path: str):
         super().__init__(
             message=(
-                f"Failed to process the release JSON file '{release_json_filepath}'. "
-                f"The provided file does not contain valid JSON data."
+                f"Failed to process the release JSON file '{path}'. The provided file "
+                f"does not contain valid JSON data."
             ),
-            detail={"release_json_filepath": release_json_filepath},
+            detail={"path": path},
         )
 
 
-class ReleaseFileSchemaError(ReleaseFileError):
+class ReleaseFileSchemaError(ReleaseFileContentError):
     """Raised when the release JSON file does not conform to the expected schema."""
 
     code = "RELEASE_FILE_SCHEMA_ERROR"
 
-    def __init__(self, release_json_filepath: str, validation_error_message: str):
+    def __init__(self, path: str, validation_error_message: str):
         super().__init__(
             message=(
-                f"Failed to process the release JSON file '{release_json_filepath}'. "
-                f"The provided file failed validation. {validation_error_message}"
+                f"Failed to process the release JSON file '{path}'. The provided file "
+                f"failed validation. {validation_error_message}"
             ),
             detail={
-                "release_json_filepath": release_json_filepath,
+                "path": path,
                 "validation_error_message": validation_error_message,
             },
         )

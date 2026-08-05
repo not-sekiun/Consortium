@@ -4,13 +4,13 @@ import pathlib
 import pytest
 
 from consortium.server.exceptions.service_exceptions.authorization_service_exceptions import (
-    InvalidRolePermissionsFileJSONError,
-    InvalidRolePermissionsFilePermissionValueError,
-    InvalidRolePermissionsFileSchemaError,
     PermissionAlreadyInRoleError,
     PermissionNotInRoleError,
     RoleAlreadyExistsError,
     RoleNotFoundError,
+    RolePermissionsFileJSONError,
+    RolePermissionsFilePermissionValueError,
+    RolePermissionsFileSchemaError,
 )
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.services.authorization_service import AuthorizationService
@@ -53,7 +53,7 @@ def test_load_role_permissions_from_path_invalid_json(tmp_path: pathlib.Path):
     bad = tmp_path / "bad.json"
     bad.write_text("not json {{")
     svc = AuthorizationService(role_permissions_json_file=bad)
-    with pytest.raises(InvalidRolePermissionsFileJSONError):
+    with pytest.raises(RolePermissionsFileJSONError):
         svc.load_role_permissions_from_path(bad)
 
 
@@ -62,7 +62,7 @@ def test_load_role_permissions_from_path_invalid_schema(tmp_path: pathlib.Path):
     bad = tmp_path / "bad_schema.json"
     bad.write_text(json.dumps({"lowercase_key": ["READ_ALL_USERS"]}))
     svc = AuthorizationService(role_permissions_json_file=bad)
-    with pytest.raises(InvalidRolePermissionsFileSchemaError):
+    with pytest.raises(RolePermissionsFileSchemaError):
         svc.load_role_permissions_from_path(bad)
 
 
@@ -72,7 +72,7 @@ def test_load_role_permissions_from_path_invalid_permission_value(
     bad = tmp_path / "bad_perm.json"
     bad.write_text(json.dumps({"ADMIN": ["NOT_A_REAL_PERMISSION"]}))
     svc = AuthorizationService(role_permissions_json_file=bad)
-    with pytest.raises(InvalidRolePermissionsFilePermissionValueError):
+    with pytest.raises(RolePermissionsFilePermissionValueError):
         svc.load_role_permissions_from_path(bad)
 
 
