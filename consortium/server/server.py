@@ -242,6 +242,15 @@ class Server:
         if self.status == ServerStatus.RUNNING:
             return
 
+        # Must run before anything below reads a path off `paths_service`: this line
+        # reads release.json (below), `load_server_role_permissions` reads
+        # role_permissions.json, and `load_framework_user_accounts` reads
+        # user_accounts.json. Preflighting here first means a missing or invalid file
+        # aborts startup immediately with a clear typed error naming the file, instead
+        # of failing later, confusingly, inside whichever of those calls happens to
+        # touch it first.
+        server_singletons.paths_service._run_preflight_path_validations()
+
         server_release = server_singletons.release_service.release
         self._logger.info(
             f"Starting server (v{server_release.version} ({server_release.codename}) "

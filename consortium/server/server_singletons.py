@@ -40,8 +40,10 @@ logging_service = LoggingService()
 
 
 # This service is instantiated early because nearly every other service relies on it to
-# retrieve important Consortium related directory paths. This service will abort
-# server startup if certain critical paths do not exist and auto create other paths
+# retrieve important Consortium related directory paths. Construction only resolves
+# paths, it performs no filesystem validation: `Server._server_startup_procedure` calls
+# `paths_service._run_preflight_path_validations()` at boot, which is what aborts
+# server startup if certain critical paths do not exist, and auto creates other paths
 # if they are missing.
 paths_service = PathsService()
 
