@@ -136,9 +136,6 @@ class AgentGeneratorsService:
             AgentGeneratorCreationParameterTypeError: If `name` is not a string, or if
                 `description` or the resolved `parameters` fail type validation when the
                 agent generator instance is constructed.
-            RuntimeError: If called with no running event loop. The
-                `AGENT_GENERATOR_CREATED` event is scheduled with `asyncio.create_task`,
-                which requires one.
 
         Note that every option validation error above is raised by the template before
         the agent generator is instantiated, so nothing is registered and no
@@ -190,9 +187,6 @@ class AgentGeneratorsService:
         Raises:
             AgentGeneratorAlreadyExistsError: If an agent generator with the same ID is
                 already registered.
-            RuntimeError: If called with no running event loop. The
-                `AGENT_GENERATOR_ADDED` event is scheduled with `asyncio.create_task`,
-                which requires one.
         """
         if str(agent_generator.agent_generator_id) in self._agent_generators:
             raise AgentGeneratorAlreadyExistsError(
@@ -237,9 +231,6 @@ class AgentGeneratorsService:
             AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
             AgentGeneratorAlreadyRunningError: If the agent generator is currently
                 running.
-            RuntimeError: If called with no running event loop. The
-                `AGENT_GENERATOR_REMOVED` event is scheduled with `asyncio.create_task`,
-                which requires one.
         """
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
@@ -304,9 +295,6 @@ class AgentGeneratorsService:
             AgentGeneratorCreationParameterTypeError: If the resolved parameter set
                 fails type validation while the replacement agent generator is
                 constructed.
-            RuntimeError: If called with no running event loop on the path where at
-                least one field changes. The `AGENT_GENERATOR_UPDATED` event is
-                scheduled with `asyncio.create_task`, which requires one.
         """
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id

@@ -341,6 +341,12 @@ def _log_background_task_error(task: asyncio.Task) -> None:
 
 # Running fire and forget background tasks safely. The _coroutine set is needed since
 # tasks are only held onto by a weak reference and may be GCed at any time.
+#
+# `asyncio.create_task` requires a running event loop, so every caller must already be
+# running inside one. Calling a service method that schedules an event from outside the
+# loop raises `RuntimeError`. That is a programming error rather than a domain condition
+# and no caller can act on it, so it is documented here at its origin instead of in the
+# `Raises:` block of every service method that happens to emit an event.
 def run_async_background_task(coroutine: Coroutine) -> None:
     # The task is named after the coroutine so a failure can be traced back to what was
     # launched, rather than to asyncio's positional `Task-<n>` default.

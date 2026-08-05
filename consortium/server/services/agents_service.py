@@ -120,8 +120,6 @@ class AgentsService:
                 because neither `payload_id` nor `agent_type` was provided, because
                 `payload_id` does not correspond to a known payload, or because
                 `agent_type` does not name a known agent type.
-            RuntimeError: If called with no running event loop. The `AGENT_REGISTERED`
-                event is scheduled with `asyncio.create_task`, which requires one.
         """
         agent = Agent(
             tasks_service=self._tasks_service,
@@ -167,8 +165,6 @@ class AgentsService:
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
-            RuntimeError: If called with no running event loop. The `AGENT_DEREGISTERED`
-                event is scheduled with `asyncio.create_task`, which requires one.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         self._tasks_service._error_pending_tasks_for_agent(
@@ -232,8 +228,6 @@ class AgentsService:
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
-            RuntimeError: If called with no running event loop. The `AGENT_CHECKED_IN`
-                event is scheduled with `asyncio.create_task`, which requires one.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
         run_async_background_task(
@@ -579,9 +573,6 @@ class AgentsService:
 
         Raises:
             AgentNotFoundError: If no agent with the given ID is registered.
-            RuntimeError: If called with no running event loop on the path where at
-                least one field changes. The `AGENT_UPDATED` event is scheduled with
-                `asyncio.create_task`, which requires one.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
 
