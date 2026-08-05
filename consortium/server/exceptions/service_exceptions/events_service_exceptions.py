@@ -5,6 +5,7 @@ Exception hierarchy:
     - [`EventsServiceError`][consortium.server.exceptions.service_exceptions.events_service_exceptions.EventsServiceError]
         - [`EventHandlerAlreadyRegisteredError`][consortium.server.exceptions.service_exceptions.events_service_exceptions.EventHandlerAlreadyRegisteredError]
         - [`EventHandlerNotRegisteredError`][consortium.server.exceptions.service_exceptions.events_service_exceptions.EventHandlerNotRegisteredError]
+        - [`InvalidEventTypeError`][consortium.server.exceptions.service_exceptions.events_service_exceptions.InvalidEventTypeError]
 """
 
 from consortium.framework.event_hooks import EventType
@@ -58,4 +59,25 @@ class EventHandlerNotRegisteredError(EventsServiceError):
                 f"{event_type}. The requested event handler is not registered for "
                 f"that event."
             ),
+        )
+
+
+class InvalidEventTypeError(EventsServiceError):
+    """Raised when the provided event type does not correspond to a valid `EventType`
+    member.
+    """
+
+    code = "INVALID_EVENT_TYPE_ERROR"
+
+    def __init__(self, event_type: str):
+        super().__init__(
+            message=(
+                f"Failed to register the provided event handler for event type "
+                f"'{event_type}'. The provided event type does not correspond to a "
+                f"valid `EventType` member. Check that the event type is one of the "
+                f"values defined in `EventType`."
+            ),
+            detail={
+                "event_type": str(event_type),
+            },
         )

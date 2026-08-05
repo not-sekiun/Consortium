@@ -15,6 +15,7 @@ from consortium.server.exceptions.service_exceptions.event_hooks_service_excepti
 from consortium.server.exceptions.service_exceptions.events_service_exceptions import (
     EventHandlerAlreadyRegisteredError,
     EventHandlerNotRegisteredError,
+    InvalidEventTypeError,
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.utils import log_and_propagate_error_on_service_method
@@ -28,7 +29,6 @@ class EventsService:
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
         self._logger.debug("Started {}", self)
-        self._custom_event_types = set()
 
     def __str__(self):
         return "Events Service"
@@ -50,9 +50,16 @@ class EventsService:
                 whenever the event type is triggered.
 
         Raises:
+            InvalidEventTypeError: If the provided event type does not correspond to a
+                valid `EventType` member.
             EventHandlerAlreadyRegisteredError: If the same handler is already
                 registered for the given event type.
         """
+        try:
+            EventType(event_type)
+        except ValueError:
+            raise InvalidEventTypeError(event_type) from None
+
         if str(event_type) in self._event_handlers:
             if event_handler in self._event_handlers[str(event_type)]:
                 raise EventHandlerAlreadyRegisteredError
@@ -102,7 +109,7 @@ class EventsService:
             event type.
         """
         try:
-            return self._event_handlers[event_type]
+            return self._event_handlers[str(event_type)]
         except KeyError:
             # KeyError being raised implies that no event handlers was registered, so
             # we return an empty list.
@@ -121,10 +128,6 @@ class EventsService:
         Returns:
             A list of event types the handler is subscribed to. Empty if the handler is
             not registered for any event type.
-
-        Raises:
-            ValueError: If a registered event type string does not correspond to a
-                valid `EventType` member.
         """
         handled_events = []
         for event_type, handlers in self._event_handlers.items():
