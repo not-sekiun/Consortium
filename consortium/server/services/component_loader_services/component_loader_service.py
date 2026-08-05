@@ -207,9 +207,20 @@ class ComponentLoaderService[Component: ComponentMetadata]:
         # loading the entire component in.
         if pyproject_filepath.exists():
             try:
-                with pyproject_filepath.open("r") as pyproject_toml_file:
+                # The encoding is pinned because TOML mandates UTF-8. Left to the
+                # platform default, a component's `pyproject.toml` written as UTF-8
+                # would be decoded as whatever the locale encoding happens to be
+                # (cp1252 on Windows), so any non-ASCII character in it, an accented
+                # author name for example, either fails to parse or silently yields
+                # mojibake in the parsed values.
+                with pyproject_filepath.open(
+                    "r", encoding="utf-8"
+                ) as pyproject_toml_file:
                     pyproject_toml = tomllib.loads(pyproject_toml_file.read())
-            except tomllib.TOMLDecodeError:
+            # A file whose bytes are not valid UTF-8 is not a valid TOML file, so it is
+            # reported through the same error rather than leaking a raw
+            # `UnicodeDecodeError` out of the loader.
+            except (tomllib.TOMLDecodeError, UnicodeDecodeError):
                 raise self._component_exceptions.invalid_pyproject_file_toml(
                     component_directory=str(component_directory),
                 ) from None
