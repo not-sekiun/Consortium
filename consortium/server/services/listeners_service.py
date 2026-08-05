@@ -3,7 +3,6 @@ import uuid
 from typing import Any
 
 from loguru import logger
-from pydantic import validate_call
 
 from consortium.framework._core.components.component_status import State
 from consortium.framework._core.framework_exceptions.listeners_framework_exceptions import (
@@ -57,7 +56,6 @@ class ListenersService:
         )
 
     @log_and_propagate_error_on_service_method
-    @validate_call
     def get_listener_by_listener_id(self, listener_id: str | uuid.UUID) -> BaseListener:
         """Returns a registered listener by its ID.
 
@@ -68,8 +66,6 @@ class ListenersService:
             The requested listener.
 
         Raises:
-            ValidationError: Raised by pydantic if `listener_id` fails validation
-                against its declared type.
             ListenerNotFoundError: If no listener with the given ID exists.
         """
         listener_id = normalize_uuid(listener_id)
