@@ -8,6 +8,9 @@ from pydantic import ValidationError
 import consortium.server.server_component_dependency_syncer as server_component_dependency_syncer
 import consortium.server.server_reloader as server_reloader
 import consortium.server.server_singletons as server_singletons
+from consortium.server.exceptions.service_exceptions.logging_service_exceptions import (
+    LoggingServiceError,
+)
 from consortium.server.models.logging_models import LoggingConfigModel
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server import Server
@@ -134,8 +137,12 @@ async def _start_server(arguments: argparse.Namespace) -> None:
         server_singletons.logging_service.configure_default_logging(
             logging_config=logging_config
         )
-    # Loguru raises `ValueError` for invalid rotation and retention values.
-    except ValueError as exc:
+    # The logging service wraps loguru's own errors, so an invalid rotation or
+    # retention value arrives here as a `SinkConfigurationError` and an unopenable log
+    # file path as a `SinkFileSystemError`. Both are caught through their common base so
+    # a bad logging configuration file still aborts with a readable message rather than
+    # a traceback.
+    except LoggingServiceError as exc:
         print(
             f"Failed to start server. The provided logging configuration file "
             f"'{logging_config_filepath}' contains invalid values: {exc}",

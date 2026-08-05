@@ -4,6 +4,11 @@ import sys
 import pytest
 from loguru import logger
 
+from consortium.server.exceptions.service_exceptions.logging_service_exceptions import (
+    SinkConfigurationError,
+    SinkLabelAlreadyExistsError,
+    SinkNotFoundError,
+)
 from consortium.server.models.logging_models import LoggingConfigModel
 from consortium.server.services.logging_service import LoggingService
 
@@ -43,8 +48,14 @@ def test_add_sink_stores_correct_sink_info():
 def test_add_sink_duplicate_label_raises():
     service = LoggingService()
     service.add_sink(sink=io.StringIO(), level="DEBUG", label="test")
-    with pytest.raises(ValueError, match="already registered"):
+    with pytest.raises(SinkLabelAlreadyExistsError, match="already registered"):
         service.add_sink(sink=io.StringIO(), level="INFO", label="test")
+
+
+def test_add_sink_invalid_level_raises_sink_configuration_error():
+    service = LoggingService()
+    with pytest.raises(SinkConfigurationError):
+        service.add_sink(sink=io.StringIO(), level="NOT_A_REAL_LEVEL", label="test")
 
 
 def test_add_sink_server_default_flag_stored():
@@ -77,7 +88,7 @@ def test_remove_sink_removes_from_registry():
 
 def test_remove_sink_unknown_label_raises():
     service = LoggingService()
-    with pytest.raises(KeyError):
+    with pytest.raises(SinkNotFoundError):
         service.remove_sink("nonexistent")
 
 
@@ -143,7 +154,7 @@ def test_modify_sink_successive_calls_layer_correctly():
 
 def test_modify_sink_unknown_label_raises():
     service = LoggingService()
-    with pytest.raises(KeyError):
+    with pytest.raises(SinkNotFoundError):
         service.modify_sink("nonexistent", level="INFO")
 
 
@@ -155,6 +166,34 @@ def test_modify_sink_handler_id_changes_after_modify():
     service.modify_sink("test", level="INFO")
     new_id = service.get_all_sinks()[0].handler_id
     assert new_id != original_id
+
+
+def test_modify_sink_rollback_on_rebuild_failure_restores_original_sink():
+    # Forcing logger.add to fail during the rebuild (an invalid level string) must
+    # raise the typed configuration error while restoring the sink to its previous,
+    # working configuration rather than leaving it removed.
+    service = LoggingService()
+    sink = io.StringIO()
+    service.add_sink(sink=sink, level="DEBUG", label="test")
+
+    with pytest.raises(SinkConfigurationError):
+        service.modify_sink("test", level="NOT_A_REAL_LEVEL")
+
+    info = service.get_all_sinks()[0]
+    # The sink is still registered under its original configuration, not stale: its
+    # handler_id must match whatever loguru actually has registered right now, which
+    # is not necessarily the pre-modify ID since the rollback re-adds the handler.
+    assert info.level == "DEBUG"
+    assert info.sink is sink
+
+    logger.bind(logger_name="test", logger_type=None).info("still logging")
+    assert "still logging" in sink.getvalue()
+
+    # The restored handler_id must be live in loguru (not the stale, already-removed
+    # ID from before the rebuild attempt), otherwise a later remove_sink would raise
+    # StaleSinkHandlerError.
+    service.remove_sink("test")
+    assert service.get_all_sinks() == []
 
 
 # ---------------------------------------------------------------------------
