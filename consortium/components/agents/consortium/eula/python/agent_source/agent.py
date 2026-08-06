@@ -323,75 +323,64 @@ def upload_capability(context):
     while True:
         response = context.connection.get_task_input_message_from_listener()
 
-        if not response.success:
-            if current_file_handle:
-                current_file_handle.close()
-            return
-
         msg_type = response.data.get("type")
 
         if msg_type == "file":
-            pass
-            # if current_file_handle:
-            #     current_file_handle.close()
-            #
-            # relative_path = response.data["path"]
-            #
-            # if is_dir:
-            #     # Uploading a directory: reconstruct path
-            #     current_file_path = os.path.join(destination, relative_path)
-            # else:
-            #     # Uploading a single file: check if destination is meant to be a folder
-            #     if os.path.isdir(destination):
-            #         current_file_path = os.path.join(destination, relative_path)
-            #     else:
-            #         current_file_path = destination
-            #
-            # # Ensure the parent directory for the incoming file exists
-            # parent_dir = os.path.dirname(current_file_path)
-            # if parent_dir:
-            #     os.makedirs(parent_dir, exist_ok=True)
-            #
-            # try:
-            #     current_file_handle = open(current_file_path, "wb")
-            # except PermissionError:
-            #     context.connection.post_task_message_to_listener(
-            #         task_id=context.task_id,
-            #         success=False,
-            #         message=f"Permission denied writing to '{current_file_path}'.",
-            #     )
-            #     return
-        elif msg_type == "chunk":
-            pass
-            # try:
-            #     # Decode and write the chunk
-            #     chunk = zlib.decompress(response.payload.data)
-            #     if current_file_handle:
-            #         current_file_handle.write(chunk)
-            # except zlib.error as exc:
-            #     context.connection.post_task_message_to_listener(
-            #         task_id=context.task_id,
-            #         success=False,
-            #         message=f"Failed to decompress file chunk: {exc}",
-            #     )
-            #     if current_file_handle:
-            #         current_file_handle.close()
-            #     return
-        elif msg_type == "directory":
-            pass
-            # # Reconstruct and create empty/nested directories
-            # dir_path = os.path.join(destination, response.data["path"])
-            # os.makedirs(dir_path, exist_ok=True)
-        elif msg_type == "end_of_file":
-            pass
-            # if current_file_handle:
-            #     current_file_handle.close()
-            #     current_file_handle = None
-        elif msg_type == "end_of_transfer":
-            # if current_file_handle:
-            #     current_file_handle.close()
+            if current_file_handle:
+                current_file_handle.close()
 
-            # Acknowledge completion back to the server (optional, but good practice)
+            relative_path = response.data["path"]
+
+            if is_dir:
+                # Uploading a directory: reconstruct path
+                current_file_path = os.path.join(destination, relative_path)
+            else:
+                # Uploading a single file: check if destination is meant to be a folder
+                if os.path.isdir(destination):
+                    current_file_path = os.path.join(destination, relative_path)
+                else:
+                    current_file_path = destination
+
+            # Ensure the parent directory for the incoming file exists
+            parent_dir = os.path.dirname(current_file_path)
+            if parent_dir:
+                os.makedirs(parent_dir, exist_ok=True)
+
+            try:
+                current_file_handle = open(current_file_path, "wb")
+            except PermissionError:
+                context.connection.post_task_message_to_listener(
+                    task_id=context.task_id,
+                    success=False,
+                    message=f"Permission denied writing to '{current_file_path}'.",
+                )
+                return
+        elif msg_type == "chunk":
+            try:
+                # Decode and write the chunk
+                chunk = zlib.decompress(response.payload)
+                if current_file_handle:
+                    current_file_handle.write(chunk)
+            except zlib.error as exc:
+                context.connection.post_task_message_to_listener(
+                    task_id=context.task_id,
+                    success=False,
+                    message=f"Failed to decompress file chunk: {exc}",
+                )
+                if current_file_handle:
+                    current_file_handle.close()
+                return
+        elif msg_type == "directory":
+            # Reconstruct and create empty/nested directories
+            dir_path = os.path.join(destination, response.data["path"])
+            os.makedirs(dir_path, exist_ok=True)
+        elif msg_type == "end_of_file":
+            if current_file_handle:
+                current_file_handle.close()
+                current_file_handle = None
+        elif msg_type == "end_of_transfer":
+            if current_file_handle:
+                current_file_handle.close()
             context.connection.post_task_message_to_listener(
                 task_id=context.task_id,
                 success=True,
