@@ -1,5 +1,6 @@
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
+    ComponentFatalError,
     ComponentNotRunningError,
     ComponentOperationError,
     ComponentRuntimeError,
@@ -293,6 +294,26 @@ class AgentGeneratorStopError(ComponentStopError, AgentGeneratorOperationError):
     """Raised when an agent generator fails to stop during agent generator operation."""
 
     code = "AGENT_GENERATOR_STOP_ERROR"
+
+
+class AgentGeneratorFatalError(ComponentFatalError, AgentGeneratorOperationError):
+    """Raised when an unhandled exception escapes one of an agent generator's life cycle
+    hooks, terminating the agent generator fatally during agent generator operation.
+    """
+
+    code = "AGENT_GENERATOR_FATAL_ERROR"
+
+
+class AgentGeneratorBuildStepFatalError(
+    ComponentFatalError,
+    AgentGeneratorOperationError,
+):
+    """Raised when an unhandled exception escapes one of an agent generator build step's
+    life cycle hooks, terminating the build step fatally during agent generator operation.
+    """
+
+    code = "AGENT_GENERATOR_BUILD_STEP_FATAL_ERROR"
+    _COMPONENT_TYPE = "agent generator build step"
 
 
 class AgentGeneratorStateError(

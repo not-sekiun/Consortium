@@ -1,8 +1,7 @@
 import pathlib
 import uuid
-from collections.abc import Generator
 from functools import wraps
-from typing import IO, Any, BinaryIO, Literal
+from typing import Any, BinaryIO, Literal, TextIO
 
 from loguru import logger
 
@@ -53,7 +52,7 @@ class AgentTemplatesPayloadsService:
     async def create_payload_file(
         self,
         build_parameters: dict[str, Any],
-        content: str | bytes | IO | Generator[bytes] | Generator[str],
+        content: str | bytes | TextIO | BinaryIO,
         payload_data: dict[str, Any] | None = None,
         payload_id: str | uuid.UUID | None = None,
         name: str | None = None,
@@ -67,7 +66,9 @@ class AgentTemplatesPayloadsService:
         Args:
             build_parameters: Parameters used to build the agent generator from the
                 bound agent template (validated against the template).
-            content: The file content to write to the repository.
+            content: The file content to write to the repository, supplied either
+                as an in-memory `str` or `bytes`, or as an open text or binary file
+                object that is read to exhaustion.
             payload_data: Arbitrary metadata attached to the payload. When `None`, no
                 extra metadata is stored.
             payload_id: A previously reserved ID to assign to this payload. When
@@ -110,7 +111,7 @@ class AgentTemplatesPayloadsService:
     async def create_payload_directory(
         self,
         build_parameters: dict[str, Any],
-        content: bytes | Generator[bytes] | BinaryIO,
+        content: bytes | BinaryIO,
         payload_data: dict[str, Any] | None = None,
         payload_id: str | uuid.UUID | None = None,
         archive_file_format: Literal["zip", "tar", "gztar", "bztar", "xztar"] = "zip",
@@ -125,7 +126,9 @@ class AgentTemplatesPayloadsService:
         Args:
             build_parameters: Parameters used to build the agent generator from the
                 bound agent template (validated against the template).
-            content: The archive content to extract into the repository directory.
+            content: The archive content to extract into the repository directory,
+                supplied either as raw `bytes` or as an open binary file object that
+                is read to exhaustion.
             payload_data: Arbitrary metadata attached to the payload. When `None`, no
                 extra metadata is stored.
             payload_id: A previously reserved ID to assign to this payload. When

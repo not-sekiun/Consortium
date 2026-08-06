@@ -63,7 +63,11 @@ class _AgentTemplateMetadataModel(ComponentMetadataModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     agent_generator: type[BaseAgentGenerator]
-    agent_type: type[BaseAgentType]
+    # A `str` is an agent type reference: the name of an agent type declared by another
+    # agent profile, resolved to that profile's agent type instance after all profiles
+    # are loaded. Declaring the type as a class only would reject the reference here, at
+    # class definition time, long before there is anything to resolve it against.
+    agent_type: type[BaseAgentType] | str
     compatible_listener_types: set[str]
     options: set[Options]
     validating_function: (
@@ -84,7 +88,10 @@ class BaseAgentTemplate(ComponentMetadata):
         agent_generator: The generator class that this template instantiates when
             creating a new agent generator.
         agent_type: The agent type that identifies which capabilities the generated
-            agent supports.
+            agent supports. Either the agent type class, or the name of an agent type
+            declared by another agent profile as a string reference to it. Both forms
+            are resolved to a shared agent type instance once every agent profile is
+            loaded, so this always reads back as a `BaseAgentType` instance at runtime.
         compatible_listener_types: Names of listener types that agents generated from
             this template can connect through.
         options: Configuration options accepted when creating a generator from this
@@ -106,7 +113,7 @@ class BaseAgentTemplate(ComponentMetadata):
     )
 
     agent_generator: type[BaseAgentGenerator]
-    agent_type: type[BaseAgentType]
+    agent_type: type[BaseAgentType] | str
     compatible_listener_types: set[str] | None = None
     options: set[Options] | None = None
     validating_function: Callable[[dict[str, Options]], None] | None = None

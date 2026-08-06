@@ -89,7 +89,7 @@ class UploadCapability(BaseAgentCapability):
         source_asset_id = task_launch_message.arguments["source_asset"]
 
         try:
-            self.agent_file_manager_service.get_asset_by_asset_id(
+            asset = self.agent_file_manager_service.get_asset_by_asset_id(
                 asset_id=source_asset_id
             )
         except ResourceNotFoundError:
@@ -103,7 +103,7 @@ class UploadCapability(BaseAgentCapability):
 
         # Strip server-side-only arguments before sending to agent
         task_launch_message.arguments = {
-            "destination": task_launch_message.arguments["destination"],
+            "destination": task_launch_message.arguments["destination"] or asset.name,
             "expand": task_launch_message.arguments["expand"],
             "overwrite": task_launch_message.arguments["overwrite"],
         }
@@ -189,7 +189,7 @@ class UploadCapability(BaseAgentCapability):
                 # Signal file completion
                 await self.send_to_agent(data={"type": "end_of_file"})
                 return True
-            except PermissionError as exc:
+            except OSError as exc:
                 self.event_logger.error(
                     message=f"Failed to upload asset '{target_name}': {exc}"
                 )
@@ -227,7 +227,9 @@ class UploadCapability(BaseAgentCapability):
         # Finalize
         if success:
             await self.send_to_agent(data={"type": "end_of_transfer"})
-            self.event_logger.artifact(
+            # Wait for summary from agent
+            await self.recv_from_agent()
+            self.event_logger.success(
                 message=f"Uploaded {'directory' if is_dir else 'file'} '{target_name}'"
             )
             return Success(message="Upload complete")

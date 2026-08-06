@@ -130,7 +130,8 @@ class C2TypesService:
         agent type.
 
         Compatibility is determined by the `compatible_listener_types` attribute of the
-        agent type.
+        agent template. A single agent type can be declared by more than one agent
+        template, in which case the result is the union of what each of them declares.
 
         Args:
             agent_type_name: The name of the agent type to look up.
@@ -142,9 +143,13 @@ class C2TypesService:
         compatible_listener_types = []
         for agent_profile in self._agent_profiles_service.get_all_agent_profiles():
             if str(agent_profile.agent_type.name) == agent_type_name:
-                for listener_type in agent_profile.agent_type.compatible_listener_types:
-                    if listener_type not in compatible_listener_types:
-                        compatible_listener_types.append(listener_type)
+                # Read off the template, not the agent type: `compatible_listener_types`
+                # is declared by `BaseAgentTemplate` and `BaseAgentType` has no such
+                # attribute, so going through the agent type raises `AttributeError`.
+                declared = agent_profile.agent_template.compatible_listener_types
+                for listener_type_name in declared:
+                    if listener_type_name not in compatible_listener_types:
+                        compatible_listener_types.append(listener_type_name)
         self._logger.debug(
             "Retrieved compatible listener types from agent type '{}'"
             " ({} compatible listener type(s) retrieved)",
@@ -260,10 +265,22 @@ class C2TypesService:
             ListenerTypeNotFoundError: If no listener type with the given name is
                 registered.
         """
-        agent_type = self.get_agent_type_by_name(agent_type_name)
+        # Both lookups are kept for their side effect of raising when either type is not
+        # registered, which is part of this method's contract.
+        self.get_agent_type_by_name(agent_type_name)
         listener_type = self.get_listener_type_by_name(listener_type_name)
 
-        if listener_type in agent_type.compatible_listener_types:
+        compatible_listener_type_names = (
+            self.get_compatible_listener_types_from_agent_type_name(
+                agent_type_name=agent_type_name,
+            )
+        )
+
+        # Compared by name rather than by object. A template declares its compatible
+        # listener types as a set of names, and listener types define no `__eq__`, so
+        # testing an instance for membership compares by identity against strings and
+        # can never match.
+        if listener_type.name in compatible_listener_type_names:
             self._logger.debug(
                 "Checked that agent type '{}' and listener type '{}' are compatible",
                 agent_type_name,
@@ -333,10 +350,23 @@ class C2TypesService:
             agent_type = agent_profile.agent_type
             if isinstance(agent_type, str):
                 if agent_type in agent_type_name_to_agent_profile_map:
-                    # Agent types need to be instances of the class
-                    agent_profile.agent_type = agent_type_name_to_agent_profile_map[
+                    # The map holds agent profiles, so the agent type is reached through
+                    # the matched profile rather than by calling it. The referenced
+                    # profile's own instance is shared rather than a fresh one built
+                    # from its class: agent types define no `__eq__`, so every consumer
+                    # that compares or deduplicates them does it by identity, and a
+                    # second instance would read as a different agent type carrying the
+                    # same name. Sharing is safe because `BaseAgentType` keeps its state
+                    # on the class, not the instance.
+                    resolved_agent_type = agent_type_name_to_agent_profile_map[
                         agent_type
-                    ]()
+                    ].agent_type
+                    # The loader assigns the same object to all three of these, so all
+                    # three have to be moved off the string together. The generator in
+                    # particular reads `agent_type.to_json()` when it serializes.
+                    agent_profile.agent_type = resolved_agent_type
+                    agent_profile.agent_template.agent_type = resolved_agent_type
+                    agent_profile.agent_generator.agent_type = resolved_agent_type
                 else:
                     raise UnresolvableAgentTypeReferenceError(
                         agent_template_str=str(agent_profile.agent_template),

@@ -1,5 +1,6 @@
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
+    ComponentFatalError,
     ComponentNotRunningError,
     ComponentOperationError,
     ComponentRuntimeError,
@@ -49,6 +50,14 @@ class ListenerStopError(ComponentStopError, ListenerOperationError):
     """Raised when a listener fails to stop during listener operation."""
 
     code = "LISTENER_STOP_ERROR"
+
+
+class ListenerFatalError(ComponentFatalError, ListenerOperationError):
+    """Raised when an unhandled exception escapes one of a listener's life cycle hooks,
+    terminating the listener fatally during listener operation.
+    """
+
+    code = "LISTENER_FATAL_ERROR"
 
 
 class ListenerStateError(

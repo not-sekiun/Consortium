@@ -184,7 +184,10 @@ class UserAccountsService:
     ) -> UserAccountModel:
         """Updates a user account's username, password, and/or role.
 
-        Only fields that are not `None` are updated.
+        Only fields that are not `None` are updated. A field submitted with the value
+        the account already holds is a no op: it is validated, then left unchanged and
+        unlogged. Submitting an account's own username is therefore accepted rather than
+        reported as a conflict.
 
         Args:
             user_account_id: The ID of the user account to update.
@@ -193,15 +196,15 @@ class UserAccountsService:
             role: The new role. When `None`, the role is not changed.
 
         Returns:
-            The updated user account.
+            The updated user account, whether or not any field changed.
 
         Raises:
             UserAccountIDNotFoundError: If no user account with the given ID exists.
             EmptyUserAccountUsernameError: If `username` is an empty string.
             EmptyUserAccountPasswordError: If `password` is an empty string.
             InvalidUserAccountRoleError: If `role` is not a valid user role value.
-            UserAccountUsernameAlreadyExistsError: If an account with the given username
-                already exists.
+            UserAccountUsernameAlreadyExistsError: If a different account already has
+                the given username.
         """
         # Calling the `get_user_account_by_user_account_id()` method will implicitly
         # check to see if the user account ID is valid.
@@ -209,53 +212,74 @@ class UserAccountsService:
             user_account_id=user_account_id,
         )
 
-        # TODO: Check for no ops and also add event firing
+        # TODO: Add event firing
+        # A field submitted with the value it already holds is a no op, never an error:
+        # clients read an account, edit one field and submit the rest back unchanged,
+        # and a `PATCH` has to stay idempotent so a client retrying after a timeout is
+        # not failed for work its first attempt already did. Skipping the assignment
+        # keeps the logging below (and the event firing above) describing only changes
+        # that actually happened. Validation still runs first either way, so a value
+        # that is invalid on its own terms is rejected rather than waved through on the
+        # grounds that nothing would change.
         if username is not None:
             if not username:
                 raise EmptyUserAccountUsernameError._during_user_account_modification(
                     user_account_str=str(user_account),
                 )
-            for existing_user_account in self.get_all_user_accounts():
-                if existing_user_account.username == username:
-                    raise UserAccountUsernameAlreadyExistsError._during_user_account_modification(
-                        username=username,
-                        user_account_str=str(user_account),
+            if username != user_account.username:
+                for existing_user_account in self.get_all_user_accounts():
+                    # The account being updated is excluded: the check means that no
+                    # *other* account may hold this username. Scanning every account
+                    # meant an account always found itself and reported a conflict with
+                    # itself, so re-submitting an account's own username failed.
+                    is_same_account = (
+                        existing_user_account.user_account_id
+                        == user_account.user_account_id
                     )
-            old_username = user_account.username
-            user_account.username = username
-            self._logger.info(
-                "Updated username for user account {} from '{}' to '{}'",
-                user_account,
-                old_username,
-                username,
-            )
+                    if is_same_account:
+                        continue
+                    if existing_user_account.username == username:
+                        raise UserAccountUsernameAlreadyExistsError._during_user_account_modification(
+                            username=username,
+                            user_account_str=str(user_account),
+                        )
+                old_username = user_account.username
+                user_account.username = username
+                self._logger.info(
+                    "Updated username for user account {} from '{}' to '{}'",
+                    user_account,
+                    old_username,
+                    username,
+                )
         if password is not None:
             if not password:
                 raise EmptyUserAccountPasswordError._during_user_account_modification(
                     user_account_str=str(user_account),
                 )
-            old_password = user_account.password
-            user_account.password = password
-            self._logger.info(
-                "Updated password for user account {} from '{}' to '{}'",
-                user_account,
-                old_password,
-                password,
-            )
+            if password != user_account.password:
+                old_password = user_account.password
+                user_account.password = password
+                self._logger.info(
+                    "Updated password for user account {} from '{}' to '{}'",
+                    user_account,
+                    old_password,
+                    password,
+                )
         if role is not None:
             if role not in self._authorization_service.get_all_roles():
                 raise InvalidUserAccountRoleError._during_user_account_modification(
                     role=role,
                     user_account_str=str(user_account),
                 )
-            old_role = user_account.role
-            user_account.role = role
-            self._logger.info(
-                "Updated role for {} from '{}' to '{}'",
-                user_account,
-                old_role,
-                role,
-            )
+            if role != user_account.role:
+                old_role = user_account.role
+                user_account.role = role
+                self._logger.info(
+                    "Updated role for {} from '{}' to '{}'",
+                    user_account,
+                    old_role,
+                    role,
+                )
 
         return user_account
 
@@ -469,16 +493,20 @@ class UserAccountsService:
                     username=new_user_account.username,
                     path=str(user_accounts_filepath),
                 )
-            # Known defect, tracked as H4 in HIGH_DIFF.md and left unchanged here:
-            # `new_usernames` is never appended to, so this check cannot fire and a file
-            # containing the same username twice loads as two separate accounts that
-            # share it. Deliberately not fixed alongside the validation rework, because
-            # making it fire can stop a server that boots today from booting.
+            # Distinct from the check above: that one catches a username the registry
+            # already holds, this one catches the same username appearing twice within
+            # this file. `existing_usernames` is snapshotted before the loop and is
+            # never extended, so without tracking the usernames read so far the second
+            # occurrence would pass both checks. It has to be rejected rather than
+            # deduplicated because every entry becomes a `UserAccountModel` with its own
+            # ID, so two entries sharing a username produce two real accounts, and only
+            # the first is ever reachable by username lookup.
             if new_user_account.username in new_usernames:
                 raise UserAccountsFileDuplicateUsernamesError(
                     path=str(user_accounts_filepath),
                     duplicate_username=new_user_account.username,
                 )
+            new_usernames.append(new_user_account.username)
             self._logger.debug("Read user account: {}", new_user_account)
             new_user_accounts.append(new_user_account)
 

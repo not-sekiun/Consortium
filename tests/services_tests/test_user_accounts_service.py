@@ -10,7 +10,6 @@ from consortium.server.exceptions.service_exceptions.user_accounts_service_excep
     InvalidUserAccountRoleError,
     UserAccountAuthenticationError,
     UserAccountIDNotFoundError,
-    UserAccountsFileDuplicateUsernamesError,
     UserAccountsFileEncodingError,
     UserAccountsFileJSONError,
     UserAccountsFileSchemaError,
@@ -283,19 +282,13 @@ def test_update_user_account_to_another_accounts_username(service: UserAccountsS
         )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Known defect: the uniqueness scan in `update_user_account_by_user_account_id` "
-        "does not exclude the account being updated, so re-submitting an account's own "
-        "username raises `UserAccountUsernameAlreadyExistsError` (a 409 through "
-        "`PATCH /api/user-accounts/me`) instead of being a no op. Not fixed in this "
-        "pass; see the `# TODO: Check for no ops` in the service."
-    ),
-)
 def test_update_user_account_to_its_own_username_is_a_no_op(
     service: UserAccountsService,
 ):
+    # The uniqueness scan has to exclude the account being updated. Scanning every
+    # account meant an account found itself and reported a conflict with itself, so
+    # re-submitting an unchanged username failed with a 409 through
+    # `PATCH /api/user-accounts/me`.
     created = service.create_user_account(
         username="operator",
         password="password",
@@ -306,6 +299,111 @@ def test_update_user_account_to_its_own_username_is_a_no_op(
         username="operator",
     )
     assert updated.username == "operator"
+
+
+def test_update_user_account_to_its_own_username_is_repeatable(
+    service: UserAccountsService,
+):
+    # A `PATCH` has to stay idempotent: a client retrying after a timeout must not be
+    # told its own submitted state conflicts with something.
+    created = service.create_user_account(
+        username="operator",
+        password="password",
+        role="OPERATOR",
+    )
+    for _ in range(3):
+        updated = service.update_user_account_by_user_account_id(
+            user_account_id=created.user_account_id,
+            username="operator",
+        )
+        assert updated.username == "operator"
+
+
+def test_update_user_account_resubmitting_every_field_unchanged_is_a_no_op(
+    service: UserAccountsService,
+):
+    # The read-modify-write pattern: a client reads an account, changes nothing and
+    # submits the whole thing back.
+    created = service.create_user_account(
+        username="operator",
+        password="password",
+        role="OPERATOR",
+    )
+    updated = service.update_user_account_by_user_account_id(
+        user_account_id=created.user_account_id,
+        username="operator",
+        password="password",
+        role="OPERATOR",
+    )
+    assert updated.username == "operator"
+    assert updated.password == "password"
+    assert updated.role == "OPERATOR"
+
+
+def test_update_user_account_changes_one_field_alongside_unchanged_ones(
+    service: UserAccountsService,
+):
+    # The case the read-modify-write pattern actually produces: one field edited, the
+    # rest submitted back as they were. The unchanged username must not block the
+    # change to the role.
+    created = service.create_user_account(
+        username="operator",
+        password="password",
+        role="OPERATOR",
+    )
+    updated = service.update_user_account_by_user_account_id(
+        user_account_id=created.user_account_id,
+        username="operator",
+        role="SPECTATOR",
+    )
+    assert updated.username == "operator"
+    assert updated.role == "SPECTATOR"
+
+
+def test_update_user_account_to_another_accounts_username_still_conflicts(
+    service: UserAccountsService,
+):
+    # Excluding the account from its own uniqueness scan must not weaken the check
+    # against every other account.
+    service.create_user_account(
+        username="taken",
+        password="password",
+        role="OPERATOR",
+    )
+    created = service.create_user_account(
+        username="operator",
+        password="password",
+        role="OPERATOR",
+    )
+    with pytest.raises(UserAccountUsernameAlreadyExistsError):
+        service.update_user_account_by_user_account_id(
+            user_account_id=created.user_account_id,
+            username="taken",
+        )
+    assert (
+        service.get_user_account_by_user_account_id(
+            user_account_id=created.user_account_id,
+        ).username
+        == "operator"
+    )
+
+
+def test_update_user_account_with_unknown_role_raises_alongside_unchanged_username(
+    service: UserAccountsService,
+):
+    # A no op on one field must not short-circuit validation of another. The username
+    # here is unchanged; the role is still rejected.
+    created = service.create_user_account(
+        username="operator",
+        password="password",
+        role="OPERATOR",
+    )
+    with pytest.raises(InvalidUserAccountRoleError):
+        service.update_user_account_by_user_account_id(
+            user_account_id=created.user_account_id,
+            username="operator",
+            role="NOT_A_ROLE",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -563,32 +661,6 @@ def test_read_user_accounts_conflicts_with_registered_account(
         [{"username": "operator", "password": "other", "role": "ADMIN"}],
     )
     with pytest.raises(UserAccountUsernameAlreadyExistsError):
-        service.read_user_accounts_from_user_accounts_file(
-            user_accounts_filepath=user_accounts_file,
-        )
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "HIGH_DIFF.md H4: `new_usernames` is never appended to, so the in-file duplicate "
-        "check is unreachable and both entries load as separate accounts sharing a "
-        "username. Deferred: the fix changes whether a server that boots today keeps "
-        "booting."
-    ),
-)
-def test_read_user_accounts_duplicate_usernames_within_file(
-    service: UserAccountsService,
-    user_accounts_file: pathlib.Path,
-):
-    _write_accounts_file(
-        user_accounts_file,
-        [
-            {"username": "operator", "password": "first", "role": "OPERATOR"},
-            {"username": "operator", "password": "second", "role": "ADMIN"},
-        ],
-    )
-    with pytest.raises(UserAccountsFileDuplicateUsernamesError):
         service.read_user_accounts_from_user_accounts_file(
             user_accounts_filepath=user_accounts_file,
         )

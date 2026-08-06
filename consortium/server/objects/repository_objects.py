@@ -180,10 +180,25 @@ class RepositoryFile:
         if path.exists() and not exist_ok:
             raise RepositoryFileAlreadyExistsError(repository_file_str=str(path))
 
+        # Checked before anything touches the disk so an unsupported type cannot leave a
+        # file or freshly created parent directories behind. Only `None` means "no
+        # content": every other unsupported type used to fall through to `touch()` and
+        # produce a silently empty file, so a caller passing something this cannot write
+        # (a generator, for instance) got an empty file and no error.
+        if content is not None and not (
+            hasattr(content, "read") or isinstance(content, str | bytes)
+        ):
+            raise TypeError(
+                "content must be str, bytes, a readable file object or None, not "
+                f"{type(content).__name__}"
+            )
+
         with _wrap_filesystem_errors(operation="create the file", path=path):
             path.parent.mkdir(parents=True, exist_ok=True)
 
-            if hasattr(content, "read"):
+            if content is None:
+                path.touch()
+            elif hasattr(content, "read"):
                 first_chunk = content.read(_DEFAULT_CHUNK_SIZE)
                 is_binary = isinstance(first_chunk, bytes)
                 mode = "wb" if is_binary else "w"
@@ -196,12 +211,11 @@ class RepositoryFile:
             elif isinstance(content, bytes):
                 with path.open(mode="wb") as file:
                     file.write(content)
-            elif isinstance(content, str):
+            else:
+                # `content` is a `str`, the only remaining option the check above lets
+                # through.
                 with path.open(mode="w", encoding=encoding) as file:
                     file.write(content)
-            else:
-                # content is None (or unsupported type) -> empty file, text mode
-                path.touch()
 
         return cls(path=path, name=name, description=description, data=data)
 
@@ -554,6 +568,18 @@ class RepositoryDirectory:
         if isinstance(content, str):
             content = pathlib.Path(content)
 
+        # Checked before the directory is made so an unsupported type cannot leave an
+        # empty directory behind. Only `None` means "no content": every other
+        # unsupported type previously fell past all three branches below and produced a
+        # silently empty directory with no error.
+        if content is not None and not (
+            isinstance(content, pathlib.Path | bytes) or hasattr(content, "read")
+        ):
+            raise TypeError(
+                "content must be str, pathlib.Path, bytes, a readable file object or "
+                f"None, not {type(content).__name__}"
+            )
+
         if not path.exists():
             with _wrap_filesystem_errors(operation="create the directory", path=path):
                 path.mkdir()
@@ -616,6 +642,8 @@ class RepositoryDirectory:
                     raise InvalidRepositoryDirectoryArchiveFileFormatError(
                         archive_file_format=archive_file_format
                     ) from None
+        # `content` is `None`, the only remaining option the check above lets through:
+        # the directory made at the top of this method is the whole result.
 
         return cls(path=path, name=name, description=description, data=data)
 

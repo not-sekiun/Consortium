@@ -1,4 +1,3 @@
-import traceback
 import uuid
 from datetime import datetime
 from types import SimpleNamespace
@@ -18,6 +17,7 @@ from consortium.framework._core.event_logging.event_logger import EventLogger
 from consortium.framework._core.framework_exceptions.listeners_framework_exceptions import (
     ListenerAlreadyRunningError,
     ListenerCreationParameterTypeError,
+    ListenerFatalError,
     ListenerNotRunningError,
     ListenerRuntimeError,
     ListenerStartError,
@@ -92,6 +92,7 @@ class BaseListener(ComponentLifeCycle):
         start=ListenerStartError,
         stop=ListenerStopError,
         runtime=ListenerRuntimeError,
+        fatal=ListenerFatalError,
         not_running=ListenerNotRunningError,
         already_running=ListenerAlreadyRunningError,
     )
@@ -263,11 +264,13 @@ class BaseListener(ComponentLifeCycle):
             ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
-        self.logger.opt(colors=True).error(
-            "<bold><red>Fatal error occurred within listener {} while it was {}:</></>\n{}",
+        # Pass the exception object rather than a pre-rendered traceback string: it
+        # reaches sinks as `record["exception"]`, so a registered sink can walk the
+        # exception and its `__cause__` chain instead of parsing text out of the message.
+        self.logger.opt(colors=True, exception=exc).error(
+            "<bold><red>Fatal error occurred within listener {} while it was {}:</></>",
             str(self),
             ctx_to_str_map[fatal_context],
-            traceback.format_exc(),
         )
 
     # start(), stop() and cancel() below add no behaviour and exist purely to carry their
@@ -286,6 +289,9 @@ class BaseListener(ComponentLifeCycle):
         Raises:
             ListenerAlreadyRunningError: If the listener is already in a running state.
             ListenerStartError: If the listener fails to start due to a lifecycle error.
+            ListenerFatalError: If an unhandled exception escapes `on_started`, leaving
+                the listener in a fatal state. The original exception is chained onto it
+                as `__cause__`.
         """
         await super().start()
 
@@ -295,6 +301,9 @@ class BaseListener(ComponentLifeCycle):
         Raises:
             ListenerNotRunningError: If the listener is not currently running.
             ListenerStopError: If the listener fails to stop cleanly.
+            ListenerFatalError: If an unhandled exception escapes `on_stopped`, leaving
+                the listener in a fatal state. The original exception is chained onto it
+                as `__cause__`.
         """
         await super().stop()
 
@@ -303,6 +312,9 @@ class BaseListener(ComponentLifeCycle):
 
         Raises:
             ListenerNotRunningError: If the listener is not currently running.
+            ListenerFatalError: If an unhandled exception escapes `on_cancelled`, leaving
+                the listener in a fatal state. The original exception is chained onto it
+                as `__cause__`.
         """
         await super().cancel()
 

@@ -179,3 +179,61 @@ async def test_unload_procedure_exception_force_cancels(registry):
     plugin.cancel.assert_called_once()
     mock_logger.error.assert_called_once()
     assert result is plugin
+
+
+# REGRESSION: the forced unload used to call cancel() unconditionally. cancel() only
+# accepts a RUNNING component, and the states a failed stop actually leaves behind are
+# STOPPING (the stop hung inside `on_stopped` and timed out) and FATAL (the stop raised an
+# unhandled exception). Both raised PluginNotRunningError straight back out of the
+# handler, so `force_unload=True` failed in exactly the situations it exists for.
+@pytest.mark.parametrize(
+    ("state", "raised_exception"),
+    [
+        (State.STOPPING, TimeoutError()),
+        (State.FATAL, RuntimeError("unexpected")),
+    ],
+)
+@pytest.mark.anyio
+async def test_unload_procedure_force_skips_cancel_for_an_uncancellable_plugin(
+    registry,
+    state: State,
+    raised_exception: Exception,
+):
+    plugin = _make_plugin(state=State.RUNNING)
+
+    def _fail_and_leave_plugin_in(coro, *args, **kwargs):
+        coro.close()
+        plugin.status.state = state
+        raise raised_exception
+
+    with patch(
+        "consortium.server.services.component_registry_services.plugin_registry_service.asyncio.wait_for",
+        side_effect=_fail_and_leave_plugin_in,
+    ):
+        result = await registry._component_unload_procedure(
+            plugin, {"timeout": 5, "force_unload": True, "logger": MagicMock()}
+        )
+
+    plugin.cancel.assert_not_called()
+    assert result is plugin
+
+
+# A plugin whose `on_cancelled` hook raises takes the cancellation fatal. The forced
+# unload has to survive that too, since the whole point is that the plugin comes out of
+# the registry regardless.
+@pytest.mark.anyio
+async def test_unload_procedure_force_survives_a_failing_cancel(registry):
+    plugin = _make_plugin(state=State.RUNNING)
+    plugin.cancel.side_effect = RuntimeError("cancel exploded")
+    mock_logger = MagicMock()
+
+    with patch(
+        "consortium.server.services.component_registry_services.plugin_registry_service.asyncio.wait_for",
+        side_effect=_closing_side_effect(RuntimeError("unexpected")),
+    ):
+        result = await registry._component_unload_procedure(
+            plugin, {"timeout": 5, "force_unload": True, "logger": mock_logger}
+        )
+
+    plugin.cancel.assert_called_once()
+    assert result is plugin

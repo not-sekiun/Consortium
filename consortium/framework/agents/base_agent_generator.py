@@ -1,5 +1,4 @@
 import pathlib
-import traceback
 import types
 import uuid
 from typing import TYPE_CHECKING, Any, final, get_type_hints
@@ -19,10 +18,12 @@ from consortium.framework._core.event_logging.event_logger import EventLogger
 from consortium.framework._core.framework_exceptions.agent_generators_framework_exceptions import (
     AgentGeneratorAlreadyRunningError,
     AgentGeneratorBuildStepConfigurationParameterTypeError,
+    AgentGeneratorBuildStepFatalError,
     AgentGeneratorBuildStepOverridesFinalMethodError,
     AgentGeneratorBuildStepRuntimeError,
     AgentGeneratorConfigurationParameterTypeError,
     AgentGeneratorCreationParameterTypeError,
+    AgentGeneratorFatalError,
     AgentGeneratorNotRunningError,
     AgentGeneratorOverridesFinalMethodError,
     AgentGeneratorRuntimeError,
@@ -91,11 +92,13 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
     name: str
     description: str = ""
 
-    # Only the runtime slot has a build step specific class. The remaining slots keep the
-    # generic component errors, so a build step start or stop failure reports as a
-    # component exactly as it did before this set existed.
+    # Only the runtime and fatal slots have a build step specific class, since those are
+    # the two a build step failure actually reaches. The remaining slots keep the generic
+    # component errors, so a build step start or stop failure reports as a component
+    # exactly as it did before this set existed.
     _component_life_cycle_exceptions = ComponentLifeCycleExceptions(
         runtime=AgentGeneratorBuildStepRuntimeError,
+        fatal=AgentGeneratorBuildStepFatalError,
     )
 
     def __init__(self, agent_templates_payload_service: AgentTemplatesPayloadsService):
@@ -278,11 +281,13 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
             ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
-        self.logger.opt(colors=True).error(
-            "<bold><red>Fatal error occurred within agent generator build step {} while it was {}:</></>\n{}",
+        # Pass the exception object rather than a pre-rendered traceback string: it
+        # reaches sinks as `record["exception"]`, so a registered sink can walk the
+        # exception and its `__cause__` chain instead of parsing text out of the message.
+        self.logger.opt(colors=True, exception=exc).error(
+            "<bold><red>Fatal error occurred within agent generator build step {} while it was {}:</></>",
             str(self),
             ctx_to_str_map[fatal_context],
-            traceback.format_exc(),
         )
 
     async def run(
@@ -407,6 +412,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
         start=AgentGeneratorStartError,
         stop=AgentGeneratorStopError,
         runtime=AgentGeneratorRuntimeError,
+        fatal=AgentGeneratorFatalError,
         not_running=AgentGeneratorNotRunningError,
         already_running=AgentGeneratorAlreadyRunningError,
     )
@@ -683,11 +689,13 @@ class BaseAgentGenerator(ComponentLifeCycle):
             ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
-        self.logger.opt(colors=True).error(
-            "<bold><red>Fatal error occurred within agent generator {} while it was {}:</></>\n{}",
+        # Pass the exception object rather than a pre-rendered traceback string: it
+        # reaches sinks as `record["exception"]`, so a registered sink can walk the
+        # exception and its `__cause__` chain instead of parsing text out of the message.
+        self.logger.opt(colors=True, exception=exc).error(
+            "<bold><red>Fatal error occurred within agent generator {} while it was {}:</></>",
             str(self),
             ctx_to_str_map[fatal_context],
-            traceback.format_exc(),
         )
 
     # start() and cancel() below add no behaviour and exist purely to carry their
@@ -707,6 +715,9 @@ class BaseAgentGenerator(ComponentLifeCycle):
         Raises:
             AgentGeneratorAlreadyRunningError: If the generator is already in a running state.
             AgentGeneratorStartError: If the generator fails to start due to a lifecycle error.
+            AgentGeneratorFatalError: If an unhandled exception escapes `on_started`,
+                leaving the generator in a fatal state. The original exception is chained
+                onto it as `__cause__`.
         """
         await super().start()
 
@@ -715,6 +726,9 @@ class BaseAgentGenerator(ComponentLifeCycle):
 
         Raises:
             AgentGeneratorNotRunningError: If the generator is not currently running.
+            AgentGeneratorFatalError: If an unhandled exception escapes `on_cancelled`,
+                leaving the generator in a fatal state. The original exception is chained
+                onto it as `__cause__`.
         """
         await super().cancel()
 
@@ -726,6 +740,9 @@ class BaseAgentGenerator(ComponentLifeCycle):
         Raises:
             AgentGeneratorNotRunningError: If the generator is not currently running.
             AgentGeneratorStopError: If the generator fails to stop cleanly.
+            AgentGeneratorFatalError: If an unhandled exception escapes `on_stopped`,
+                leaving the generator in a fatal state. The original exception is chained
+                onto it as `__cause__`.
         """
         await super().stop()
 

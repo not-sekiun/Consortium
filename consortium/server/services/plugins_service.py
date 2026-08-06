@@ -327,6 +327,8 @@ class PluginsService:
             PluginAlreadyRegisteredError: If a plugin with the same ID is already
                 registered.
             PluginStartError: If the plugin autostarts but fails to start.
+            PluginFatalError: If the plugin autostarts and an unhandled exception escapes
+                its `on_started` hook, leaving the plugin in a fatal state.
         """
         plugin = await self._plugin_registry_service.load_component_from_directory(
             directory=directory,
@@ -364,6 +366,8 @@ class PluginsService:
             PluginStopError: If the plugin fails to stop and `force_unload` is `False`.
             PluginStopTimeoutError: If the plugin does not stop within `timeout` and
                 `force_unload` is `False`.
+            PluginFatalError: If an unhandled exception escapes the plugin's `on_stopped`
+                hook and `force_unload` is `False`, leaving the plugin in a fatal state.
         """
         plugin = await self._plugin_registry_service.unload_component_by_component_id(
             component_id=plugin_id,
@@ -443,6 +447,10 @@ class PluginsService:
             PluginAlreadyRegisteredError: If a plugin with the same ID is already
                 registered when it is reloaded.
             PluginStartError: If the reloaded plugin autostarts but fails to start.
+            PluginFatalError: If an unhandled exception escapes the plugin's `on_stopped`
+                hook during unload and `force_unload` is `False`, or escapes its
+                `on_started` hook when the reloaded plugin autostarts, leaving the plugin
+                in a fatal state.
         """
         plugin = await self._plugin_registry_service.reload_component_by_component_id(
             component_id=plugin_id,
@@ -720,6 +728,8 @@ class PluginsService:
             PluginNotFoundError: If no plugin with the given ID is registered.
             PluginAlreadyRunningError: If the plugin is already running.
             PluginStartError: If the plugin fails to start.
+            PluginFatalError: If an unhandled exception escapes the plugin's `on_started`
+                hook, leaving the plugin in a fatal state.
         """
         plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
         await plugin.start()
@@ -746,6 +756,8 @@ class PluginsService:
             PluginNotFoundError: If no plugin with the given ID is registered.
             PluginNotRunningError: If the plugin is not running.
             PluginStopError: If the plugin fails to stop.
+            PluginFatalError: If an unhandled exception escapes the plugin's `on_stopped`
+                hook, leaving the plugin in a fatal state.
         """
         plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
         await plugin.stop()
@@ -781,6 +793,9 @@ class PluginsService:
             PluginAlreadyRunningError: If `blocking` is `True` and the plugin is already
                 running when the restart attempts to start it.
             PluginStartError: If `blocking` is `True` and the plugin fails to start.
+            PluginFatalError: If `blocking` is `True` and an unhandled exception escapes
+                the plugin's `on_stopped` or `on_started` hook, leaving the plugin in a
+                fatal state.
         """
 
         async def _restart_plugin():
@@ -816,6 +831,8 @@ class PluginsService:
         Raises:
             PluginNotFoundError: If no plugin with the given ID is registered.
             PluginNotRunningError: If the plugin is not running.
+            PluginFatalError: If an unhandled exception escapes the plugin's
+                `on_cancelled` hook, leaving the plugin in a fatal state.
         """
         plugin = self.get_plugin_by_plugin_id(plugin_id=plugin_id)
         await plugin.cancel()

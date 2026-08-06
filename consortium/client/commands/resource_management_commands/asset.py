@@ -28,7 +28,9 @@ from consortium.client.utils.printer_utils import (
     print_success,
 )
 from consortium.client.utils.repository_resource_command_utils import (
+    archive_directory_to_file,
     download_resource_stream_to_file,
+    report_resource_upload_progress,
 )
 
 
@@ -380,25 +382,30 @@ class AssetCommand(BaseConnectedCommand):
         if asset_path.is_dir():
             print_info(f"Uploading asset directory: '{asset_path}'")
             with tempfile.TemporaryDirectory() as temp_dir_path:
-                # When the archive file is created by `shutil.make_archive`, the
-                # .zip file extension is appended automatically as inferred from the
-                # `format` parameter.
-                temp_archive_file = pathlib.Path(temp_dir_path, "archive")
-                shutil.make_archive(
-                    base_name=str(temp_archive_file.resolve()),
-                    format="zip",
-                    root_dir=asset_path,
+                temp_archive_file_path = pathlib.Path(temp_dir_path, "archive.zip")
+                await archive_directory_to_file(
+                    directory_path=asset_path,
+                    output_archive_file_path=temp_archive_file_path,
                 )
-                # The actual `temp_archive_file` file path object does not include
-                # the .zip file extension.
-                with temp_archive_file.with_suffix(".zip").open("rb") as asset_file:
-                    asset = await rest_api.upload_asset(
+                with temp_archive_file_path.open("rb") as asset_file:
+                    # The archive is measured rather than the directory it was made
+                    # from: what is uploaded is the compressed archive, so its size is
+                    # the only total the upload can be reported against.
+                    with report_resource_upload_progress(
                         file_object=asset_file,
-                        is_directory=True,
-                        name=parsed_args.name if parsed_args.name else asset_path.name,
-                        description=parsed_args.description,
-                        asset_directory_archive_file_format=".zip",
-                    )
+                        total_size_bytes=temp_archive_file_path.stat().st_size,
+                    ) as upload_file_object:
+                        asset = await rest_api.upload_asset(
+                            file_object=upload_file_object,
+                            is_directory=True,
+                            name=(
+                                parsed_args.name
+                                if parsed_args.name
+                                else asset_path.name
+                            ),
+                            description=parsed_args.description,
+                            asset_directory_archive_file_format=".zip",
+                        )
             print_success(
                 f"Uploaded asset directory '{asset_path}' as: "
                 f"'{asset['name']}' ({asset['resource_id']})"
@@ -406,12 +413,16 @@ class AssetCommand(BaseConnectedCommand):
         else:
             print_info(f"Uploading asset file: '{asset_path}'")
             with asset_path.open("rb") as asset_file:
-                asset = await rest_api.upload_asset(
+                with report_resource_upload_progress(
                     file_object=asset_file,
-                    is_directory=False,
-                    name=parsed_args.name if parsed_args.name else asset_path.name,
-                    description=parsed_args.description,
-                )
+                    total_size_bytes=asset_path.stat().st_size,
+                ) as upload_file_object:
+                    asset = await rest_api.upload_asset(
+                        file_object=upload_file_object,
+                        is_directory=False,
+                        name=parsed_args.name if parsed_args.name else asset_path.name,
+                        description=parsed_args.description,
+                    )
             print_success(
                 f"Uploaded asset file '{asset_path}' as: "
                 f"'{asset['name']}' ({asset['resource_id']})"

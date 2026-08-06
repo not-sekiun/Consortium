@@ -27,18 +27,19 @@ class _ListenerTypeB(BaseListenerType):
     name = "type_b"
 
 
+# Deliberately left without a `compatible_listener_types` attribute. `BaseAgentType`
+# does not declare one, and these stubs previously added it so that the service could
+# read it off the agent type. That hid the defect these tests now cover: compatibility
+# is declared by the agent template, and reaching for it on the agent type raises
+# `AttributeError` against any real agent type.
 class _AgentTypeX(BaseAgentType):
     name = "agent_x"
     agent_capabilities = set()
-    # compatible_listener_types is not defined on BaseAgentType but is accessed by
-    # get_compatible_listener_types_from_agent_type_name; set it here for tests.
-    compatible_listener_types: list = []
 
 
 class _AgentTypeY(BaseAgentType):
     name = "agent_y"
     agent_capabilities = set()
-    compatible_listener_types: list = []
 
 
 # ---------------------------------------------------------------------------
@@ -214,10 +215,38 @@ def test_get_compatible_listener_types_from_agent_type_name_returns_names(
     service: C2TypesService, agent_profiles_service: MagicMock
 ):
     at = _AgentTypeX()
-    # compatible_listener_types is read from agent_type (not agent_template) by this method
-    at.compatible_listener_types = ["type_a", "type_b"]
     profiles = [_make_agent_profile(at, {"type_a", "type_b"})]
     agent_profiles_service.get_all_agent_profiles.return_value = profiles
+    result = service.get_compatible_listener_types_from_agent_type_name("agent_x")
+    assert set(result) == {"type_a", "type_b"}
+
+
+def test_get_compatible_listener_types_reads_the_template_not_the_agent_type(
+    service: C2TypesService, agent_profiles_service: MagicMock
+):
+    # A real agent type has no `compatible_listener_types`, so a lookup that goes
+    # through the agent type raises `AttributeError` rather than returning names.
+    at = _AgentTypeX()
+    assert not hasattr(at, "compatible_listener_types")
+
+    agent_profiles_service.get_all_agent_profiles.return_value = [
+        _make_agent_profile(at, {"type_a"})
+    ]
+    assert service.get_compatible_listener_types_from_agent_type_name("agent_x") == [
+        "type_a"
+    ]
+
+
+def test_get_compatible_listener_types_unions_across_templates(
+    service: C2TypesService, agent_profiles_service: MagicMock
+):
+    # One agent type can be declared by more than one template, each with its own
+    # compatible listener types. The result is the union of all of them.
+    at = _AgentTypeX()
+    agent_profiles_service.get_all_agent_profiles.return_value = [
+        _make_agent_profile(at, {"type_a"}),
+        _make_agent_profile(at, {"type_b"}),
+    ]
     result = service.get_compatible_listener_types_from_agent_type_name("agent_x")
     assert set(result) == {"type_a", "type_b"}
 
@@ -235,12 +264,17 @@ def test_get_compatible_listener_types_from_agent_type_name_no_match(
 def test_get_compatible_listener_types_from_agent_type_name_deduplicates(
     service: C2TypesService, agent_profiles_service: MagicMock
 ):
+    # Two templates declaring the same agent type and overlapping listener types must
+    # not report the overlap twice.
     at = _AgentTypeX()
-    at.compatible_listener_types = ["type_a", "type_a", "type_b"]
-    profiles = [_make_agent_profile(at, set())]
+    profiles = [
+        _make_agent_profile(at, {"type_a", "type_b"}),
+        _make_agent_profile(at, {"type_a"}),
+    ]
     agent_profiles_service.get_all_agent_profiles.return_value = profiles
     result = service.get_compatible_listener_types_from_agent_type_name("agent_x")
     assert len(result) == len(set(result))
+    assert set(result) == {"type_a", "type_b"}
 
 
 # ---------------------------------------------------------------------------
@@ -327,7 +361,6 @@ def test_are_c2_types_compatible_returns_true(
 ):
     lt = _ListenerTypeA()
     at = _AgentTypeX()
-    at.compatible_listener_types = [lt]
     listener_profiles_service.get_all_listener_profiles.return_value = [
         _make_listener_profile(lt)
     ]
@@ -337,6 +370,62 @@ def test_are_c2_types_compatible_returns_true(
     assert service.are_c2_types_compatible("agent_x", "type_a") is True
 
 
+def test_are_c2_types_compatible_matches_on_name_not_identity(
+    service: C2TypesService,
+    listener_profiles_service: MagicMock,
+    agent_profiles_service: MagicMock,
+):
+    # The template declares compatibility as a name. The listener type the service
+    # resolves is a separate object that shares only that name, and `BaseListenerType`
+    # defines no `__eq__`, so anything comparing objects here reports incompatible.
+    at = _AgentTypeX()
+    declared = _ListenerTypeA()
+    resolved = _ListenerTypeA()
+    assert declared is not resolved
+    assert declared != resolved
+
+    listener_profiles_service.get_all_listener_profiles.return_value = [
+        _make_listener_profile(resolved)
+    ]
+    agent_profiles_service.get_all_agent_profiles.return_value = [
+        _make_agent_profile(at, {declared.name})
+    ]
+    assert service.are_c2_types_compatible("agent_x", "type_a") is True
+
+
+def test_are_c2_types_compatible_true_for_one_of_several_declared(
+    service: C2TypesService,
+    listener_profiles_service: MagicMock,
+    agent_profiles_service: MagicMock,
+):
+    at = _AgentTypeX()
+    listener_profiles_service.get_all_listener_profiles.return_value = [
+        _make_listener_profile(_ListenerTypeA()),
+        _make_listener_profile(_ListenerTypeB()),
+    ]
+    agent_profiles_service.get_all_agent_profiles.return_value = [
+        _make_agent_profile(at, {"type_a", "type_b"})
+    ]
+    assert service.are_c2_types_compatible("agent_x", "type_a") is True
+    assert service.are_c2_types_compatible("agent_x", "type_b") is True
+
+
+def test_are_c2_types_compatible_false_for_undeclared_listener_type(
+    service: C2TypesService,
+    listener_profiles_service: MagicMock,
+    agent_profiles_service: MagicMock,
+):
+    at = _AgentTypeX()
+    listener_profiles_service.get_all_listener_profiles.return_value = [
+        _make_listener_profile(_ListenerTypeA()),
+        _make_listener_profile(_ListenerTypeB()),
+    ]
+    agent_profiles_service.get_all_agent_profiles.return_value = [
+        _make_agent_profile(at, {"type_a"})
+    ]
+    assert service.are_c2_types_compatible("agent_x", "type_b") is False
+
+
 def test_are_c2_types_compatible_returns_false(
     service: C2TypesService,
     listener_profiles_service: MagicMock,
@@ -344,7 +433,6 @@ def test_are_c2_types_compatible_returns_false(
 ):
     lt = _ListenerTypeA()
     at = _AgentTypeX()
-    at.compatible_listener_types = []
     listener_profiles_service.get_all_listener_profiles.return_value = [
         _make_listener_profile(lt)
     ]
@@ -374,7 +462,6 @@ def test_are_c2_types_compatible_missing_listener_type_raises(
     agent_profiles_service: MagicMock,
 ):
     at = _AgentTypeX()
-    at.compatible_listener_types = []
     listener_profiles_service.get_all_listener_profiles.return_value = []
     agent_profiles_service.get_all_agent_profiles.return_value = [
         _make_agent_profile(at, set())
@@ -459,25 +546,98 @@ def test_resolve_agent_type_references_duplicate_agent_type_name_raises(
         service._resolve_agent_type_references()
 
 
-def test_resolve_agent_type_references_resolves_string_reference(
+def test_resolve_agent_type_references_resolves_to_an_agent_type_instance(
     service: C2TypesService, agent_profiles_service: MagicMock
 ):
-    # One profile has a real BaseAgentType; another references it by name (string).
-    # The resolution code does: p_ref.agent_type = map[string]() where map[string] is
-    # p_real (the profile). Since p_real is a MagicMock, calling it returns a child
-    # MagicMock, so p_ref.agent_type is no longer the original string after resolution.
+    # One profile declares a real agent type, another references it by name. After
+    # resolution the reference must read back as an actual `BaseAgentType` instance,
+    # which is what every consumer of `agent_type` expects to find there.
     at = _AgentTypeX()
-
     p_real = _make_agent_profile(at, set())
-    p_ref = MagicMock()
-    p_ref.agent_type = "agent_x"
-    p_ref.agent_template = MagicMock()
-    p_ref.agent_template.compatible_listener_types = set()
+    p_ref = _make_agent_profile("agent_x", set())
 
     agent_profiles_service.get_all_agent_profiles.return_value = [p_real, p_ref]
     service._resolve_agent_type_references()
-    # The string reference was replaced (agent_type is no longer the string "agent_x")
-    assert p_ref.agent_type != "agent_x"
+
+    assert isinstance(p_ref.agent_type, BaseAgentType)
+    assert p_ref.agent_type.name == "agent_x"
+
+
+def test_resolve_agent_type_references_shares_the_referenced_instance(
+    service: C2TypesService, agent_profiles_service: MagicMock
+):
+    # The reference resolves to the very same object the referenced profile carries,
+    # not to a second instance of its class. Agent types define no `__eq__`, so a
+    # separate instance would be a different agent type to every consumer that
+    # compares or deduplicates them.
+    at = _AgentTypeX()
+    p_real = _make_agent_profile(at, set())
+    p_ref = _make_agent_profile("agent_x", set())
+
+    agent_profiles_service.get_all_agent_profiles.return_value = [p_real, p_ref]
+    service._resolve_agent_type_references()
+
+    assert p_ref.agent_type is at
+
+
+def test_resolve_agent_type_references_deduplicates_after_resolution(
+    service: C2TypesService, agent_profiles_service: MagicMock
+):
+    # The payoff of sharing the instance: a referencing profile does not make the same
+    # agent type name show up twice in the registered agent types.
+    at = _AgentTypeX()
+    p_real = _make_agent_profile(at, set())
+    p_ref = _make_agent_profile("agent_x", set())
+
+    agent_profiles_service.get_all_agent_profiles.return_value = [p_real, p_ref]
+    service._resolve_agent_type_references()
+
+    assert service.get_all_agent_types() == [at]
+
+
+def test_resolve_agent_type_references_resolves_template_and_generator(
+    service: C2TypesService, agent_profiles_service: MagicMock
+):
+    # The loader points the profile, its template and its generator at one agent type
+    # object, so resolution has to move all three off the string. The generator matters
+    # in particular: it calls `agent_type.to_json()` when it serializes itself.
+    at = _AgentTypeX()
+    p_real = _make_agent_profile(at, set())
+    p_ref = _make_agent_profile("agent_x", set())
+
+    agent_profiles_service.get_all_agent_profiles.return_value = [p_real, p_ref]
+    service._resolve_agent_type_references()
+
+    assert p_ref.agent_template.agent_type is at
+    assert p_ref.agent_generator.agent_type is at
+
+
+def test_resolve_agent_type_references_leaves_resolved_profiles_alone(
+    service: C2TypesService, agent_profiles_service: MagicMock
+):
+    at = _AgentTypeX()
+    p_real = _make_agent_profile(at, set())
+
+    agent_profiles_service.get_all_agent_profiles.return_value = [p_real]
+    service._resolve_agent_type_references()
+
+    assert p_real.agent_type is at
+
+
+def test_resolve_agent_type_references_is_idempotent(
+    service: C2TypesService, agent_profiles_service: MagicMock
+):
+    # The resolver runs again on every profile load, reload and unload, so it has to
+    # tolerate being handed profiles it has already resolved.
+    at = _AgentTypeX()
+    p_real = _make_agent_profile(at, set())
+    p_ref = _make_agent_profile("agent_x", set())
+
+    agent_profiles_service.get_all_agent_profiles.return_value = [p_real, p_ref]
+    service._resolve_agent_type_references()
+    service._resolve_agent_type_references()
+
+    assert p_ref.agent_type is at
 
 
 def test_resolve_agent_type_references_unresolvable_string_raises(

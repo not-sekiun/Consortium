@@ -16,6 +16,26 @@ from consortium.client.exceptions.rest_api_exceptions import (
 )
 from consortium.client.models.logging_models import LoggerType
 
+# Repository resource transfers (uploading and downloading assets, artifacts and
+# payloads) are not bounded by the total time they take, unlike every other request the
+# client makes. aiohttp's default of five minutes for a whole request is a sane bound
+# for an API call but an arbitrary one for a transfer, whose duration is set by the size
+# of the resource and the speed of the link: it cancels a large upload that is
+# progressing perfectly well, and does so with a bare timeout that tells the operator
+# nothing about why.
+#
+# The transfer is bounded by inactivity instead, so a connection that has actually
+# stalled still fails rather than hanging forever. `sock_read` only starts counting once
+# the request body has been written, meaning it limits how long the server may stay
+# silent, not how long a slow upload is allowed to take. It is set generously because
+# that silence covers the server storing and checksumming a resource it has only just
+# finished receiving.
+_RESOURCE_TRANSFER_TIMEOUT = aiohttp.ClientTimeout(
+    total=None,
+    sock_connect=30,
+    sock_read=600,
+)
+
 
 def _requires_authentication(
     async_func: Callable[..., Awaitable[Any]],
@@ -657,6 +677,7 @@ class RestAPI:
             method="POST",
             url=f"{self._api_base_url}/assets/upload",
             data=form_data,
+            timeout=_RESOURCE_TRANSFER_TIMEOUT,
         )
 
     # Wrapper methods for the /api/artifacts API endpoint.
@@ -768,7 +789,10 @@ class RestAPI:
         url: str,
         maximum_chunk_size: int,
     ) -> AsyncGenerator[bytes]:
-        response = await self._aiohttp_client_session.get(url)
+        response = await self._aiohttp_client_session.get(
+            url,
+            timeout=_RESOURCE_TRANSFER_TIMEOUT,
+        )
         # A failed download responds with an error body in place of the resource's
         # bytes. Those bytes are streamed straight into the caller's output file, so
         # without this check the error document itself is what gets saved as the
@@ -811,14 +835,12 @@ class RestAPI:
     def _check_for_api_error_response(
         status_code: int, response_json: JsonValue | None
     ) -> None:
+        if status_code < 400:
+            return
+
         # The server wraps every error it raises in an `{"error": ...}` envelope, and
         # that envelope is what carries the useful error information back to the
-        # operator. It is not what decides *whether* the request failed though: any
-        # 4XX/5XX is an error even when the body is missing the envelope or missing
-        # entirely, and returning such a body to the caller makes it treat a failed
-        # request as a successful one and read result fields off the error payload.
-        # Note that a successful response body can be a list, so the envelope is only
-        # looked for on a mapping.
+        # operator.
         error = response_json.get("error") if isinstance(response_json, dict) else None
 
         if error is not None:
@@ -829,18 +851,15 @@ class RestAPI:
                 detail=error["detail"],
             )
 
-        # Empty bodies (HTTP 204 or 202 responses) reach here and are only an error if
-        # the status says so.
-        if status_code >= 400:
-            raise RestAPIOperationError(
-                status_code=status_code,
-                code="UNEXPECTED_ERROR_RESPONSE",
-                message=(
-                    "Failed to perform the requested operation. The server returned an "
-                    f"unexpected HTTP {status_code} response."
-                ),
-                detail={"response_body": response_json},
-            )
+        raise RestAPIOperationError(
+            status_code=status_code,
+            code="UNEXPECTED_ERROR_RESPONSE",
+            message=(
+                "Failed to perform the requested operation. The server returned an "
+                f"unexpected HTTP {status_code} response."
+            ),
+            detail={"response_body": response_json},
+        )
 
     def _log_request_and_response(
         self,

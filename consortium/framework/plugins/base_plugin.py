@@ -1,5 +1,4 @@
 import pathlib
-import traceback
 import types
 import uuid
 
@@ -25,6 +24,7 @@ from consortium.framework._core.framework_exceptions.plugins_framework_exception
     InvalidPluginVersionError,
     MissingPluginConfigurationParameterError,
     PluginAlreadyRunningError,
+    PluginFatalError,
     PluginNotRunningError,
     PluginRuntimeError,
     PluginStartError,
@@ -89,6 +89,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         start=PluginStartError,
         stop=PluginStopError,
         runtime=PluginRuntimeError,
+        fatal=PluginFatalError,
         not_running=PluginNotRunningError,
         already_running=PluginAlreadyRunningError,
     )
@@ -193,11 +194,13 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
             ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
             ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
         }
-        self.logger.opt(colors=True).error(
-            "<bold><red>Fatal error occurred within plugin {} while it was {}:</></>\n{}",
+        # Pass the exception object rather than a pre-rendered traceback string: it
+        # reaches sinks as `record["exception"]`, so a registered sink can walk the
+        # exception and its `__cause__` chain instead of parsing text out of the message.
+        self.logger.opt(colors=True, exception=exc).error(
+            "<bold><red>Fatal error occurred within plugin {} while it was {}:</></>",
             str(self),
             ctx_to_str_map[fatal_context],
-            traceback.format_exc(),
         )
 
     # start(), stop() and cancel() below add no behaviour and exist purely to carry their
@@ -216,6 +219,9 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         Raises:
             PluginAlreadyRunningError: If the plugin is already in a running state.
             PluginStartError: If the plugin fails to start due to a lifecycle error.
+            PluginFatalError: If an unhandled exception escapes `on_started`, leaving the
+                plugin in a fatal state. The original exception is chained onto it as
+                `__cause__`.
         """
         await super().start()
 
@@ -225,6 +231,9 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         Raises:
             PluginNotRunningError: If the plugin is not currently running.
             PluginStopError: If the plugin fails to stop cleanly.
+            PluginFatalError: If an unhandled exception escapes `on_stopped`, leaving the
+                plugin in a fatal state. The original exception is chained onto it as
+                `__cause__`.
         """
         await super().stop()
 
@@ -233,6 +242,9 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
 
         Raises:
             PluginNotRunningError: If the plugin is not currently running.
+            PluginFatalError: If an unhandled exception escapes `on_cancelled`, leaving
+                the plugin in a fatal state. The original exception is chained onto it as
+                `__cause__`.
         """
         await super().cancel()
 

@@ -17,6 +17,7 @@ dependencies = [
     "websockets>=15.0.1",
     "pydantic>=2.0",
     "tomlkit>=0.15.0",
+    "slowapi>=0.1.10",
 ]
 
 [dependency-groups]

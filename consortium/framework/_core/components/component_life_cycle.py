@@ -31,6 +31,7 @@ class ComponentLifeCycleExceptions:
     start: type[frmwrk_excs.ComponentStartError] = frmwrk_excs.ComponentStartError
     stop: type[frmwrk_excs.ComponentStopError] = frmwrk_excs.ComponentStopError
     runtime: type[frmwrk_excs.ComponentRuntimeError] = frmwrk_excs.ComponentRuntimeError
+    fatal: type[frmwrk_excs.ComponentFatalError] = frmwrk_excs.ComponentFatalError
     not_running: type[frmwrk_excs.ComponentNotRunningError] = (
         frmwrk_excs.ComponentNotRunningError
     )
@@ -47,6 +48,19 @@ class ComponentLifeCycleFatalContext(enum.StrEnum):
     STOP = enum.auto()
     CANCEL = enum.auto()
     ERROR = enum.auto()
+
+
+# The verb phrase each fatal context contributes to a ComponentFatalError message, which
+# reads "Failed to <operation> the <component type> <component>. ...". ERROR carries a
+# whole phrase rather than a bare verb because the failure is in the error handler, not in
+# an operation that was requested of the component.
+_FATAL_CONTEXT_TO_OPERATION_MAP = {
+    ComponentLifeCycleFatalContext.START: "start",
+    ComponentLifeCycleFatalContext.RUNNING: "run",
+    ComponentLifeCycleFatalContext.STOP: "stop",
+    ComponentLifeCycleFatalContext.CANCEL: "cancel",
+    ComponentLifeCycleFatalContext.ERROR: "handle a runtime error within",
+}
 
 
 # Life cycles are abstractions of entities that can run separately from the event loop.
@@ -129,11 +143,15 @@ class ComponentLifeCycle(abc.ABC):
                 ) from None
             except Exception as exc:
                 self._start_concluded.set()
-                await self._transition_to_fatal_and_notify(
+                fatal_error = await self._transition_to_fatal_and_notify(
                     exc=exc,
                     fatal_context=ComponentLifeCycleFatalContext.START,
                 )
-                raise exc
+                # Chain rather than sever: the fatal error is the single formatted line
+                # the API and logs render and the closed contract callers catch, while the
+                # exception that actually killed the component stays reachable as
+                # __cause__ so its traceback survives server side.
+                raise fatal_error from exc
 
             self._runtime_loop_task = asyncio.create_task(self._runtime_loop())
             self._runtime_loop_task.add_done_callback(self._clear_runtime_loop_task)
@@ -176,11 +194,11 @@ class ComponentLifeCycle(abc.ABC):
                 # transition runs synchronously before any await, so the loop never
                 # observes RUNNING and cannot take the completion branch.
                 self.stop_event.set()
-                await self._transition_to_fatal_and_notify(
+                fatal_error = await self._transition_to_fatal_and_notify(
                     exc=exc,
                     fatal_context=ComponentLifeCycleFatalContext.STOP,
                 )
-                raise exc
+                raise fatal_error from exc
 
             # Accepted: commit the stop. Only now release the parked on_running() so its
             # runtime loop can drain, then settle on STOPPED. The loop reads STOPPING (or
@@ -221,11 +239,11 @@ class ComponentLifeCycle(abc.ABC):
             try:
                 await self.on_cancelled()
             except Exception as exc:
-                await self._transition_to_fatal_and_notify(
+                fatal_error = await self._transition_to_fatal_and_notify(
                     exc=exc,
                     fatal_context=ComponentLifeCycleFatalContext.CANCEL,
                 )
-                raise exc
+                raise fatal_error from exc
 
     async def wait_until_started(self) -> None:
         # RUNNING or any state past it (STOPPING, terminal) means there is nothing left
@@ -279,33 +297,34 @@ class ComponentLifeCycle(abc.ABC):
             detail=error.detail,
         )
 
-    def _construct_component_runtime_error_from_unhandled_exception(
+    def _construct_component_fatal_error(
         self,
         exc: Exception,
-    ) -> frmwrk_excs.ComponentRuntimeError:
-        return self._component_life_cycle_exceptions.runtime(
+        fatal_context: ComponentLifeCycleFatalContext,
+    ) -> frmwrk_excs.ComponentFatalError:
+        return self._component_life_cycle_exceptions.fatal(
             component_str=str(self),
-            error_message=(
-                f"An unhandled exception was raised while running. "
-                f"{type(exc).__name__}: {exc}"
-            ),
-            detail={
-                "type": type(exc).__name__,
-                "message": str(exc),
-            },
+            operation=_FATAL_CONTEXT_TO_OPERATION_MAP[fatal_context],
+            fatal_context=str(fatal_context),
+            underlying_exception=exc,
         )
 
+    # Returns the error it stored on the status so `start()`, `stop()` and `cancel()` can
+    # raise the very object the component now carries: the caller and the status report
+    # the same failure rather than two descriptions of it. The runtime loop has no caller
+    # to raise to and discards the return value.
     async def _transition_to_fatal_and_notify(
         self,
         exc: Exception,
         fatal_context: ComponentLifeCycleFatalContext,
-    ) -> None:
-        self.status._transition_to_fatal(
-            error=self._construct_component_runtime_error_from_unhandled_exception(
-                exc=exc,
-            ),
+    ) -> frmwrk_excs.ComponentFatalError:
+        fatal_error = self._construct_component_fatal_error(
+            exc=exc,
+            fatal_context=fatal_context,
         )
+        self.status._transition_to_fatal(error=fatal_error)
         await self._invoke_fatal_hook(exc=exc, fatal_context=fatal_context)
+        return fatal_error
 
     async def _invoke_fatal_hook(
         self,
@@ -315,17 +334,18 @@ class ComponentLifeCycle(abc.ABC):
         # on_fatal() is the last resort handler. If it raises, the failure must never
         # propagate (in the runtime loop task nobody would retrieve it) and must never
         # recurse back into on_fatal(). The component stays FATAL carrying the original
-        # error, with the secondary failure chained onto it so it is not lost.
+        # error, with the secondary failure recorded on it so it is not lost.
         try:
             await self.on_fatal(exc=exc, fatal_context=fatal_context)
         except Exception as handler_exc:
-            # Chain the secondary failure onto the stored error. The original error
-            # remains the primary cause of the FATAL state; the handler failure hangs
-            # off it as its __cause__.
-            # TODO: surface this chained handler error through Status.to_json() once the
-            # shape for exposing chained exceptions is decided.
-            if isinstance(self.status.error, frmwrk_excs.ComponentRuntimeError):
-                self.status.error.__cause__ = handler_exc
+            # Record the secondary failure on the stored error rather than losing it. It
+            # cannot go on `__cause__`: `start()`, `stop()` and `cancel()` raise the
+            # stored error `from` the exception that killed the component, so a handler
+            # failure chained there would be overwritten moments later.
+            # TODO: surface this handler error through Status.to_json() once the shape for
+            # exposing chained exceptions is decided.
+            if isinstance(self.status.error, frmwrk_excs.ComponentFatalError):
+                self.status.error.fatal_hook_error = handler_exc
 
     async def _runtime_loop(self) -> None:
         try:

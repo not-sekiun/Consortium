@@ -249,6 +249,53 @@ class ComponentStopError(ComponentOperationError):
         )
 
 
+class ComponentFatalError(ComponentOperationError):
+    """Raised when an unhandled exception escapes one of a component's life cycle hooks,
+    terminating the component fatally during component operation.
+    """
+
+    code = "COMPONENT_FATAL_ERROR"
+
+    _MESSAGE_TEMPLATE = (
+        "Failed to {operation} the $C_LOWER$ {component_str}. An unhandled exception "
+        "was raised. {elaboration}"
+    )
+
+    def __init__(
+        self,
+        component_str: str,
+        operation: str,
+        fatal_context: str,
+        underlying_exception: Exception,
+    ):
+        # The secondary failure raised by the component's own `on_fatal` handler, when it
+        # has one. It cannot be chained onto `__cause__`: the life cycle raises this error
+        # `from` the underlying exception so the traceback that actually killed the
+        # component survives server side, which would overwrite anything chained there.
+        self.fatal_hook_error: Exception | None = None
+
+        error_type = type(underlying_exception).__name__
+        error_message = str(underlying_exception)
+        super().__init__(
+            component_str=component_str,
+            operation=operation,
+            # Rendered the way Python renders an exception on the final line of a
+            # traceback. An exception carrying no message renders as its type alone,
+            # since a trailing "TypeError: " reads as truncated output.
+            elaboration=(
+                f"{error_type}: {error_message}" if error_message else error_type
+            ),
+            # `detail` is serialized to clients through `Status.to_json()`, so it carries
+            # only what a client can act on. The traceback stays on `__cause__`, which
+            # never crosses the API boundary.
+            detail={
+                "type": error_type,
+                "message": error_message,
+                "fatal_context": fatal_context,
+            },
+        )
+
+
 class ComponentStateError(ComponentsFrameworkError):
     """Base exception for all errors that occur due to invalid component status during
     component operation.

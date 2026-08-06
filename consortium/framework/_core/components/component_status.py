@@ -1,8 +1,15 @@
 import enum
 
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
+    ComponentFatalError,
     ComponentRuntimeError,
 )
+
+# The error types a status can carry. ERRORED carries a ComponentRuntimeError (a failure
+# the component signalled deliberately) and FATAL carries a ComponentFatalError (an
+# unhandled exception that escaped a life cycle hook), so the stored error's type
+# identifies which of the two terminal failure states the component is in.
+ComponentStatusError = ComponentRuntimeError | ComponentFatalError
 
 
 class State(enum.StrEnum):
@@ -88,14 +95,14 @@ class Status:
                 "message": self.error.message,
                 "detail": self.error.detail,
             }
-            if isinstance(self.error, ComponentRuntimeError)
+            if isinstance(self.error, (ComponentRuntimeError, ComponentFatalError))
             else None,
         }
 
     def _transition_to_state(
         self,
         new_state: State,
-        error: ComponentRuntimeError | None = None,
+        error: ComponentStatusError | None = None,
     ):
         if new_state not in self._valid_state_transitions[self.state]:
             raise AssertionError(
@@ -139,5 +146,5 @@ class Status:
     def _transition_to_errored(self, error: ComponentRuntimeError) -> None:
         self._transition_to_state(new_state=State.ERRORED, error=error)
 
-    def _transition_to_fatal(self, error: ComponentRuntimeError) -> None:
+    def _transition_to_fatal(self, error: ComponentFatalError) -> None:
         self._transition_to_state(new_state=State.FATAL, error=error)

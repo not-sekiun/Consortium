@@ -402,6 +402,8 @@ class ListenersService:
             ListenerNotFoundError: If no listener with the given ID exists.
             ListenerAlreadyRunningError: If the listener is already in a running state.
             ListenerStartError: If the listener fails to start due to a lifecycle error.
+            ListenerFatalError: If an unhandled exception escapes the listener's
+                `on_started` hook, leaving the listener in a fatal state.
         """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
@@ -441,6 +443,8 @@ class ListenersService:
             ListenerNotFoundError: If no listener with the given ID exists.
             ListenerNotRunningError: If the listener is not currently running.
             ListenerStopError: If the listener fails to stop cleanly.
+            ListenerFatalError: If an unhandled exception escapes the listener's
+                `on_stopped` hook, leaving the listener in a fatal state.
         """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 
@@ -480,6 +484,8 @@ class ListenersService:
         Raises:
             ListenerNotFoundError: If no listener with the given ID exists.
             ListenerNotRunningError: If the listener is not currently running.
+            ListenerFatalError: If an unhandled exception escapes the listener's
+                `on_cancelled` hook, leaving the listener in a fatal state.
         """
         listener = self.get_listener_by_listener_id(listener_id=listener_id)
 

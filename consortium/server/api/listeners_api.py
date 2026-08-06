@@ -168,6 +168,11 @@ async def start_listener_by_listener_id(
         raise api_excs.ListenerNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
+    except listeners_framework_exceptions.ListenerFatalError:
+        # The generic body is the whole response: a component bug is not something a
+        # client can act on. The failure is recorded server side, and the listener's own
+        # status carries the client-safe detail for anyone who asks for it.
+        raise InternalServerError() from None
     except Exception as exc:
         raise InternalServerError(
             detail={
@@ -214,6 +219,11 @@ async def stop_listener_by_listener_id(
         raise api_excs.ListenerNotRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
+    except listeners_framework_exceptions.ListenerFatalError:
+        # The generic body is the whole response: a component bug is not something a
+        # client can act on. The failure is recorded server side, and the listener's own
+        # status carries the client-safe detail for anyone who asks for it.
+        raise InternalServerError() from None
     except Exception as exc:
         raise InternalServerError(
             detail={
@@ -258,6 +268,11 @@ async def cancel_listener_by_listener_id(
         raise api_excs.ListenerNotRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
+    except listeners_framework_exceptions.ListenerFatalError:
+        # The generic body is the whole response: a component bug is not something a
+        # client can act on. The failure is recorded server side, and the listener's own
+        # status carries the client-safe detail for anyone who asks for it.
+        raise InternalServerError() from None
     except Exception as exc:
         raise InternalServerError(
             detail={

@@ -1,7 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
@@ -16,6 +18,7 @@ router = APIRouter(
     },
     tags=["Login"],
 )
+limiter = Limiter(key_func=get_remote_address)
 
 _user_accounts_service = server_singletons.user_accounts_service
 _users_service = server_singletons.users_service
@@ -30,7 +33,9 @@ _users_service = server_singletons.users_service
     # Response is not a valid Pydantic model.
     response_model=None,
 )
+@limiter.limit("5/minute")
 async def login_to_server(
+    request: Request,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> JSONWebTokenModel | Response:
     try:

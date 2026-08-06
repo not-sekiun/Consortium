@@ -230,3 +230,74 @@ def test_chunked_file_read_reports_missing_when_removed_after_the_existence_chec
 
     with pytest.raises(RepositoryFileDoesNotExistError):
         list(repository_file.read(chunk_size=8))
+
+
+# ---------------------------------------------------------------------------
+# RepositoryFile.create / RepositoryDirectory.create content typing
+# ---------------------------------------------------------------------------
+
+
+def test_file_create_with_no_content_makes_an_empty_file(tmp_path: pathlib.Path):
+    repository_file = RepositoryFile.create(path=tmp_path / "empty.txt")
+
+    assert repository_file.path.is_file()
+    assert repository_file.path.read_text(encoding="utf-8") == ""
+
+
+def test_file_create_rejects_unsupported_content(tmp_path: pathlib.Path):
+    # Anything that is neither a string, bytes nor a readable file object used to fall
+    # through to `touch()`, so the caller got an empty file and no indication that the
+    # content had been dropped. A generator is the case that motivated this: it reads
+    # as a plausible way to supply content and writes nothing at all.
+    def _chunks():
+        yield "written"
+
+    with pytest.raises(TypeError):
+        RepositoryFile.create(path=tmp_path / "generator.txt", content=_chunks())
+
+    with pytest.raises(TypeError):
+        RepositoryFile.create(path=tmp_path / "integer.txt", content=1)
+
+
+def test_file_create_leaves_nothing_behind_when_content_is_rejected(
+    tmp_path: pathlib.Path,
+):
+    # The type is checked before the parent directories are made, so a rejected call
+    # does not leave a half-created tree.
+    path = tmp_path / "nested" / "generator.txt"
+
+    with pytest.raises(TypeError):
+        RepositoryFile.create(path=path, content=(chunk for chunk in ("a", "b")))
+
+    assert not path.exists()
+    assert not path.parent.exists()
+
+
+def test_directory_create_with_no_content_makes_an_empty_directory(
+    tmp_path: pathlib.Path,
+):
+    repository_directory = RepositoryDirectory.create(path=tmp_path / "empty_dir")
+
+    assert repository_directory.path.is_dir()
+    assert list(repository_directory.path.iterdir()) == []
+
+
+def test_directory_create_rejects_unsupported_content(tmp_path: pathlib.Path):
+    # The directory path had no fallback branch at all, so unsupported content was
+    # silently ignored and left an empty directory behind.
+    def _chunks():
+        yield b"archive"
+
+    with pytest.raises(TypeError):
+        RepositoryDirectory.create(path=tmp_path / "generator_dir", content=_chunks())
+
+
+def test_directory_create_leaves_nothing_behind_when_content_is_rejected(
+    tmp_path: pathlib.Path,
+):
+    path = tmp_path / "generator_dir"
+
+    with pytest.raises(TypeError):
+        RepositoryDirectory.create(path=path, content=(chunk for chunk in (b"a", b"b")))
+
+    assert not path.exists()

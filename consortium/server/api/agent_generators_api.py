@@ -180,6 +180,11 @@ async def start_agent_generator_by_agent_generator_id(
         raise api_excs.AgentGeneratorNotFoundError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
+    except agent_generators_framework_exceptions.AgentGeneratorFatalError:
+        # The generic body is the whole response: a component bug is not something a
+        # client can act on. The failure is recorded server side, and the generator's own
+        # status carries the client-safe detail for anyone who asks for it.
+        raise InternalServerError() from None
     except Exception as exc:
         raise InternalServerError(
             detail={
@@ -226,6 +231,11 @@ async def stop_agent_generator_by_agent_generator_id(
         raise api_excs.AgentGeneratorNotRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
+    except agent_generators_framework_exceptions.AgentGeneratorFatalError:
+        # The generic body is the whole response: a component bug is not something a
+        # client can act on. The failure is recorded server side, and the generator's own
+        # status carries the client-safe detail for anyone who asks for it.
+        raise InternalServerError() from None
     except Exception as exc:
         raise InternalServerError(
             detail={
@@ -268,6 +278,11 @@ async def cancel_agent_generator_by_agent_generator_id(
         raise api_excs.AgentGeneratorNotRunningError.from_consortium_exception(
             consortium_exception=exc,
         ) from None
+    except agent_generators_framework_exceptions.AgentGeneratorFatalError:
+        # The generic body is the whole response: a component bug is not something a
+        # client can act on. The failure is recorded server side, and the generator's own
+        # status carries the client-safe detail for anyone who asks for it.
+        raise InternalServerError() from None
     except Exception as exc:
         raise InternalServerError(
             detail={

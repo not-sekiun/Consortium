@@ -461,6 +461,8 @@ class AgentGeneratorsService:
             AgentGeneratorAlreadyRunningError: If the agent generator is already in a
                 running state.
             AgentGeneratorStartError: If the agent generator fails to start.
+            AgentGeneratorFatalError: If an unhandled exception escapes the agent
+                generator's `on_started` hook, leaving it in a fatal state.
         """
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
@@ -501,6 +503,8 @@ class AgentGeneratorsService:
             AgentGeneratorNotRunningError: If the agent generator is not currently
                 running.
             AgentGeneratorStopError: If the agent generator fails to stop cleanly.
+            AgentGeneratorFatalError: If an unhandled exception escapes the agent
+                generator's `on_stopped` hook, leaving it in a fatal state.
         """
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,
@@ -541,6 +545,8 @@ class AgentGeneratorsService:
             AgentGeneratorNotFoundError: If no agent generator with the given ID exists.
             AgentGeneratorNotRunningError: If the agent generator is not currently
                 running.
+            AgentGeneratorFatalError: If an unhandled exception escapes the agent
+                generator's `on_cancelled` hook, leaving it in a fatal state.
         """
         agent_generator = self.get_agent_generator_by_agent_generator_id(
             agent_generator_id=agent_generator_id,

@@ -345,7 +345,7 @@ class BaseAgentCapability(_AgentCommunicator):
                 (such as None). The task handler converts this into an ERRORED task.
         """
         try:
-            self.task_launch_message = task_launch_message
+            self.task_launch_message = task_launch_message.model_copy(deep=True)
             modified_task_launch_message = await self.on_launch(task_launch_message)
             if not isinstance(modified_task_launch_message, TaskLaunchMessageModel):
                 # on_launch must hand back a launch message or deny the launch by raising

@@ -1,6 +1,7 @@
 from consortium.framework._core.framework_exceptions.components_framework_exceptions import (
     ComponentAlreadyRunningError,
     ComponentConfigurationError,
+    ComponentFatalError,
     ComponentNotRunningError,
     ComponentOperationError,
     ComponentRuntimeError,
@@ -138,6 +139,14 @@ class PluginStopError(ComponentStopError, PluginOperationError):
     """Raised when a plugin fails to stop during plugin operation."""
 
     code = "PLUGIN_STOP_ERROR"
+
+
+class PluginFatalError(ComponentFatalError, PluginOperationError):
+    """Raised when an unhandled exception escapes one of a plugin's life cycle hooks,
+    terminating the plugin fatally during plugin operation.
+    """
+
+    code = "PLUGIN_FATAL_ERROR"
 
 
 class PluginStateError(

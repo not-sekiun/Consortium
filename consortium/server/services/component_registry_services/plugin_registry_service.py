@@ -54,6 +54,31 @@ class PluginRegistryService(
             except asyncio.CancelledError:
                 pass
 
+        # `force_unload` means the plugin leaves the registry whatever happens, so the
+        # forced cancellation must never be able to abort the unload it is meant to
+        # guarantee. Two things can go wrong here and both used to escape:
+        #
+        # `cancel()` only accepts a RUNNING plugin, and by the time a stop has failed the
+        # plugin usually is not one. A stop that timed out inside `on_stopped` leaves it
+        # STOPPING and a stop that raised an unhandled exception leaves it FATAL; only a
+        # signalled refusal rolls back to RUNNING. In the other two cases the plugin is
+        # already off its runtime path, so there is nothing left to cancel and the guard
+        # skips it rather than raising PluginNotRunningError.
+        #
+        # A cancellation that is attempted can still fail on its own terms, since a
+        # plugin's `on_cancelled` hook can raise and take the plugin fatal. That is logged
+        # and swallowed for the same reason: the unload still has to finish.
+        async def _force_cancel_plugin() -> None:
+            if component.status.state is not State.RUNNING:
+                return
+            try:
+                await component.cancel()
+            except Exception as exc:
+                logger.opt(exception=exc).error(
+                    f"Failed to cancel plugin {component} while forcing its unload. "
+                    f"Unloading it regardless.",
+                )
+
         try:
             await asyncio.wait_for(_stop_plugin(), timeout=timeout)
         except TimeoutError:
@@ -64,7 +89,7 @@ class PluginRegistryService(
                 f"its timeout exceeded the specified duration: {timeout} "
                 f"second(s)",
             )
-            await component.cancel()
+            await _force_cancel_plugin()
         except Exception as exc:
             if not force_unload:
                 raise exc
@@ -72,6 +97,6 @@ class PluginRegistryService(
                 f"An error occurred while stopping plugin {component}. "
                 f"Forcing plugin cancellation. Error: {exc}",
             )
-            await component.cancel()
+            await _force_cancel_plugin()
 
         return component

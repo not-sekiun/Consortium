@@ -16,6 +16,8 @@ from consortium.server.exceptions.service_exceptions.agents_service_exceptions i
 
 class Listener(BaseListener):
     async def on_started(self) -> None:
+        self.event_logger.info("Starting listener...")
+
         local_host = self.parameters["local_host"]
         local_port = self.parameters["local_port"]
         tasks_url_paths = self.parameters["tasks_url_paths"]
@@ -279,7 +281,12 @@ class Listener(BaseListener):
             await self.environment.runner.setup()
             site = web.TCPSite(self.environment.runner, local_host, local_port)
             await site.start()
+            self.event_logger.success(f"Listener started on {local_host}:{local_port}")
         except OSError as exc:
+            self.event_logger.error(
+                f"Listener was unable to bind to {local_host}:{local_port} due to the "
+                f"following error: {exc}.",
+            )
             raise ListenerStartError(
                 f"Listener was unable to bind to {local_host}:{local_port} due to the "
                 f"following error: {exc}.",
