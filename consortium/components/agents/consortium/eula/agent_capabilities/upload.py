@@ -31,7 +31,10 @@ class UploadCapability(BaseAgentCapability):
         ),
         SingleValueOption(
             name="destination",
-            description="Remote path to save the upload. Defaults to current directory.",
+            description=(
+                "Remote path to save the upload. Defaults to current directory using "
+                "the asset's file or directory name."
+            ),
             required=False,
             value_type=str,
         ),
