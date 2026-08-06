@@ -35,7 +35,7 @@ _users_service = server_singletons.users_service
 )
 @limiter.limit("5/minute")
 async def login_to_server(
-    request: Request,
+    request: Request,  # Declaring request here is necessary for the rate limiter
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> JSONWebTokenModel | Response:
     try:
