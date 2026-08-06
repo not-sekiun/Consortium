@@ -52,15 +52,53 @@ async def on_triggered(self, event) -> None:
     await asyncio.sleep(0)  # yield control back to the event loop if needed
 ```
 
-The framework awaits each call to `on_triggered()` sequentially for a given hook
-instance, so concurrent calls to the same hook are not possible. That said,
-`on_triggered()` should complete promptly. A slow implementation blocks subsequent
-events for this hook from being delivered. For heavy work (network I/O, file writes),
-consider `asyncio.create_task()` to offload work and return immediately:
+## Concurrency and re-entrancy
+
+Every handler subscribed to an event runs concurrently, so a slow `on_triggered()` no
+longer delays delivery to other hooks or to connected websocket clients. Routine network
+I/O inside `on_triggered()` is fine and does not need to be offloaded just to keep the
+event pipeline moving.
+
+`on_triggered()` is also re-entrant. Each trigger is dispatched as an independent task,
+so a second event can enter `on_triggered()` before an earlier call has returned. Two
+consequences when writing a hook:
+
+- Do not assume calls to your hook are serialised, and do not assume events arrive in
+  the order they were triggered. No ordering is guaranteed between hooks or between
+  triggers.
+- State mutated across an `await` needs a lock. State read and written without an
+  intervening `await` is safe, because the event loop cannot switch coroutines partway
+  through a step.
+
+```python
+async def on_setup(self) -> None:
+    self.environment.counts = {}
+    self.environment.pending = 0
+    self.environment.lock = asyncio.Lock()
+
+
+async def on_triggered(self, event) -> None:
+    # Safe: no `await` between the read and the write, so no other call can interleave.
+    self.environment.counts[event.event_type] = (
+        self.environment.counts.get(event.event_type, 0) + 1
+    )
+
+    # Needs the lock: the value is read, awaited across, then written. Without it a
+    # second call can read the same value before this one writes it back.
+    async with self.environment.lock:
+        pending = self.environment.pending + 1
+        await self._flush(pending)
+        self.environment.pending = 0
+```
+
+## Offloading with create_task
+
+Offloading is still useful for genuine fire-and-forget work that the framework should
+not wait on at all, such as work that should outlive the trigger:
 
 ```python
 async def on_triggered(self, event) -> None:
-    # Schedule the heavy work as a background task and return immediately
+    # Schedule the work as a background task and return immediately
     asyncio.create_task(self._send_webhook(event))
 ```
 
@@ -70,6 +108,10 @@ reported as an `EventHookTriggerError` (see below). Wrap the body in a try/excep
 task can fail, and raise `EventHookTriggerError` from within that try/except if you
 still
 want the failure reported through the framework.
+
+Note also that a task created this way is not cancelled when the trigger is, so it can
+outlive server shutdown. Keep a reference to it and cancel it in `on_teardown()` if that
+matters for your hook.
 
 ## Signalling trigger failures
 

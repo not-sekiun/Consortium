@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Callable, Coroutine
 from typing import Any
 
@@ -150,14 +151,18 @@ class EventsService:
     ) -> None:
         """Triggers an event, invoking all handlers registered for the given event type.
 
-        Handlers are called sequentially. If any handler raises an exception, remaining
-        handlers still run, and all exceptions are collected and re-raised together as
-        an `ExceptionGroup`. Event hooks that raise `EventHookTriggerError` (the
-        framework-level signal from
+        Handlers run concurrently. A handler that fails or is cancelled does not affect
+        the others: every failure is collected and re-raised together as an
+        `ExceptionGroup` once all handlers have finished. Event hooks that raise
+        `EventHookTriggerError` (the framework-level signal from
         `consortium.framework.signal_exceptions.event_hooks_signal_exceptions`) from
         `on_triggered()` have that error remapped to the consortium-level
-        `EventHookTriggerError` before being collected, preserving the original
-        `message` and `detail`.
+        `EventHookTriggerError`, preserving the original `message` and `detail`.
+
+        Because handlers run concurrently, and because separate triggers are dispatched
+        as independent tasks, a handler may be entered again before an earlier call has
+        returned. Handlers that mutate shared state across an `await` must guard it, and
+        no ordering is guaranteed between handlers or between triggers.
 
         Args:
             event_type: The type of event to trigger.
@@ -166,37 +171,59 @@ class EventsService:
                 empty dict when `None`.
 
         Raises:
-            ExceptionGroup: If one or more event handlers raise exceptions. The group
-                can contain the consortium-level `EventHookTriggerError` (remapped from
-                the framework-level signal raised by a handler's `on_triggered()`)
-                alongside any other exception a handler raised.
+            ExceptionGroup: If one or more handlers fail. May contain the
+                consortium-level `EventHookTriggerError` (remapped from the
+                framework-level signal raised by a handler's `on_triggered()`),
+                `asyncio.CancelledError` for a handler that was cancelled, and any other
+                exception a handler raised.
+            asyncio.CancelledError: If the caller awaiting this method is itself
+                cancelled, in which case the pending handlers are cancelled too.
         """
         if str(event_type) not in self._event_handlers:
             return
         if data is None:
             data = {}
 
-        errors = []
         event = Event(
             event_type=event_type,
             message=message,
             data=data,
         )
-        for event_handler in self._event_handlers[str(event.event_type)]:
-            try:
-                await event_handler(event)
-            except event_hook_framework_excs.EventHookTriggerError as exc:
+        # Snapshotted because a handler can deregister itself from another task while
+        # this one is suspended: iterating the live list would shift it mid-trigger and
+        # silently skip a handler. Websocket senders do exactly this on disconnect.
+        event_handlers = list(self._event_handlers[str(event.event_type)])
+        # `return_exceptions=True` is what makes a failing or cancelled handler local to
+        # itself. A `CancelledError` raised by a handler comes back as a result, so the
+        # siblings are untouched and the already-collected failures survive to be
+        # raised. Cancellation aimed at *this* coroutine still cancels the gather and
+        # propagates, which is the distinction `TaskGroup` cannot express here since it
+        # tears down the siblings on the first failure.
+        results = await asyncio.gather(
+            *(event_handler(event) for event_handler in event_handlers),
+            return_exceptions=True,
+        )
+
+        errors = []
+        for event_handler, result in zip(event_handlers, results, strict=True):
+            # Deliberately wider than `Exception`: `CancelledError` is a `BaseException`
+            # and is the case this collection exists to catch.
+            if not isinstance(result, BaseException):
+                continue
+            if isinstance(result, (KeyboardInterrupt, SystemExit)):
+                raise result
+            if isinstance(result, event_hook_framework_excs.EventHookTriggerError):
                 errors.append(
                     EventHookTriggerError(
                         event_hook_str=str(
                             getattr(event_handler, "__self__", event_handler)
                         ),
-                        error_message=exc.message,
-                        detail=exc.detail,
+                        error_message=result.message,
+                        detail=result.detail,
                     )
                 )
-            except Exception as exc:
-                errors.append(exc)
+            else:
+                errors.append(result)
 
         if errors:
             raise ExceptionGroup(
