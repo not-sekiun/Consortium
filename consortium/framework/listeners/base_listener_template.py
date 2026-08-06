@@ -250,6 +250,7 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         # Check for missing required options before filling in defaults, so that
         # a required option with default_value=None is caught rather than silently
         # accepted.
+        print(parameters)
         for option_name, option in self.options.items():
             if option.required and option_name not in parameters:
                 raise MissingRequiredListenerTemplateOptionError(
