@@ -34,7 +34,11 @@ name, whether it is a file or directory, its size, and a status:
 - **malformed** entries are index entries that are not valid objects.
 
 Selecting a file shows its full metadata. For tracked files this includes the resource ID,
-name, description, on-disk file, size, extension, timestamps, and MD5 checksum. The MD5
+name, description, on-disk file, size, timestamps, and MD5 checksum. Files and directories
+alike are stored on disk under their bare resource ID, so the "on-disk file" row is a UUID
+with no extension: it is the name to look for when finding a resource by hand. A resource's
+"name" is what it was uploaded or renamed to, extension included, and is only ever the name
+it is served and downloaded under. The MD5
 checksum is only stored in the index when explicitly requested, so when it is absent the
 tool computes it on demand from the on-disk resource (marked `(computed)`), using the same
 algorithm as the framework: a chunked hash for files, and for directories a folded hash of
@@ -43,16 +47,30 @@ metadata that varies by repository, so it is rendered generically as pretty-prin
 rather than parsed field by field. Untracked files have no metadata, so only basic on-disk
 facts are shown.
 
-### Opening and deleting files
+### Opening, exporting and deleting files
 
 From a file's view you can:
 
 - **Open in default viewer** hands the file to the platform's default application. This
   works cross-platform (`os.startfile` on Windows, `open` on macOS, `xdg-open` on Linux);
-  if no opener is available the tool reports it instead of failing.
+  if no opener is available the tool reports it instead of failing. Because a resource is
+  stored under a bare resource ID, there is no extension for the platform to associate an
+  application with, so the tool first copies the resource into a temporary directory under
+  its metadata name and opens the copy. The copy is left in place (the viewer is launched
+  asynchronously, and removing it would pull the file out from under the application) and
+  its path is printed.
+- **Export to the current directory** writes the resource into the directory the tool was
+  run from, under its metadata name, so it lands as the file it would have downloaded as.
+  An existing destination asks for confirmation before being overwritten (defaulting to
+  **No**), and the path written is printed.
 - **Delete this file** removes the file from disk and, when the file is tracked, drops its
   entry from `.repository.json`. Deletion always asks for confirmation (defaulting to
   **No**).
+
+For both the copy and the export, only the last component of a resource's name is used, and
+a name with no usable last component falls back to the on-disk name: the name is operator
+supplied, so one carrying path separators or `..` would otherwise write outside the intended
+directory.
 
 ### Clearing and hard resetting
 
@@ -60,7 +78,7 @@ Two repository-wide actions remove files in bulk. Both print the full plan and a
 final confirmation (defaulting to **No**) before deleting anything.
 
 - **Clear** removes only the files listed in `.repository.json`, read explicitly from the
-  index. Each entry's on-disk file is resolved as `<resource_id><extension>`. Stale
+  index. Each entry's on-disk file is resolved as `<resource_id>`. Stale
   entries are skipped and untracked files are left untouched. Afterwards the index is reset
   to an empty object (`{}`).
 - **Hard reset** removes every entry in the repository directory, including untracked

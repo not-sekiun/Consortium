@@ -5,6 +5,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import tempfile
 from collections import deque
 from datetime import datetime
 
@@ -351,12 +352,30 @@ def ensure_keep(repository_path: pathlib.Path) -> None:
 def resolve_entry_path(
     repository_path: pathlib.Path,
     resource_id: str,
-    entry: dict,
 ) -> pathlib.Path:
-    # On-disk resources are stored as "<resource_id><extension>". Directory
-    # resources have no extension.
-    extension = entry.get("extension") or ""
-    return repository_path / f"{resource_id}{extension}"
+    # Files and directories alike are stored on disk as a bare "<resource_id>".
+    # An entry's "name" is what the resource is served and downloaded under and
+    # never appears in its path, so nothing in the entry is needed to find it.
+    return repository_path / resource_id
+
+
+def safe_entry_name(item: dict) -> str:
+    # An entry's name is operator supplied and stored verbatim, so it can carry
+    # path separators or "..". Only its last component can name a single file,
+    # and an entry with no usable last component falls back to the on-disk name.
+    # Windows path semantics are used regardless of platform because they treat
+    # both separators, and a drive prefix, as significant.
+    name = pathlib.PureWindowsPath(str(item["name"])).name
+    if name in ("", ".", ".."):
+        name = item["path"].name
+    return name
+
+
+def copy_resource(source: pathlib.Path, destination: pathlib.Path, is_directory: bool):
+    if is_directory:
+        shutil.copytree(source, destination)
+    else:
+        shutil.copy2(source, destination)
 
 
 def _hash_file_content(path) -> str:
@@ -437,11 +456,13 @@ def collect_tracked(repository_path: pathlib.Path, metadata: dict) -> list[dict]
                 },
             )
             continue
-        path = resolve_entry_path(repository_path, resource_id, entry)
+        path = resolve_entry_path(repository_path, resource_id)
         tracked.append(
             {
                 "resource_id": resource_id,
-                "name": entry.get("name", resource_id),
+                # An entry that recorded no name at all is shown under its resource
+                # ID, which is the same fallback the server itself loads it with.
+                "name": entry.get("name") or resource_id,
                 "path": path,
                 "size": entry.get("size"),
                 "is_directory": bool(entry.get("is_directory")),
@@ -617,7 +638,6 @@ def render_metadata(display_name: str, item: dict) -> None:
         if isinstance(entry.get("size"), (int, float))
         else "-",
     )
-    table.add_row("Extension", str(entry.get("extension") or "-"))
     table.add_row("Is directory", "yes" if entry.get("is_directory") else "no")
     table.add_row(
         "Exists on disk",
@@ -696,6 +716,7 @@ def file_actions(repository_path: pathlib.Path, display_name: str, item: dict) -
     exists = item["path"].exists()
     if exists:
         options.append(("open", "Open in default viewer"))
+        options.append(("export", "Export to the current directory"))
     options.append(("delete", "Delete this file"))
     options.append(("back", "Back to file list"))
 
@@ -704,13 +725,57 @@ def file_actions(repository_path: pathlib.Path, display_name: str, item: dict) -
         return
 
     if action == "open":
-        ok, error = open_in_viewer(item["path"])
+        # The resource is stored under its bare resource ID, so there is no
+        # extension for the platform to associate an application with. The copy
+        # carries the entry's name, which is what a download would have arrived
+        # as, and that is what gets handed to the viewer.
+        export_name = safe_entry_name(item)
+        try:
+            temp_directory = pathlib.Path(
+                tempfile.mkdtemp(prefix="consortium_repository_"),
+            )
+            temp_path = temp_directory / export_name
+            copy_resource(item["path"], temp_path, item["is_directory"])
+        except OSError as error:
+            console.print(
+                f"[red]Could not copy {item['name']} out to open it: {error}[/red]",
+            )
+            return
+        ok, error = open_in_viewer(temp_path)
         if ok:
             console.print(
-                f"[green]Opened {item['path'].name} in the default viewer.[/green]",
+                f"[green]Opened a copy of {item['name']} in the default "
+                "viewer.[/green]",
             )
+            # The viewer is launched asynchronously, so the copy is deliberately
+            # left behind: removing it here would pull the file out from under
+            # the application that was just handed it.
+            console.print(f"[dim]The copy is left at {temp_path}[/dim]")
         else:
-            console.print(f"[red]Could not open {item['path'].name}: {error}[/red]")
+            console.print(f"[red]Could not open {item['name']}: {error}[/red]")
+        return
+
+    if action == "export":
+        destination = pathlib.Path.cwd() / safe_entry_name(item)
+        if destination.exists():
+            confirmed = confirm(
+                f"{destination} already exists. Overwrite it?",
+                default=False,
+            )
+            if not confirmed:
+                console.print("[yellow]Export cancelled.[/yellow]")
+                return
+            try:
+                remove_path(destination)
+            except OSError as error:
+                console.print(f"[red]Could not replace {destination}: {error}[/red]")
+                return
+        try:
+            copy_resource(item["path"], destination, item["is_directory"])
+        except OSError as error:
+            console.print(f"[red]Failed to export {item['name']}: {error}[/red]")
+            return
+        console.print(f"[green]Exported {item['name']} to {destination}[/green]")
         return
 
     if action == "delete":

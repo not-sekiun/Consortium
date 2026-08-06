@@ -1,4 +1,5 @@
 import io
+import zipfile
 
 import pytest
 
@@ -10,14 +11,25 @@ from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
 
+
+def _build_zip_archive_bytes() -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("inner.txt", "inner")
+    return buffer.getvalue()
+
+
+# Archive content for the directory uploads that have to actually unpack, as opposed to
+# the ones below that are rejected on their filename before their content is read.
+_ZIP_ARCHIVE_BYTES = _build_zip_archive_bytes()
+
 ASSET_JSON_SCHEMA = {
     "type": "object",
     "properties": {
         "resource_id": {"type": "string"},
-        "name": {"type": ["string", "null"]},
+        "name": {"type": "string"},
         "description": {"type": "string"},
         "size": {"type": ["integer", "null"]},
-        "extension": {"type": ["string", "null"]},
         "exists_on_disk": {"type": "boolean"},
         "datetime_created": {"type": "string"},
         "datetime_modified": {"type": "string"},
@@ -51,7 +63,6 @@ ASSET_JSON_SCHEMA = {
         "name",
         "description",
         "size",
-        "extension",
         "exists_on_disk",
         "datetime_created",
         "datetime_modified",
@@ -244,6 +255,88 @@ async def test_upload_file_asset_returns_200(admin_client):
         expected_status_code=200,
     )
     asset_id = response.json()["resource_id"]
+    await admin_client.delete(f"/api/assets/{asset_id}")
+
+
+async def test_upload_file_asset_stores_the_uploaded_filename_verbatim(admin_client):
+    """POST /api/assets/upload records the uploaded filename as the asset's name."""
+    response = await admin_client.post(
+        "/api/assets/upload",
+        data={"is_directory": "false"},
+        files={"file": ("report.tar.gz", io.BytesIO(b"hello world"), "text/plain")},
+    )
+    body = response.json()
+    # Nothing is split off the filename: the whole thing, multi-part suffix included, is
+    # the name the asset is served under.
+    assert body["name"] == "report.tar.gz"
+
+    await admin_client.delete(f"/api/assets/{body['resource_id']}")
+
+
+async def test_download_file_asset_is_served_under_its_name(admin_client):
+    """GET /api/assets/download/{id} names the download after the asset's name."""
+    upload_response = await admin_client.post(
+        "/api/assets/upload",
+        data={"is_directory": "false"},
+        files={"file": ("report.txt", io.BytesIO(b"hello world"), "text/plain")},
+    )
+    asset_id = upload_response.json()["resource_id"]
+
+    response = await admin_client.get(f"/api/assets/download/{asset_id}")
+
+    assert response.status_code == 200
+    assert response.content == b"hello world"
+    # The asset is stored on the server under its bare resource ID, so the download has
+    # to carry the name for the file to arrive as what the operator uploaded.
+    assert 'filename="report.txt"' in response.headers["content-disposition"]
+
+    await admin_client.delete(f"/api/assets/{asset_id}")
+
+
+async def test_download_directory_asset_is_served_as_a_named_archive(admin_client):
+    """GET /api/assets/download/{id} names a directory download after its name."""
+    upload_response = await admin_client.post(
+        "/api/assets/upload",
+        data={"is_directory": "true", "name": "collection.v2"},
+        files={
+            "file": (
+                "collection.zip",
+                io.BytesIO(_ZIP_ARCHIVE_BYTES),
+                "application/zip",
+            )
+        },
+    )
+    asset_id = upload_response.json()["resource_id"]
+
+    response = await admin_client.get(f"/api/assets/download/{asset_id}")
+
+    assert response.status_code == 200
+    # A period in a directory's name is not a suffix to be replaced: the archive's own
+    # extension is appended to the whole name.
+    assert 'filename="collection.v2.zip"' in response.headers["content-disposition"]
+
+    await admin_client.delete(f"/api/assets/{asset_id}")
+
+
+async def test_download_file_asset_sanitizes_a_name_carrying_path_separators(
+    admin_client,
+):
+    """GET /api/assets/download/{id} serves a traversing name under its last component."""
+    upload_response = await admin_client.post(
+        "/api/assets/upload",
+        data={"is_directory": "false", "name": "../../escaped.txt"},
+        files={"file": ("report.txt", io.BytesIO(b"hello world"), "text/plain")},
+    )
+    asset_id = upload_response.json()["resource_id"]
+    # The name is recorded exactly as the operator gave it: the sanitation belongs to
+    # serving the file, not to storing the name.
+    assert upload_response.json()["name"] == "../../escaped.txt"
+
+    response = await admin_client.get(f"/api/assets/download/{asset_id}")
+
+    assert response.status_code == 200
+    assert 'filename="escaped.txt"' in response.headers["content-disposition"]
+
     await admin_client.delete(f"/api/assets/{asset_id}")
 
 

@@ -60,6 +60,11 @@ asset download 123e4567-e89b-12d3-a456-426614174000 -d                # decompre
 By default an asset directory is downloaded as a `.zip` archive. Pass `-d` (or
 `--decompress`) to automatically extract asset directories after downloading.
 
+An asset's name is whatever it was uploaded or renamed to, extension included, and it is
+the name the download is saved under when `-o` is not given (with `.zip` appended for an
+asset directory). The server stores the file itself under the asset's resource ID, so the
+name is free to be anything: it never has to match what is on disk.
+
 ## Renaming, describing, and removing an asset
 
 ```text

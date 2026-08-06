@@ -339,7 +339,6 @@ class AssetCommand(BaseConnectedCommand):
         table.add_row("Resource ID", str(asset["resource_id"]))
         table.add_row("Name", str(asset["name"]))
         table.add_row("Description", str(asset["description"]))
-        table.add_row("Extension", str(asset["extension"]))
         table.add_row(
             "Size",
             f"{size} B ({format_size_bytes_as_human_readable_str(size_bytes=size)})"

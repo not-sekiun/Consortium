@@ -7,7 +7,6 @@ from pydantic import (
     ConfigDict,
     JsonValue,
     RootModel,
-    model_validator,
 )
 
 from consortium.server.models.agent_models import AgentModel
@@ -26,10 +25,9 @@ from consortium.server.models.user_account_models import (
 
 class RepositoryResourceModel(BaseModel):
     resource_id: UUID4
-    name: str | None
+    name: str
     description: str
     size: int | None
-    extension: str | None
     exists_on_disk: bool
     datetime_created: datetime
     # `datetime_modified` is read from the resource's mtime on disk, so it is null for
@@ -62,28 +60,12 @@ class PersistentRepositoryResourceModel(BaseModel):
     name: str | None
     description: str
     size: int | None
-    # Always null for directories, and required to be non-null for files by the
-    # validator below.
-    extension: str | None
     exists_on_disk: bool
     md5_checksum: None
     datetime_created: datetime
     datetime_modified: datetime | None
     is_directory: bool
     data: dict[str, JsonValue]
-
-    @model_validator(mode="after")
-    def _validate_file_resource_has_extension(self):
-        # A file resource's on-disk path is reconstructed as `<resource_id><extension>`,
-        # so a null extension leaves the repository service unable to locate the file at
-        # all. Directories are stored under their bare resource ID and carry no
-        # extension.
-        if not self.is_directory and self.extension is None:
-            raise ValueError(
-                "a file resource must have a non-null extension, only directory "
-                "resources may have a null extension"
-            )
-        return self
 
 
 class PersistentRepositoryMetadataModel(

@@ -1,6 +1,5 @@
 import functools
 import json
-import os
 import pathlib
 import uuid
 from typing import BinaryIO, Literal, TextIO
@@ -168,15 +167,10 @@ class RepositoryService:
         ] = {}
         for resource_metadata in repository_metadata.values():
             resource_id = str(resource_metadata.resource_id)
-            if resource_metadata.is_directory:
-                resource_path = self.repository_directory_path / resource_id
-            else:
-                # A file resource is guaranteed a non-null extension by the metadata
-                # model's own validator, so the path reconstruction below is total.
-                resource_path = (
-                    self.repository_directory_path
-                    / f"{resource_id}{resource_metadata.extension}"
-                )
+            # Files and directories are stored under their bare resource ID, so a
+            # resource's path is the one thing about it that never has to be derived from
+            # anything the operator supplied.
+            resource_path = self.repository_directory_path / resource_id
             if not resource_path.exists():
                 unsynced_resource_ids.append(resource_id)
             else:
@@ -209,7 +203,13 @@ class RepositoryService:
             # it with the saved `resource_id` which also correlates to the actual path
             # on disk
             resource.resource_id = resource_id
-            resource.name = resource_metadata.name
+            # An entry that recorded no name falls back to the resource ID, matching what
+            # the objects themselves do for an unnamed resource. The object's own
+            # fallback cannot be relied on here: it names itself after the ID it
+            # generated at instantiation, which the line above has just replaced.
+            resource.name = (
+                resource_metadata.name if resource_metadata.name else resource_id
+            )
             resource.description = resource_metadata.description
             resource.datetime_created = resource_metadata.datetime_created
             resource.is_directory = resource_metadata.is_directory
@@ -272,12 +272,13 @@ class RepositoryService:
     ) -> RepositoryFile:
         """Creates and persists a new file resource in the repository.
 
-        The file is stored on disk under a UUID-named path derived from the original
-        file extension (if provided). Metadata is persisted after creation.
+        The file is stored on disk under its resource ID alone, with no extension.
+        Metadata is persisted after creation.
 
         Args:
             content: The file content to write.
-            name: A human-readable name for the file. When `None`, the
+            name: A human-readable name for the file, recorded exactly as given and used
+                as the name the resource is served and downloaded under. When `None`, the
                 resource UUID is used as the name.
             description: An optional description for the file.
             resource_id: A previously reserved ID to assign to
@@ -310,10 +311,7 @@ class RepositoryService:
         # TODO: Implement create_* class methods to allow creating the repository file
         #  in memory and on disk.
         repository_file = RepositoryFile.create(
-            # Preserve the original file extension provided from the file name
-            # parameter.
-            path=self.repository_directory_path
-            / f"{unique_resource_id}{os.path.splitext(name)[1] if name else ''}",
+            path=self.repository_directory_path / str(unique_resource_id),
             content=content,
             name=name if name else str(unique_resource_id),
             description=description,
@@ -332,16 +330,15 @@ class RepositoryService:
         copy: bool = False,
         resource_id: str | uuid.UUID | None = None,
         name: str | None = None,
-        extension: str | None = None,
         description: str = "",
         data: dict[str, JsonValue] | None = None,
     ) -> RepositoryFile:
         """Registers an existing file on disk into the repository.
 
         Unlike `create_file`, no new file is written. The file at `path` is moved
-        (or copied when `copy=True`) into the repository directory under a
-        UUID-based name and registered as a resource. Metadata is persisted after
-        registration.
+        (or copied when `copy=True`) into the repository directory under its resource ID
+        alone, with no extension, and registered as a resource. Metadata is persisted
+        after registration.
 
         Args:
             path: Path to the existing file to register.
@@ -350,13 +347,10 @@ class RepositoryService:
                 is left in place.
             resource_id: A previously reserved ID to
                 assign to this resource. When `None`, a new ID is generated.
-            name: A human-readable display name for the file. Purely
-                cosmetic — never affects how the file is stored on disk. When
-                `None`, the original filename is used.
-            extension: Overrides the file's on-disk extension,
-                e.g. `".csv"`. Use this to deliberately reinterpret a file's type
-                on ingest. When `None` (default), the source file's own extension
-                (`path.suffix`) is used and behavior is unchanged from before.
+            name: A human-readable name for the file, recorded exactly as given and used
+                as the name the resource is served and downloaded under. Never affects
+                how the file is stored on disk. When `None`, the original filename is
+                used.
             description: An optional description for the file.
             data: Optional additional metadata to associate with
                 the file resource.
@@ -385,11 +379,7 @@ class RepositoryService:
         else:
             unique_resource_id = uuid.uuid4()
 
-        # `extension=None` means the `RepositoryFile` inherits its `extension` from the
-        # source file. An explicit extension is an intentional caller decision to
-        # reinterpret the file's type.
-        ext = extension if extension is not None else path.suffix
-        dest_path = self.repository_directory_path / f"{unique_resource_id}{ext}"
+        dest_path = self.repository_directory_path / str(unique_resource_id)
 
         repository_file = RepositoryFile.from_existing_path(
             source_path=path,
@@ -433,8 +423,9 @@ class RepositoryService:
                 a source directory path.
             resource_id: A previously reserved ID to assign to
                 this resource. When `None`, a new ID is generated automatically.
-            name: A human-readable name for the directory. When `None`,
-                the resource UUID is used as the name.
+            name: A human-readable name for the directory, recorded exactly as given and
+                used as the name the resource is served and downloaded under. When
+                `None`, the resource UUID is used as the name.
             description: An optional description for the directory.
             data: Optional additional metadata to associate with
                 the directory resource.
@@ -565,8 +556,9 @@ class RepositoryService:
 
         Args:
             resource_id: The ID of the resource to update.
-            name: A new human-readable name for the resource. When `None`, the
-                existing name is preserved.
+            name: A new human-readable name for the resource, recorded exactly as given
+                and used as the name the resource is served and downloaded under. Nothing
+                on disk is renamed. When `None`, the existing name is preserved.
             description: A new description for the resource. When `None`, the
                 existing description is preserved.
             data: New additional metadata to associate with the resource. When `None`,

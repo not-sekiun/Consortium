@@ -301,3 +301,58 @@ def test_directory_create_leaves_nothing_behind_when_content_is_rejected(
         RepositoryDirectory.create(path=path, content=(chunk for chunk in (b"a", b"b")))
 
     assert not path.exists()
+
+
+# ---------------------------------------------------------------------------
+# a resource's name is held verbatim and is independent of its path
+# ---------------------------------------------------------------------------
+
+
+def test_file_name_is_held_verbatim_including_its_extension(tmp_path: pathlib.Path):
+    # The name is the name the resource is served and downloaded under, so nothing is
+    # stripped from it, and the path it happens to be stored at does not shape it.
+    repository_file = RepositoryFile(path=tmp_path / "abcd-1234", name="report.tar.gz")
+
+    assert repository_file.name == "report.tar.gz"
+
+
+def test_file_name_falls_back_to_the_resource_id(tmp_path: pathlib.Path):
+    repository_file = RepositoryFile(path=tmp_path / "abcd-1234")
+
+    assert repository_file.name == str(repository_file.resource_id)
+
+
+def test_directory_name_is_held_verbatim(tmp_path: pathlib.Path):
+    repository_directory = RepositoryDirectory(
+        path=tmp_path / "abcd-1234", name="collection.v2"
+    )
+
+    assert repository_directory.name == "collection.v2"
+
+
+def test_directory_name_falls_back_to_the_resource_id(tmp_path: pathlib.Path):
+    repository_directory = RepositoryDirectory(path=tmp_path / "abcd-1234")
+
+    assert repository_directory.name == str(repository_directory.resource_id)
+
+
+def test_file_to_json_carries_the_whole_name_and_no_extension(tmp_path: pathlib.Path):
+    path = tmp_path / "abcd-1234"
+    path.write_text("content", encoding="utf-8")
+    repository_file = RepositoryFile(path=path, name="report.tar.gz")
+
+    resource_json = repository_file.to_json()
+
+    assert resource_json["name"] == "report.tar.gz"
+    assert "extension" not in resource_json
+
+
+def test_directory_to_json_carries_no_extension(tmp_path: pathlib.Path):
+    path = tmp_path / "abcd-1234"
+    path.mkdir()
+    repository_directory = RepositoryDirectory(path=path, name="collection.v2")
+
+    resource_json = repository_directory.to_json()
+
+    assert resource_json["name"] == "collection.v2"
+    assert "extension" not in resource_json

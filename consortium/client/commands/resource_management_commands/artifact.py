@@ -275,7 +275,6 @@ class ArtifactCommand(BaseConnectedCommand):
         table.add_row("Resource ID", str(artifact["resource_id"]))
         table.add_row("Name", str(artifact["name"]))
         table.add_row("Description", str(artifact["description"]))
-        table.add_row("Extension", str(artifact["extension"]))
         table.add_row(
             "Size",
             f"{size} B ({format_size_bytes_as_human_readable_str(size_bytes=size)})"

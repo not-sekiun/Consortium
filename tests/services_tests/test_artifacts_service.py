@@ -132,6 +132,20 @@ async def test_create_file_fires_artifact_created_event(
     assert mock_task.called
 
 
+async def test_created_event_carries_the_whole_name(
+    service: ArtifactsService, events_service: MagicMock
+):
+    # The event payload is the resource's own `to_json`, so a client watching events sees
+    # the same name a client polling the API does: the full filename, with nothing split
+    # off it into a separate field.
+    with patch("asyncio.create_task"):
+        await service.create_artifact_file(content="data", name="report.tar.gz")
+
+    event_data = events_service.trigger_event.call_args.kwargs["data"]
+    assert event_data["name"] == "report.tar.gz"
+    assert "extension" not in event_data
+
+
 async def test_create_file_with_reserved_id(service: ArtifactsService):
     aid = service.reserve_resource_id()
     with patch("asyncio.create_task"):

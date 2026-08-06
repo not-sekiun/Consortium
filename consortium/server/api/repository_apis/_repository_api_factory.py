@@ -126,19 +126,36 @@ def create_download_resource_by_resource_id_endpoint(
                 resource_id=str(resource_id),
             )
 
+        # A resource's name is operator supplied and reaches both a filesystem join
+        # inside the temporary directory below and the `Content-Disposition` header, so a
+        # name carrying path separators or `..` would otherwise escape that directory and
+        # name the download outside of it. A resource is only ever served as a single
+        # file, so only the last component of the name can mean anything here, and a name
+        # with no usable last component falls back to the resource ID. Windows path
+        # semantics are used regardless of the host platform because they treat both
+        # separators, and a drive prefix, as significant, so the name is stripped the same
+        # way whichever platform the name was authored on and the server runs on.
+        download_name = pathlib.PureWindowsPath(repository_resource.name).name
+        if download_name in ("", ".", ".."):
+            download_name = str(resource_id)
+
         if repository_resource.is_directory:
             temp_dir = tempfile.TemporaryDirectory()
-            temp_archive_file = pathlib.Path(temp_dir.name, repository_resource.name)
-            shutil.make_archive(
-                base_name=str(temp_archive_file.resolve()),
+            # `make_archive` returns the path it actually wrote, which is the base name
+            # with the format's extension appended. That is taken rather than rebuilt
+            # here, because rebuilding it with `with_suffix` replaces a trailing dotted
+            # segment instead of appending one, and so points at a file that was never
+            # written for any directory whose name contains a period.
+            archive_file_path = shutil.make_archive(
+                base_name=str(pathlib.Path(temp_dir.name, download_name).resolve()),
                 format="zip",
                 root_dir=repository_resource.path,
             )
             return FileResponse(
-                path=str(temp_archive_file.with_suffix(".zip").resolve()),
-                filename=f"{repository_resource.name}.zip"
-                if repository_resource.name
-                else f"{str(resource_id)}.zip",
+                path=archive_file_path,
+                # A directory is only ever sent as an archive of itself, so the archive's
+                # own extension is added to the download name here.
+                filename=f"{download_name}.zip",
                 # Only delete the temporary directory AFTER the file has been
                 # completely sent.
                 background=BackgroundTask(temp_dir.cleanup),
@@ -146,9 +163,7 @@ def create_download_resource_by_resource_id_endpoint(
         else:
             return FileResponse(
                 path=str(repository_resource.path),
-                filename=repository_resource.name
-                if repository_resource.name
-                else str(resource_id),
+                filename=download_name,
             )
 
     return download_resource_by_resource_id

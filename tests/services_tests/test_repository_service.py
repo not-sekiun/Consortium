@@ -31,7 +31,6 @@ def _metadata_entry(resource_id: str, name: str, is_directory: bool = False) -> 
         "name": name,
         "description": "",
         "size": None,
-        "extension": "",
         "exists_on_disk": True,
         "md5_checksum": None,
         "datetime_created": "2024-01-01T00:00:00",
@@ -127,24 +126,8 @@ def test_load_repository_metadata_invalid_schema_raises(
 def test_load_repository_metadata_unsynced_file_raises(
     service: RepositoryService, repo_dir: pathlib.Path
 ):
-    import uuid
-
     resource_id = str(uuid.uuid4())
-    metadata = {
-        resource_id: {
-            "resource_id": resource_id,
-            "name": "missing_file.txt",
-            "description": "",
-            "size": None,
-            "extension": "",
-            "exists_on_disk": True,
-            "md5_checksum": None,
-            "datetime_created": "2024-01-01T00:00:00",
-            "datetime_modified": "2024-01-01T00:00:00",
-            "is_directory": False,
-            "data": {},
-        }
-    }
+    metadata = {resource_id: _metadata_entry(resource_id, "missing_file.txt")}
     (repo_dir / ".repository.json").write_text(json.dumps(metadata))
     with pytest.raises(RepositoryMetadataFileUnsyncedError):
         service.load_repository_metadata()
@@ -210,6 +193,9 @@ def test_create_file_with_auto_id(service: RepositoryService):
     f = service.create_file(content="test content", name="test.txt")
     assert f.resource_id is not None
     assert f.name == "test.txt"
+    # The name says nothing about where the file lives: it is stored under its bare
+    # resource ID, exactly as a directory resource is.
+    assert f.path.name == str(f.resource_id)
     resources = service.get_all_resources()
     assert len(resources) == 1
 
@@ -236,12 +222,15 @@ def test_create_file_persists_metadata(
     assert len(data) == 1
 
 
-def test_create_file_preserves_extension(
+def test_create_file_keeps_the_whole_name_and_stores_it_without_an_extension(
     service: RepositoryService, repo_dir: pathlib.Path
 ):
     f = service.create_file(content="data", name="archive.tar.gz")
-    # The on-disk file should carry the extension
-    assert f.path.suffix == ".gz"
+    # Multi-part suffixes are the case a name-splitting scheme gets wrong. The name is
+    # recorded whole, and none of it reaches the on-disk path.
+    assert f.name == "archive.tar.gz"
+    assert f.path.name == str(f.resource_id)
+    assert f.path.suffix == ""
 
 
 def test_create_file_bytes_content(service: RepositoryService):
@@ -299,6 +288,7 @@ def test_add_file_uses_original_name_when_name_not_provided(
     src.write_text("data")
     f = service.add_file(path=src)
     assert f.name == "myfile.dat"
+    assert f.path.name == str(f.resource_id)
 
 
 def test_add_file_string_path(service: RepositoryService, tmp_path: pathlib.Path):
@@ -451,6 +441,74 @@ def test_get_all_resources_returns_all(service: RepositoryService):
 
 def test_get_all_resources_empty_on_fresh_service(service: RepositoryService):
     assert service.get_all_resources() == []
+
+
+# ---------------------------------------------------------------------------
+# update_resource_by_resource_id
+# ---------------------------------------------------------------------------
+
+
+def test_update_resource_name_is_recorded_verbatim_and_renames_nothing_on_disk(
+    service: RepositoryService,
+):
+    f = service.create_file(content="data", name="report.txt")
+    stored_path = f.path
+
+    updated = service.update_resource_by_resource_id(
+        resource_id=f.resource_id, name="notes.md"
+    )
+
+    # A rename is metadata only. The name is taken exactly as given, including an
+    # extension that says nothing about the file's actual content, and the file itself
+    # stays where it is.
+    assert updated.name == "notes.md"
+    assert updated.path == stored_path
+    assert stored_path.exists()
+
+
+# ---------------------------------------------------------------------------
+# persisted metadata shape
+# ---------------------------------------------------------------------------
+
+
+def test_saved_metadata_records_the_whole_name_and_no_extension(
+    service: RepositoryService, repo_dir: pathlib.Path
+):
+    f = service.create_file(content="data", name="report.tar.gz")
+
+    entry = json.loads((repo_dir / ".repository.json").read_text())[str(f.resource_id)]
+
+    assert entry["name"] == "report.tar.gz"
+    assert "extension" not in entry
+
+
+def test_saved_metadata_reloads_after_a_round_trip(
+    service: RepositoryService, repo_dir: pathlib.Path
+):
+    f = service.create_file(content="data", name="report.tar.gz")
+
+    reloaded = RepositoryService(repository_directory_path=repo_dir)
+    reloaded.load_repository_metadata()
+
+    resource = reloaded.get_resource_by_resource_id(resource_id=f.resource_id)
+    assert resource.name == "report.tar.gz"
+    assert resource.path.name == str(f.resource_id)
+
+
+def test_load_repository_metadata_falls_back_to_the_resource_id_for_an_unnamed_entry(
+    service: RepositoryService, repo_dir: pathlib.Path
+):
+    # An entry recording a null name still has to load as something servable, so the
+    # resource ID the object already fell back to is kept rather than overwritten.
+    resource_id = str(uuid.uuid4())
+    (repo_dir / resource_id).write_text("content")
+    entry = _metadata_entry(resource_id, "unused")
+    entry["name"] = None
+    (repo_dir / ".repository.json").write_text(json.dumps({resource_id: entry}))
+
+    service.load_repository_metadata()
+
+    assert service.get_all_resources()[0].name == resource_id
 
 
 # ---------------------------------------------------------------------------

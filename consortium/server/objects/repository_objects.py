@@ -85,7 +85,6 @@ class RepositoryFile:
         self.name = name if name else str(self.resource_id)
         self.description = description
         self.path = path
-        self.extension = self.path.suffix  # includes the leading period
         self.datetime_created = utc_now()
         self.is_directory = False
         self.data = data if data is not None else {}
@@ -101,7 +100,7 @@ class RepositoryFile:
         self._cached_md5_checksum = None
 
     def __str__(self) -> str:
-        return f"'{self.path}' ({self.resource_id})"
+        return f"'{self.name}' ({self.resource_id})"
 
     def __repr__(self) -> str:
         return (
@@ -349,7 +348,6 @@ class RepositoryFile:
             "name": self.name,
             "description": self.description,
             "size": self.size,
-            "extension": self.extension,
             "exists_on_disk": self.exists_on_disk,
             "datetime_created": self.datetime_created.isoformat(),
             "datetime_modified": dt_modified.isoformat()
@@ -377,12 +375,9 @@ class RepositoryDirectory:
             path = pathlib.Path(path)
 
         self.resource_id = uuid.uuid4()
-        self.name = name
+        self.name = name if name else str(self.resource_id)
         self.description = description
         self.path = path
-        # Directories don't have an extension but we keep extension as `None` to be
-        # symmetric with `RepositoryFile` for JSON serialization.
-        self.extension = None
         self.datetime_created = utc_now()
         self.is_directory = True
         self.data = data if data is not None else {}
@@ -394,8 +389,6 @@ class RepositoryDirectory:
         self._cached_md5_checksum = None
 
     def __str__(self) -> str:
-        if self.name is None:
-            return f"'' ({self.resource_id})"
         return f"'{self.name}' ({self.resource_id})"
 
     def __repr__(self) -> str:
@@ -708,7 +701,6 @@ class RepositoryDirectory:
             "name": self.name,
             "description": self.description,
             "size": self.size,
-            "extension": self.extension,
             "exists_on_disk": self.exists_on_disk,
             "md5_checksum": self.compute_md5_checksum(
                 force_checksum_refresh=force_checksum_refresh

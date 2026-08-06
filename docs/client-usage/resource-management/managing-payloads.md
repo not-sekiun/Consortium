@@ -58,6 +58,11 @@ payload download a1b2c3d4-... -o ./out.exe  # download to a specific path
 payload download a1b2c3d4-... -w             # overwrite an existing file
 ```
 
+A payload's name is whatever it was built or renamed as, extension included, and it is the
+name the download is saved under when `-o` is not given (with `.zip` appended for a payload
+directory). The server stores the file itself under the payload's resource ID, so the name
+is free to be anything: it never has to match what is on disk.
+
 ## Where payloads come from
 
 Payloads are produced when an agent generator runs. To create one:
