@@ -18,7 +18,7 @@ class EventHook(BaseEventHook):
         "generic HTTP POST webhooks."
     )
     version = "0.1.0"
-    compatible_framework_version = ">=0.1.0"
+    compatible_framework_version = ">=0.1.0a1"
     authors = {"Sekiun (github.com/not-sekiun)"}
     event_types = {"STOP_SERVER", "START_SERVER", "AGENT_REGISTERED"}
 

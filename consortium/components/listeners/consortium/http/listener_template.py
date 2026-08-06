@@ -44,7 +44,7 @@ class ListenerTemplate(BaseListenerTemplate):
         "HTTP transport with a custom JSON-based protocol."
     )
     version = "0.1.0"
-    compatible_framework_version = ">=0.1.0"
+    compatible_framework_version = ">=0.1.0a1"
     authors = {"Sekiun (github.com/not-sekiun)"}
     listener = Listener
     listener_type = ListenerType

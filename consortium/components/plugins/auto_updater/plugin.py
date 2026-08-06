@@ -21,7 +21,7 @@ class Plugin(BasePlugin):
         "prompt the user to update and restart the framework."
     )
     version = "0.1.0"
-    compatible_framework_version = ">=0.1.0"
+    compatible_framework_version = ">=0.1.0a1"
     authors = {"Sekiun (github.com/not-sekiun)"}
     autostart = True
 

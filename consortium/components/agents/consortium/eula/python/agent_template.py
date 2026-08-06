@@ -58,7 +58,7 @@ class AgentTemplate(BaseAgentTemplate):
         "executable via PyInstaller but does not support cross-compilation."
     )
     version = "0.1.0"
-    compatible_framework_version = ">=0.1.0"
+    compatible_framework_version = ">=0.1.0a1"
     authors = {"Sekiun (github.com/not-sekiun)"}
     agent_generator = AgentGenerator
     agent_type = AgentType

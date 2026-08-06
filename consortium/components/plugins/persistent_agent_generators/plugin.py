@@ -12,7 +12,7 @@ class Plugin(BasePlugin):
         "those generators that were previously created."
     )
     version = "0.1.0"
-    compatible_framework_version = ">=0.1.0"
+    compatible_framework_version = ">=0.1.0a1"
     authors = {"Sekiun (github.com/not-sekiun)"}
     autostart = True
 
