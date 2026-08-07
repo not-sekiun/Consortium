@@ -9,6 +9,7 @@ from pydantic import UUID4, BaseModel, JsonValue, ValidationError
 from consortium.framework._core.components import State
 from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
     AgentCapabilityExecutionError,
+    AgentCapabilityFatalError,
     AgentCapabilityLaunchError,
 )
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
@@ -991,51 +992,58 @@ class Agent:
                     message=exc.message,
                     data={"detail": exc.detail},
                 )
-            except Exception as exc:
-                # Format the error in the standard `<ErrorClass>: message` form, falling
-                # back to just `<ErrorClass>` (no dangling colon) when the exception
-                # carries no message, e.g. a bare TimeoutError.
-                exception_message = str(exc)
-                formatted_exception = (
-                    f"{exc.__class__.__name__}: {exception_message}"
-                    if exception_message
-                    else exc.__class__.__name__
-                )
+            except AgentCapabilityFatalError as exc:
+                # An unexpected exception escaped a capability hook or its execution
+                # infrastructure and was classified by phase in execute(). Distinct from
+                # the deliberate launch/execution signal paths above: this records a
+                # framework/capability defect under its own error code, preserving the
+                # original exception's type, message, and phase, and stores the fatal error
+                # as-is on the task.
+                #
+                # A compare and swap covers the one way the transition can legitimately
+                # fail: the capability suppressed its own cancellation and then raised
+                # something else while cleaning up, so agent teardown already drove this
+                # task terminal. That is a lost race rather than an error, so log it and
+                # leave the terminal state teardown already recorded in place.
                 self.logger.error(
-                    "Failed to execute agent capability '{}'. An unhandled "
-                    "exception was raised during execution. {}",
-                    str(agent_capability),
-                    formatted_exception,
+                    "Agent {} had capability '{}' fail fatally on task {}. {}",
+                    self,
+                    agent_capability.name,
+                    task.task_id,
+                    str(exc),
                 )
-                # This is the last-resort error handler running inside a fire and
-                # forget asyncio task, so it must not raise. A compare and swap covers
-                # the one way the transition can legitimately fail: the capability
-                # suppressed its own cancellation and then raised something else while
-                # cleaning up, so agent teardown already drove this task terminal. That
-                # is a lost race rather than an error, so log it and leave the terminal
-                # state teardown already recorded in place.
-                if task.status._try_transition_to_errored(
-                    error=AgentCapabilityExecutionError(
-                        agent_capability_name=agent_capability.name,
-                        error_message=(
-                            "An unhandled exception was raised during execution. "
-                            f"{formatted_exception}"
-                        ),
-                    )
-                ):
+                if task.status._try_transition_to_errored(error=exc):
                     task.event_logger.error(
-                        message=formatted_exception,
-                        data={"type": exc.__class__.__name__, "message": str(exc)},
+                        message=str(exc),
+                        data=exc.detail,
                     )
                 else:
                     self.logger.error(
                         "Agent {} could not transition task {} to ERRORED while "
-                        "handling an unhandled capability exception, it had already "
+                        "handling a fatal capability exception, it had already "
                         "reached {}.",
                         self,
                         task,
                         task.status.state,
                     )
+            except Exception:
+                # Reaching here is a framework defect, not a capability error: execute()
+                # classifies every exception within the capability contract (launch,
+                # dispatch, execution, cleanup) into an AgentCapabilityFatalError, and the
+                # deliberate paths are handled above. Anything left is a bug in the handler
+                # itself. Surface it loudly and let it propagate rather than disguising it
+                # as a capability failure and firing a spurious completion: the task is
+                # deliberately left non-terminal so the broken invariant looks broken.
+                self.logger.critical(
+                    "An unexpected exception escaped the task handler "
+                    "for agent {} capability '{}' on task {}. This is not a capability "
+                    "error and the task was left non-terminal so it is not silently "
+                    "reported as completed.",
+                    self,
+                    agent_capability.name,
+                    task.task_id,
+                )
+                raise
 
             # Upon returning from the task's execution method the capability is no
             # longer running, so release its inbox (no more results will be routed to

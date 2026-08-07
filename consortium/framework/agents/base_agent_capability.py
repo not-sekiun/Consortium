@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Callable
 from enum import StrEnum
 from inspect import signature
@@ -8,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
+    AgentCapabilityFatalError,
     DuplicateAgentCapabilityOptionNameError,
     EmptyAgentCapabilityNameError,
     InvalidAgentCapabilityConfigurationParameterTypeError,
@@ -32,6 +34,9 @@ from consortium.framework.options import (
 )
 from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
     AgentCapabilityLaunchError,
+)
+from consortium.framework.signal_exceptions.base_signal_exception import (
+    BaseSignalException,
 )
 from consortium.server.objects.mitre_attack_objects import (
     # MitreAttackTechniqueID,
@@ -82,6 +87,19 @@ class AgentLifecycle(StrEnum):
 
     ON_REGISTERED = "ON_REGISTERED"
     ON_CHECKED_IN = "ON_CHECKED_IN"
+
+
+# The stages of `execute()` at which an unexpected exception can escape a capability. The
+# value is embedded verbatim in an `AgentCapabilityFatalError` message ("... during the
+# {phase} phase.") and its `detail`, so `execute()` can tell the task handler which stage
+# failed. Kept next to `execute()` (the layer that knows which stage is active) so the
+# framework exception stays decoupled from the lifecycle, mirroring how
+# `ComponentLifeCycleFatalContext` lives with the component lifecycle.
+class AgentCapabilityPhase(StrEnum):
+    LAUNCH = "launch"
+    DISPATCH = "dispatch"
+    EXECUTION = "execution"
+    CLEANUP = "cleanup"
 
 
 class _BaseAgentCapabilityModel(BaseModel):
@@ -344,33 +362,125 @@ class BaseAgentCapability(_AgentCommunicator):
                 it directly or by returning anything other than a TaskLaunchMessageModel
                 (such as None). The task handler converts this into an ERRORED task.
         """
+        # Captured so the cleanup in `finally` can tell whether a queue shutdown error is
+        # the sole failure (classify it as a cleanup fatal) or a secondary one that must
+        # not replace an error already unwinding out of a hook.
+        pending_exc: BaseException | None = None
         try:
             self.task_launch_message = task_launch_message.model_copy(deep=True)
-            modified_task_launch_message = await self.on_launch(task_launch_message)
+
+            # LAUNCH: translate an unexpected exception from on_launch into a phase-tagged
+            # fatal error. A deliberate AgentCapabilityLaunchError (a BaseSignalException)
+            # is passed through untouched so the task handler still reports it as a launch
+            # denial rather than a framework defect.
+            try:
+                modified_task_launch_message = await self.on_launch(task_launch_message)
+            except asyncio.CancelledError:
+                raise
+            except BaseSignalException:
+                raise
+            except Exception as exc:
+                raise AgentCapabilityFatalError(
+                    agent_capability_name=self.name,
+                    phase=AgentCapabilityPhase.LAUNCH,
+                    underlying_exception=exc,
+                ) from exc
+
             if not isinstance(modified_task_launch_message, TaskLaunchMessageModel):
                 # on_launch must hand back a launch message or deny the launch by raising
                 # AgentCapabilityLaunchError. Returning anything other than a
                 # TaskLaunchMessageModel (such as None) is no longer a silent cancel: None
                 # returned from execute() now means "completed normally", so an aborted
-                # launch has to be reported explicitly through the launch error.
+                # launch has to be reported explicitly through the launch error. This is a
+                # deliberate denial, not a fatal defect, so it is raised outside the guard
+                # above and passes through to the handler as a launch error.
                 raise AgentCapabilityLaunchError(
                     "`on_launch` must return a `TaskLaunchMessageModel`, or raise "
                     "`AgentCapabilityLaunchError` to deny the launch, but it returned "
                     f"`{type(modified_task_launch_message).__name__}`."
                 )
-            await self._task_messages_outbox.put(
-                task_message=modified_task_launch_message
-            )
-            return await self.on_execute()
+
+            # DISPATCH: an unexpected failure putting the launch message on the outbox is
+            # infrastructure, not the capability's deliberate failure path, so tag it.
+            try:
+                await self._task_messages_outbox.put(
+                    task_message=modified_task_launch_message
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                raise AgentCapabilityFatalError(
+                    agent_capability_name=self.name,
+                    phase=AgentCapabilityPhase.DISPATCH,
+                    underlying_exception=exc,
+                ) from exc
+
+            # EXECUTION: translate an unexpected exception from on_execute into a fatal
+            # error while letting a deliberate AgentCapabilityExecutionError pass through.
+            try:
+                return await self.on_execute()
+            except asyncio.CancelledError:
+                raise
+            except BaseSignalException:
+                raise
+            except Exception as exc:
+                raise AgentCapabilityFatalError(
+                    agent_capability_name=self.name,
+                    phase=AgentCapabilityPhase.EXECUTION,
+                    underlying_exception=exc,
+                ) from exc
+        except BaseException as exc:
+            # Record whatever is unwinding (a phase fatal, a deliberate signal, or a
+            # cancellation) so the cleanup below knows an error already owns the unwind and
+            # must not be replaced by a secondary queue shutdown failure.
+            pending_exc = exc
+            raise
         finally:
-            # Signal end of stream on both queues so any reader still waiting on the
-            # outbox is informed the capability has finished and won't wait forever.
-            # `on_execute()` can return before the outbox is drained (for example a
-            # capability that fires messages without waiting for responses), so we
-            # shut down gracefully (`immediate=False`) to let buffered outbound
-            # messages flush before readers see the end of stream `None`.
-            await self._task_messages_inbox.shutdown(immediate=False)
-            await self._task_messages_outbox.shutdown(immediate=False)
+            await self._shutdown_task_queues(pending_exc=pending_exc)
+
+    async def _shutdown_task_queues(self, pending_exc: BaseException | None) -> None:
+        # Signal end of stream on both queues so any reader still waiting on the outbox is
+        # informed the capability has finished and won't wait forever. `on_execute()` can
+        # return before the outbox is drained (for example a capability that fires messages
+        # without waiting for responses), so we shut down gracefully (`immediate=False`) to
+        # let buffered outbound messages flush before readers see the end of stream `None`.
+        #
+        # Both queues are shut down even if the first fails, so one failing does not leave
+        # the other's readers hanging. A shutdown failure is classified as a cleanup fatal
+        # only when nothing else is unwinding: if `pending_exc` is set, an earlier failure
+        # owns the unwind and must not be silently replaced, so the cleanup error is logged
+        # rather than raised.
+        cleanup_errors: list[Exception] = []
+        for shutdown in (
+            self._task_messages_inbox.shutdown,
+            self._task_messages_outbox.shutdown,
+        ):
+            try:
+                await shutdown(immediate=False)
+            except asyncio.CancelledError:
+                raise
+            except Exception as cleanup_exc:
+                cleanup_errors.append(cleanup_exc)
+
+        if not cleanup_errors:
+            return
+
+        if pending_exc is None:
+            raise AgentCapabilityFatalError(
+                agent_capability_name=self.name,
+                phase=AgentCapabilityPhase.CLEANUP,
+                underlying_exception=cleanup_errors[0],
+            ) from cleanup_errors[0]
+
+        for cleanup_exc in cleanup_errors:
+            self.logger.error(
+                "Agent capability '{}' failed to shut down a task queue during cleanup "
+                "while another error was already propagating. The cleanup error was "
+                "suppressed so it would not replace the original: {}: {}",
+                self.name,
+                type(cleanup_exc).__name__,
+                cleanup_exc,
+            )
 
     @classmethod
     def to_json(cls) -> dict[str, Any]:

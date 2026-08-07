@@ -159,6 +159,48 @@ class AgentCapabilityExecutionError(AgentCapabilitiesFrameworkError):
         )
 
 
+class AgentCapabilityFatalError(AgentCapabilitiesFrameworkError):
+    """Raised when an unexpected exception escapes an agent capability's hooks or its
+    execution infrastructure, terminating the task fatally.
+
+    This is the agent capability analogue of `ComponentFatalError`. Unlike
+    `AgentCapabilityLaunchError` and `AgentCapabilityExecutionError`, which report the
+    capability's deliberate, typed failure paths, this reports an unhandled exception that
+    escaped `on_launch`, message dispatch, `on_execute`, or queue cleanup. The `phase`
+    identifies which of those stages failed. The original exception is preserved as the
+    cause when this error is re-raised, so its traceback survives server side; only the
+    type and message cross the API boundary through `detail`.
+    """
+
+    code = "AGENT_CAPABILITY_FATAL_ERROR"
+
+    def __init__(
+        self,
+        agent_capability_name: str,
+        phase: str,
+        underlying_exception: Exception,
+    ):
+        error_type = type(underlying_exception).__name__
+        error_message = str(underlying_exception)
+        super().__init__(
+            message=(
+                f"Failed to run agent capability '{agent_capability_name}'. An "
+                f"unhandled exception was raised during the {phase} phase. "
+                # Rendered the way Python renders an exception on the final line of a
+                # traceback. An exception carrying no message renders as its type alone,
+                # since a trailing "TypeError: " reads as truncated output.
+                + (f"{error_type}: {error_message}" if error_message else error_type)
+            ),
+            # `detail` is serialized to clients, so it carries only what a client can act
+            # on. The traceback stays on `__cause__`, which never crosses the API boundary.
+            detail={
+                "type": error_type,
+                "message": error_message,
+                "phase": phase,
+            },
+        )
+
+
 class AgentCommunicationEndOfStreamError(AgentCapabilitiesFrameworkError):
     """Raised when a communicator reaches the end of a task's message stream.
 
