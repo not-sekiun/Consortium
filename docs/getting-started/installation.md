@@ -57,6 +57,63 @@ and tools.
     an explanatory error when the engine is missing, and leaves the rest of the framework
     unaffected.
 
+### Automatic install
+
+The prerequisites above can be installed for you by the install scripts in `scripts/`.
+Each one checks what is already present, prints what it found and what is missing, shows
+the exact commands it intends to run, and installs nothing until you agree. They use the
+platform's own package manager: **winget** on Windows, **apt** on Debian based Linux, and
+**Homebrew** on macOS, where Homebrew is installed first because macOS does not ship with
+it. Once the prerequisites are in place the script offers to run `uv sync --all-packages`
+for you, which is the install step from
+[Installing Consortium](#installing-consortium) below.
+
+1. Clone the repository and change into it.
+    ```shell
+    git clone https://github.com/not-sekiun/Consortium
+    cd Consortium
+    ```
+2. Run the script for your platform from the repository root.
+
+    === "Windows"
+
+        ```powershell
+        powershell -ExecutionPolicy Bypass -File scripts\install.ps1
+        ```
+
+    === "Linux and macOS"
+
+        ```shell
+        bash scripts/install.sh
+        ```
+
+        Run it as your normal user rather than with `sudo`. On Linux it calls `sudo`
+        itself for the `apt` steps, and Homebrew refuses to run as root.
+
+3. Start the server, then connect to it with the client from a second terminal.
+    ```shell
+    uv run consortium.py server
+    ```
+    ```shell
+    uv run consortium.py client
+    ```
+
+Cloning in step 1 needs Git, which is one of the tools the script installs. If you do not
+have Git yet, download the repository as a ZIP archive from
+[GitHub](https://github.com/not-sekiun/Consortium) and run the script from the extracted
+directory instead: it installs Git along with everything else.
+
+Both scripts take `--check-only` (`-CheckOnly` on Windows) to report what is present
+without installing anything, and `--yes` (`-Yes`) to answer every prompt for an
+unattended run. See [`install.ps1`](../scripts/install-ps1.md) and
+[`install.sh`](../scripts/install-sh.md) for what each one installs and the cases they do
+not cover.
+
+!!! note
+    A tool that was just installed often only appears on the PATH of a **new** terminal.
+    If the script reports something as still missing right after installing it, open a
+    new terminal and run the script again before installing that tool by hand.
+
 ### Installing Consortium
 
 !!! important
