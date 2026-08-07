@@ -88,6 +88,37 @@ paths below. Both read their configuration from the same `data/` directory.
 
 Full instructions for both are in the
 [installation documentation](https://not-sekiun.github.io/Consortium/getting-started/installation/).
+A manual install can also be [done for you by a script](#automatic-installation).
+
+### Automatic Installation
+
+The install scripts in `scripts/` perform a manual install for you. They report which
+prerequisites are present and which are missing, ask before installing the missing ones
+with **winget** (Windows), **apt** (Debian based Linux), or **Homebrew** (macOS), and then
+install Consortium's dependencies.
+
+```bash
+git clone https://github.com/not-sekiun/Consortium.git
+cd Consortium
+```
+
+Then run the script for your platform from the repository root.
+
+**Windows**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1
+```
+
+**Linux and macOS** (as your normal user, not with `sudo`)
+
+```bash
+bash scripts/install.sh
+```
+
+Both take `--check-only` (`-CheckOnly` on Windows) to report without installing anything,
+and `--yes` (`-Yes`) for an unattended run. Afterwards, start the server and client as
+shown under [Manual Installation](#manual-installation).
 
 ### Manual Installation
 

@@ -11,68 +11,31 @@ Consortium can be installed in one of two ways.
 | Listener ports             | Bound directly on the host           | Published from the container                                  |
 
 The manual install is the better fit for developing the framework itself, because source
-changes take effect immediately and framework reloading works. Writing components suits
-either: a Docker install picks up component changes on a server restart. The Docker
-install is the better fit for running a server without provisioning Python on the host.
+changes take effect immediately and framework reloading works. The Docker install is the
+better fit for running a server without provisioning Python on the host. Writing
+components suits either.
 
-Both installs read their configuration from the same `data/` directory, so a server can
-be moved between them without reconfiguration.
+Both installs read their configuration from the same `data/` directory, so a server can be
+moved between them without reconfiguration. A manual install can also be
+[done for you by a script](#automatic-install).
 
-## Manual install
+## Automatic install
 
-### Prerequisites
-
-!!! important
-    Consortium requires **Python 3.14 or newer**. If you are using an older version of
-    Python, you will need to upgrade to a newer version before you can install
-    Consortium.
-
-??? important "Supported Python versioning"
-    Consortium aims to only support Python versions **from 3.14 onwards** that have not
-    reached end-of-life status yet (
-    See [here](https://devguide.python.org/versions/#versions)).
-
-Before you can install Consortium, you need to install a few prerequisite dependencies
-and tools.
-
-- [Python (3.14 or newer)](https://www.python.org/downloads/): The programming language
-  that the Consortium server and client are written in.
-- [Git](https://git-scm.com/downloads): The version control system that Consortium
-  uses to manage its source code.
-- [uv](https://docs.astral.sh/uv/getting-started/installation/): The package manager
-  that Consortium uses to manage its Python dependencies.
-- [Docker](https://docs.docker.com/get-started/get-docker/): The container runtime used
-  by bundled agent generators that compile their payloads inside a container. Docker
-  Engine on Linux, or Docker Desktop on Windows and macOS.
-
-??? question "Why does a manual install need Docker?"
-    Agents written in a compiled language need that language's toolchain to produce a
-    payload. Rather than requiring you to install a toolchain for every language the
-    bundled agents are written in, those agent generators compile inside a container that
-    already carries one, using whichever Docker engine is available locally.
-
-    Docker is only needed for those generators. Every other part of the framework, the
-    server, the client, listeners, plugins, event hooks, and agents that do not compile
-    in a container, runs without it. A generator that needs Docker refuses to start with
-    an explanatory error when the engine is missing, and leaves the rest of the framework
-    unaffected.
-
-### Automatic install
-
-The prerequisites above can be installed for you by the install scripts in `scripts/`.
-Each one checks what is already present, prints what it found and what is missing, shows
-the exact commands it intends to run, and installs nothing until you agree. They use the
-platform's own package manager: **winget** on Windows, **apt** on Debian based Linux, and
-**Homebrew** on macOS, where Homebrew is installed first because macOS does not ship with
-it. Once the prerequisites are in place the script offers to run `uv sync --all-packages`
-for you, which is the install step from
-[Installing Consortium](#installing-consortium) below.
+The install scripts in `scripts/` carry out a [manual install](#manual-install) for you:
+they install its prerequisites, then Consortium's own dependencies. Each script reports
+what is already present and what is missing, shows the commands it intends to run, and
+installs nothing until you agree. Only missing tools are installed, using **winget** on
+Windows, **apt** on Debian based Linux, and **Homebrew** on macOS, which is installed
+first because macOS does not ship with it.
 
 1. Clone the repository and change into it.
     ```shell
     git clone https://github.com/not-sekiun/Consortium
     cd Consortium
     ```
+    Without Git, download the repository as a ZIP archive from
+    [GitHub](https://github.com/not-sekiun/Consortium) and run the script from the
+    extracted directory instead: it installs Git along with everything else.
 2. Run the script for your platform from the repository root.
 
     === "Windows"
@@ -98,27 +61,39 @@ for you, which is the install step from
     uv run consortium.py client
     ```
 
-Cloning in step 1 needs Git, which is one of the tools the script installs. If you do not
-have Git yet, download the repository as a ZIP archive from
-[GitHub](https://github.com/not-sekiun/Consortium) and run the script from the extracted
-directory instead: it installs Git along with everything else.
-
 Both scripts take `--check-only` (`-CheckOnly` on Windows) to report what is present
-without installing anything, and `--yes` (`-Yes`) to answer every prompt for an
-unattended run. See [`install.ps1`](../scripts/install-ps1.md) and
-[`install.sh`](../scripts/install-sh.md) for what each one installs and the cases they do
-not cover.
+without installing anything, and `--yes` (`-Yes`) for an unattended run. See
+[`install.ps1`](../scripts/install-ps1.md) and [`install.sh`](../scripts/install-sh.md)
+for what each one installs.
 
 !!! note
-    A tool that was just installed often only appears on the PATH of a **new** terminal.
-    If the script reports something as still missing right after installing it, open a
-    new terminal and run the script again before installing that tool by hand.
+    A tool installed just now often only appears on the PATH of a **new** terminal. If the
+    script still reports it as missing, open a new terminal and run the script again
+    before installing it by hand.
 
-### Installing Consortium
+## Manual install
+
+### Prerequisites
+
+!!! important
+    Consortium requires **Python 3.14 or newer**, and only supports
+    [Python versions](https://devguide.python.org/versions/#versions) from 3.14 onwards
+    that have not reached end-of-life.
+
+- [Python (3.14 or newer)](https://www.python.org/downloads/)
+- [Git](https://git-scm.com/downloads)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/), which manages
+  Consortium's Python dependencies.
+- [Docker](https://docs.docker.com/get-started/get-docker/): Docker Engine on Linux, or
+  Docker Desktop on Windows and macOS. Only bundled agent generators that compile their
+  payloads inside a container need it. Everything else runs without it, and a generator
+  that needs a missing engine fails with an explanatory error.
 
 !!! important
     Make sure that all the installed tools are visible on your system's PATH, and that
     the Docker engine is running before starting an agent generator that needs it.
+
+### Installing Consortium
 
 1. Clone the repository and install base dependencies along with component dependencies
    using `uv`.
@@ -136,12 +111,11 @@ not cover.
     uv run consortium.py client
     ```
 
-For more information about component dependencies and how to install them, see the
-[Installing Component Dependencies](#installing-component-dependencies) section.
-
-For more information on how to configure the server and client, see the
-[Server Usage](../server-usage/server-usage-overview.md) and [Client Usage](../client-usage/client-usage-overview.md)
-sections.
+For component dependencies see
+[Installing Component Dependencies](#installing-component-dependencies), and for
+configuring the server and client see
+[Server Usage](../server-usage/server-usage-overview.md) and
+[Client Usage](../client-usage/client-usage-overview.md).
 
 ## Docker install
 
@@ -149,8 +123,7 @@ sections.
 
 - [Docker](https://docs.docker.com/get-started/get-docker/): Docker Engine on Linux, or
   Docker Desktop on Windows and macOS. Docker Compose v2 is included with both.
-- [Git](https://git-scm.com/downloads): The version control system that Consortium
-  uses to manage its source code.
+- [Git](https://git-scm.com/downloads)
 
 Python and uv are **not** required on the host. Both are provided inside the image.
 
@@ -167,33 +140,23 @@ Python and uv are **not** required on the host. Both are provided inside the ima
     ```
     This starts the server and the `dind` builder engine it compiles agents with (see
     [Building agents that compile in containers](#building-agents-that-compile-in-containers)).
-    The client is not started. The server is ready once its health check reports
-    `healthy`, which you can watch with `docker compose ps`.
+    The server is ready once its health check reports `healthy`, which you can watch with
+    `docker compose ps`.
 3. Connect to the server with the CLI client, which runs in a container of its own from
    the same image.
     ```shell
     docker compose run --rm client
     ```
-
-The client is declared under a Compose profile, so `docker compose up` never starts it.
-It needs an interactive terminal, which `docker compose run` provides and
-`docker compose up` does not.
+    `docker compose up` never starts the client: it needs an interactive terminal, which
+    only `docker compose run` provides.
 
 !!! important "The containerized client only sees what is mounted into it"
-    The client runs in a container of its own, so file transfers behave differently than
-    on a manual install:
-
-    - Downloads with no `-o` path land in `/consortium/workspace`, which is the
-      `./workspace` directory on your host. Files written anywhere else in the container
-      are lost when the client exits.
-    - Uploads can only read files inside a mounted directory. Copy a file into
-      `./workspace` on the host first, then upload it by name.
-    - Paths the client prints are container paths, and `exec` runs in the container's
-      shell rather than your host's.
-
-    See [Running the Client in Docker](../client-usage/running-the-client-in-docker.md) for the
-    full set of differences, including how to mount a different host directory for a
-    single run.
+    Downloads with no `-o` path and relative upload paths use `/consortium/workspace`,
+    which is `./workspace` on your host. Files written anywhere else in the container are
+    lost when the client exits, uploads can only read files inside a mounted directory,
+    and `exec` runs in the container's shell rather than your host's. See
+    [Running the Client in Docker](../client-usage/running-the-client-in-docker.md) for
+    the full set of differences.
 
 Useful follow-up commands:
 
@@ -205,26 +168,19 @@ docker compose down             # stop the stack, leaving data/ intact
 
 ### What the Compose stack does
 
-- **Configuration and state live on the host.** `data/` is bind mounted into the
-  container, so the server and client read the same configuration files a manual install
-  uses, and agents, payloads, assets, artifacts, and logs written by the server persist
-  across `docker compose down`.
-- **Components live on the host.** `consortium/components/` is bind mounted as well, so
-  components you add or edit take effect on the next server start without rebuilding the
-  image. See [Adding components](#adding-components).
-- **The API is published on port 9999.** The server binds `0.0.0.0:9999` inside the
-  container and Compose publishes that port to the host, so the REST API and the
-  websockets events API are reachable at `127.0.0.1:9999`.
-- **The client exchanges files through `workspace/`.** It is bind mounted into the client
-  container and is the client's working directory, so an upload or a download with no
-  explicit path reads from and writes to `workspace/` on the host. See
-  [Running the Client in Docker](../client-usage/running-the-client-in-docker.md).
-- **The client shares the server's network.** This means `data/client/client_config.json`
-  can point at `127.0.0.1` and work both in a container and on the host, so one
-  configuration file serves both installs.
-- **Agent builds run on their own Docker engine.** The `dind` service provides it, and
-  the server drives it over the internal Compose network. The host's Docker engine is
-  never involved.
+- **Configuration, state, and components live on the host.** `data/` and
+  `consortium/components/` are bind mounted, so the server reads the same configuration
+  files a manual install uses, everything it writes survives `docker compose down`, and
+  components you add or edit take effect on the next server start. See
+  [Adding components](#adding-components).
+- **The API is published on port 9999.** The REST API and the websockets events API are
+  reachable at `127.0.0.1:9999`.
+- **The client exchanges files through `workspace/`**, which is bind mounted into the
+  client container as its working directory.
+- **The client shares the server's network**, so a `data/client/client_config.json`
+  pointing at `127.0.0.1` works both in a container and on the host.
+- **Agent builds run on their own Docker engine**, provided by the `dind` service. The
+  host's engine is never involved.
 
 !!! important
     `local_host` in `data/server/server_config.json` must be `0.0.0.0` for the published
@@ -251,21 +207,15 @@ directly.
 
 ### Building agents that compile in containers
 
-Some bundled agent generators compile their payloads inside a container. For these to
-work from a containerized server, the server needs access to a Docker engine.
-
-The Compose stack runs one for this purpose in the `dind` service, and points the server
-at it with `DOCKER_HOST=tcp://dind:2375`. The server image contains only the Docker
-*client*, so builds run entirely on that engine and the host's engine is never involved.
-
-No extra setup is required. `docker compose up -d` starts the builder alongside the
-server, and the same command works identically on Linux, Windows, and macOS.
+Agent generators that compile their payloads in a container need a Docker engine to build
+on. The Compose stack runs one in the `dind` service and points the server at it with
+`DOCKER_HOST=tcp://dind:2375`, so no extra setup is required and the same
+`docker compose up -d` works on Linux, Windows, and macOS.
 
 !!! note
     The builder's image cache lives in the `builder-cache` volume, so the first agent
-    build on a fresh install downloads its base image before compiling. Later builds
-    reuse it. The volume survives `docker compose down` and is removed only by
-    `docker compose down -v`.
+    build downloads its base image before compiling and later builds reuse it. The volume
+    is removed only by `docker compose down -v`.
 
 !!! warning
     The `dind` service runs privileged, which it requires in order to run an engine of
@@ -274,44 +224,31 @@ server, and the same command works identically on Linux, Windows, and macOS.
     image to `docker:dind-rootless` narrows this further, at the cost of a slower storage
     driver.
 
-If you do not intend to build these agents, delete the `dind` service from
-`docker-compose.yml` along with the server's `DOCKER_HOST` entry and its `depends_on`
-block.
-
-#### Building on a different engine
-
-The generators shell out to the Docker client, which reads `DOCKER_HOST` from the
-server's environment. Repointing it is all that is needed to build somewhere else, such
-as a shared build server:
+To build on a different engine, such as a shared build server, repoint `DOCKER_HOST`:
 
 ```yaml title="docker-compose.yml"
     environment:
       - DOCKER_HOST=tcp://builder.internal:2375
 ```
 
-Mounting the host's Docker socket into the server works too, but grants the container
-control of the host's Docker engine, which is equivalent to root access on the host. The
-`dind` service exists so that this is not necessary.
+If you do not intend to build these agents, delete the `dind` service from
+`docker-compose.yml` along with the server's `DOCKER_HOST` entry and its `depends_on`
+block.
 
 ### Adding components
 
 `consortium/components/` is bind mounted, so adding a component is the same as on a
 manual install: drop its directory into the right component type folder on the host and
-restart the server.
+restart the server, which syncs any dependencies it declares as part of that restart.
 
 ```shell
 docker compose restart server
 ```
 
-The server runs its component dependency sync on every start, so a component that
-declares its own third-party packages has them registered and installed as part of that
-restart. No image rebuild is involved.
-
 !!! note
     Editing a component's source, its manifest, or the Dockerfile a containerized agent
-    generator builds with only needs this restart too, since all of it sits inside the
-    mount. Changes to the framework or server code are still baked into the image and
-    need `docker compose up -d --build server`.
+    generator builds with only needs this restart too. Changes to the framework or server
+    code are baked into the image and need `docker compose up -d --build server`.
 
 ## Installing Component Dependencies
 
@@ -320,28 +257,14 @@ restart. No image rebuild is involved.
     component's dependencies are already built into the image, and components you add
     later are synced automatically when the server starts.
 
-Consortium ships with a set of default components that extend the framework. These are
-the components bundled with the server out of the box and live in
-`consortium/components`. Components come in four types: **listeners**, **agents**,
-**plugins**, and **event-hooks**.
+Consortium ships with a set of default components that extend the framework. They live in
+`consortium/components` and come in four types: **listeners**, **agents**, **plugins**,
+and **event-hooks**.
 
-A component that needs its own third-party Python packages is a `uv` **workspace
-package**: it has its own `pyproject.toml` next to its manifest that declares those
-dependencies, and it is registered as a member of the workspace in the root
-`pyproject.toml`.
-
-```toml title="pyproject.toml"
-[tool.uv.workspace]
-members = [
-    "consortium/components/agents/consortium/eula/python",
-    "consortium/components/event_hooks/webhook_sender",
-    "consortium/components/listeners/consortium/http",
-]
-```
-
-Because the components are workspace members, syncing the whole workspace installs the
-base framework dependencies **and** the dependencies of every bundled component in one
-step. This is the `--all-packages` flag, which is used for the baseline install.
+A component that needs its own third-party Python packages declares them in a
+`pyproject.toml` of its own and is registered as a `uv` workspace member, so syncing the
+whole workspace with `--all-packages` installs the base framework dependencies **and**
+the dependencies of every bundled component in one step.
 
 ```shell
 uv sync --all-packages
@@ -353,22 +276,13 @@ uv sync --all-packages
     sure you synced the workspace with `--all-packages` so its package dependencies were
     installed.
 
-To install the dependencies for only a **particular** component, sync just that
-workspace package with `--package`, passing the name declared in that component's own
-`pyproject.toml` (`[project].name`).
+To install the dependencies for only a **particular** component, sync just that workspace
+package with `--package`, passing the name declared in that component's own
+`pyproject.toml` (`[project].name`). Several can be synced at once by passing the flag
+more than once.
 
 ```shell
 uv sync --package <component-package-name>
-```
-
-You can pass multiple `--package` flags to sync several individual packages at once.
-
-On a **Docker install** none of this is done by hand. `consortium/components/` is bind
-mounted into the container, and the server syncs component dependencies itself on every
-start, so adding a component only needs a restart:
-
-```shell
-docker compose restart server
 ```
 
 ## Installing Consortium for Development
