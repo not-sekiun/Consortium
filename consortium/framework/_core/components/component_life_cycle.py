@@ -40,9 +40,9 @@ class ComponentLifeCycleExceptions:
     )
 
 
-# Provide additional context to the `on_fatal` handler denoting which part of the
-# lifecycle the transition to fatal occurred from. Used primarily for logging.
-class ComponentLifeCycleFatalContext(enum.StrEnum):
+# Provide the `on_fatal` handler with the lifecycle phase from which the transition to
+# fatal occurred. Used primarily for logging.
+class ComponentLifeCyclePhase(enum.StrEnum):
     START = enum.auto()
     RUNNING = enum.auto()
     STOP = enum.auto()
@@ -50,16 +50,16 @@ class ComponentLifeCycleFatalContext(enum.StrEnum):
     ERROR = enum.auto()
 
 
-# The verb phrase each fatal context contributes to a ComponentFatalError message, which
+# The verb phrase each phase contributes to a ComponentFatalError message, which
 # reads "Failed to <operation> the <component type> <component>. ...". ERROR carries a
 # whole phrase rather than a bare verb because the failure is in the error handler, not in
 # an operation that was requested of the component.
-_FATAL_CONTEXT_TO_OPERATION_MAP = {
-    ComponentLifeCycleFatalContext.START: "start",
-    ComponentLifeCycleFatalContext.RUNNING: "run",
-    ComponentLifeCycleFatalContext.STOP: "stop",
-    ComponentLifeCycleFatalContext.CANCEL: "cancel",
-    ComponentLifeCycleFatalContext.ERROR: "handle a runtime error within",
+_PHASE_TO_OPERATION_MAP = {
+    ComponentLifeCyclePhase.START: "start",
+    ComponentLifeCyclePhase.RUNNING: "run",
+    ComponentLifeCyclePhase.STOP: "stop",
+    ComponentLifeCyclePhase.CANCEL: "cancel",
+    ComponentLifeCyclePhase.ERROR: "handle a runtime error within",
 }
 
 
@@ -108,7 +108,7 @@ class ComponentLifeCycle(abc.ABC):
     async def on_fatal(
         self,
         exc: Exception,
-        fatal_context: ComponentLifeCycleFatalContext,
+        phase: ComponentLifeCyclePhase,
     ) -> None: ...
 
     async def start(self) -> None:
@@ -145,7 +145,7 @@ class ComponentLifeCycle(abc.ABC):
                 self._start_concluded.set()
                 fatal_error = await self._transition_to_fatal_and_notify(
                     exc=exc,
-                    fatal_context=ComponentLifeCycleFatalContext.START,
+                    phase=ComponentLifeCyclePhase.START,
                 )
                 # Chain rather than sever: the fatal error is the single formatted line
                 # the API and logs render and the closed contract callers catch, while the
@@ -196,7 +196,7 @@ class ComponentLifeCycle(abc.ABC):
                 self.stop_event.set()
                 fatal_error = await self._transition_to_fatal_and_notify(
                     exc=exc,
-                    fatal_context=ComponentLifeCycleFatalContext.STOP,
+                    phase=ComponentLifeCyclePhase.STOP,
                 )
                 raise fatal_error from exc
 
@@ -241,7 +241,7 @@ class ComponentLifeCycle(abc.ABC):
             except Exception as exc:
                 fatal_error = await self._transition_to_fatal_and_notify(
                     exc=exc,
-                    fatal_context=ComponentLifeCycleFatalContext.CANCEL,
+                    phase=ComponentLifeCyclePhase.CANCEL,
                 )
                 raise fatal_error from exc
 
@@ -300,12 +300,12 @@ class ComponentLifeCycle(abc.ABC):
     def _construct_component_fatal_error(
         self,
         exc: Exception,
-        fatal_context: ComponentLifeCycleFatalContext,
+        phase: ComponentLifeCyclePhase,
     ) -> frmwrk_excs.ComponentFatalError:
         return self._component_life_cycle_exceptions.fatal(
             component_str=str(self),
-            operation=_FATAL_CONTEXT_TO_OPERATION_MAP[fatal_context],
-            fatal_context=str(fatal_context),
+            operation=_PHASE_TO_OPERATION_MAP[phase],
+            phase=str(phase),
             underlying_exception=exc,
         )
 
@@ -316,27 +316,27 @@ class ComponentLifeCycle(abc.ABC):
     async def _transition_to_fatal_and_notify(
         self,
         exc: Exception,
-        fatal_context: ComponentLifeCycleFatalContext,
+        phase: ComponentLifeCyclePhase,
     ) -> frmwrk_excs.ComponentFatalError:
         fatal_error = self._construct_component_fatal_error(
             exc=exc,
-            fatal_context=fatal_context,
+            phase=phase,
         )
         self.status._transition_to_fatal(error=fatal_error)
-        await self._invoke_fatal_hook(exc=exc, fatal_context=fatal_context)
+        await self._invoke_fatal_hook(exc=exc, phase=phase)
         return fatal_error
 
     async def _invoke_fatal_hook(
         self,
         exc: Exception,
-        fatal_context: ComponentLifeCycleFatalContext,
+        phase: ComponentLifeCyclePhase,
     ) -> None:
         # on_fatal() is the last resort handler. If it raises, the failure must never
         # propagate (in the runtime loop task nobody would retrieve it) and must never
         # recurse back into on_fatal(). The component stays FATAL carrying the original
         # error, with the secondary failure recorded on it so it is not lost.
         try:
-            await self.on_fatal(exc=exc, fatal_context=fatal_context)
+            await self.on_fatal(exc=exc, phase=phase)
         except Exception as handler_exc:
             # Record the secondary failure on the stored error rather than losing it. It
             # cannot go on `__cause__`: `start()`, `stop()` and `cancel()` raise the
@@ -381,12 +381,12 @@ class ComponentLifeCycle(abc.ABC):
             except Exception as hook_exc:
                 await self._transition_to_fatal_and_notify(
                     exc=hook_exc,
-                    fatal_context=ComponentLifeCycleFatalContext.ERROR,
+                    phase=ComponentLifeCyclePhase.ERROR,
                 )
         except Exception as unhandled_exc:
             await self._transition_to_fatal_and_notify(
                 exc=unhandled_exc,
-                fatal_context=ComponentLifeCycleFatalContext.RUNNING,
+                phase=ComponentLifeCyclePhase.RUNNING,
             )
 
     def _clear_runtime_loop_task(self, _task: asyncio.Task) -> None:

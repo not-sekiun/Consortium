@@ -152,7 +152,7 @@ would cause all steps to fail.
 | `on_stopped()`                 | When stopped before all steps complete | Resource cleanup on early halt                                  |
 | `on_cancelled()`               | When cancelled externally              | Resource cleanup on abort                                       |
 | `on_errored(error)`            | `AgentGeneratorRuntimeError` raised    | Custom error handling                                           |
-| `on_fatal(exc, fatal_context)` | Unhandled exception in any hook        | Last-resort alerting                                            |
+| `on_fatal(exc, phase)` | Unhandled exception in any hook        | Last-resort alerting                                            |
 
 ## What lives on self
 

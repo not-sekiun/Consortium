@@ -8,12 +8,12 @@ from packaging import requirements, specifiers, version
 from consortium.framework._core.components import (
     ComponentLifeCycle,
     ComponentLifeCycleExceptions,
-    ComponentLifeCycleFatalContext,
+    ComponentLifeCyclePhase,
     ComponentMetadata,
     State,
 )
 from consortium.framework._core.components.component_life_cycle import (
-    _FATAL_CONTEXT_TO_OPERATION_MAP,
+    _PHASE_TO_OPERATION_MAP,
 )
 from consortium.framework._core.components.component_status import Status
 from consortium.framework._core.framework_exceptions import (
@@ -69,12 +69,12 @@ def _runtime_error(message: str = "runtime error") -> frmwrk_excs.ComponentRunti
 def _fatal_error(
     underlying_exception: Exception | None = None,
     operation: str = "start",
-    fatal_context: ComponentLifeCycleFatalContext = ComponentLifeCycleFatalContext.START,
+    phase: ComponentLifeCyclePhase = ComponentLifeCyclePhase.START,
 ) -> frmwrk_excs.ComponentFatalError:
     return frmwrk_excs.ComponentFatalError(
         component_str="test-component",
         operation=operation,
-        fatal_context=str(fatal_context),
+        phase=str(phase),
         underlying_exception=underlying_exception or ValueError("fatal error"),
     )
 
@@ -115,9 +115,7 @@ class _RecordingComponent(ComponentLifeCycle):
         self.calls: list[str] = []
         self.behaviours: dict[str, Callable[[], object]] = {}
         self.errored_with: list[frmwrk_excs.ComponentRuntimeError] = []
-        self.fatal_calls: list[
-            tuple[BaseException, ComponentLifeCycleFatalContext]
-        ] = []
+        self.fatal_calls: list[tuple[BaseException, ComponentLifeCyclePhase]] = []
 
     def __str__(self) -> str:
         return "test-component"
@@ -153,9 +151,9 @@ class _RecordingComponent(ComponentLifeCycle):
     async def on_fatal(
         self,
         exc: Exception,
-        fatal_context: ComponentLifeCycleFatalContext,
+        phase: ComponentLifeCyclePhase,
     ) -> None:
-        self.fatal_calls.append((exc, fatal_context))
+        self.fatal_calls.append((exc, phase))
         await self._dispatch("on_fatal")
 
 
@@ -344,7 +342,7 @@ def test_status_to_json_with_a_component_fatal_error():
             "detail": {
                 "type": "ValueError",
                 "message": "it broke",
-                "fatal_context": str(ComponentLifeCycleFatalContext.START),
+                "phase": str(ComponentLifeCyclePhase.START),
             },
         },
     }
@@ -363,30 +361,30 @@ def test_status_to_json_ignores_a_foreign_error_object():
 
 
 @pytest.mark.parametrize(
-    ("fatal_context", "expected_operation"),
+    ("phase", "expected_operation"),
     [
-        (ComponentLifeCycleFatalContext.START, "start"),
-        (ComponentLifeCycleFatalContext.RUNNING, "run"),
-        (ComponentLifeCycleFatalContext.STOP, "stop"),
-        (ComponentLifeCycleFatalContext.CANCEL, "cancel"),
-        (ComponentLifeCycleFatalContext.ERROR, "handle a runtime error within"),
+        (ComponentLifeCyclePhase.START, "start"),
+        (ComponentLifeCyclePhase.RUNNING, "run"),
+        (ComponentLifeCyclePhase.STOP, "stop"),
+        (ComponentLifeCyclePhase.CANCEL, "cancel"),
+        (ComponentLifeCyclePhase.ERROR, "handle a runtime error within"),
     ],
 )
-def test_fatal_error_renders_the_operation_for_every_context(
-    fatal_context: ComponentLifeCycleFatalContext,
+def test_fatal_error_renders_the_operation_for_every_phase(
+    phase: ComponentLifeCyclePhase,
     expected_operation: str,
 ):
     error = _fatal_error(
         underlying_exception=ValueError("boom"),
-        operation=_FATAL_CONTEXT_TO_OPERATION_MAP[fatal_context],
-        fatal_context=fatal_context,
+        operation=_PHASE_TO_OPERATION_MAP[phase],
+        phase=phase,
     )
 
     assert error.message == (
         f"Failed to {expected_operation} the component test-component. An unhandled "
         f"exception was raised. ValueError: boom"
     )
-    assert error.detail["fatal_context"] == str(fatal_context)
+    assert error.detail["phase"] == str(phase)
 
 
 # An exception carrying no message renders as its bare type. Formatting it the usual way
@@ -401,7 +399,7 @@ def test_fatal_error_omits_the_colon_for_an_empty_underlying_message():
     assert error.detail == {
         "type": "ValueError",
         "message": "",
-        "fatal_context": str(ComponentLifeCycleFatalContext.START),
+        "phase": str(ComponentLifeCyclePhase.START),
     }
 
 
@@ -410,7 +408,7 @@ def test_fatal_error_omits_the_colon_for_an_empty_underlying_message():
 def test_fatal_error_detail_carries_no_traceback():
     error = _fatal_error(underlying_exception=ValueError("boom"))
 
-    assert set(error.detail) == {"type", "message", "fatal_context"}
+    assert set(error.detail) == {"type", "message", "phase"}
 
 
 def test_fatal_error_starts_with_no_fatal_hook_error():
@@ -505,13 +503,13 @@ async def test_start_unhandled_exception_goes_fatal_and_raises_a_fatal_error(
     assert exc_info.value.detail == {
         "type": "ValueError",
         "message": "boom",
-        "fatal_context": str(ComponentLifeCycleFatalContext.START),
+        "phase": str(ComponentLifeCyclePhase.START),
     }
     assert component.status.state is State.FATAL
     assert component.status.error is exc_info.value
     assert component._runtime_loop_task is None
-    assert [context for _, context in component.fatal_calls] == [
-        ComponentLifeCycleFatalContext.START,
+    assert [phase for _, phase in component.fatal_calls] == [
+        ComponentLifeCyclePhase.START,
     ]
     # The hook still receives the original exception rather than the wrapper.
     assert component.fatal_calls[0][0] is boom
@@ -637,8 +635,8 @@ async def test_runtime_loop_errored_hook_failure_goes_fatal(
         "Failed to handle a runtime error within the component test-component. An "
         "unhandled exception was raised. RuntimeError: handler exploded"
     )
-    assert [context for _, context in component.fatal_calls] == [
-        ComponentLifeCycleFatalContext.ERROR,
+    assert [phase for _, phase in component.fatal_calls] == [
+        ComponentLifeCyclePhase.ERROR,
     ]
     assert component.fatal_calls[0][0] is boom
 
@@ -662,8 +660,8 @@ async def test_runtime_loop_unhandled_exception_goes_fatal(
     # status and never raised. Nothing chains the original onto it here.
     assert component.status.error.__cause__ is None
     assert component.calls == ["on_started", "on_running", "on_fatal"]
-    assert [context for _, context in component.fatal_calls] == [
-        ComponentLifeCycleFatalContext.RUNNING,
+    assert [phase for _, phase in component.fatal_calls] == [
+        ComponentLifeCyclePhase.RUNNING,
     ]
 
 
@@ -676,8 +674,8 @@ async def test_runtime_loop_completed_hook_failure_goes_fatal(
     await asyncio.wait_for(component.wait_until_stopped(), timeout=_TIMEOUT)
 
     assert component.status.state is State.FATAL
-    assert [context for _, context in component.fatal_calls] == [
-        ComponentLifeCycleFatalContext.RUNNING,
+    assert [phase for _, phase in component.fatal_calls] == [
+        ComponentLifeCyclePhase.RUNNING,
     ]
 
 
@@ -840,7 +838,7 @@ async def test_refused_stop_that_suspends_keeps_the_runtime_task_live(
 
 
 # CONTRADICTION (F2): stop() transitions to FATAL without ever invoking on_fatal(),
-# unlike start(), cancel() and the runtime loop. ComponentLifeCycleFatalContext.STOP is
+# unlike start(), cancel() and the runtime loop. ComponentLifeCyclePhase.STOP is
 # defined and currently unused, which is the evidence this is an omission.
 async def test_stop_unhandled_exception_goes_fatal_and_calls_on_fatal(
     blocking_component: _RecordingComponent,
@@ -857,13 +855,13 @@ async def test_stop_unhandled_exception_goes_fatal_and_calls_on_fatal(
         "Failed to stop the component test-component. An unhandled exception was "
         "raised. ValueError: boom"
     )
-    assert exc_info.value.detail["fatal_context"] == str(
-        ComponentLifeCycleFatalContext.STOP,
+    assert exc_info.value.detail["phase"] == str(
+        ComponentLifeCyclePhase.STOP,
     )
     assert blocking_component.status.state is State.FATAL
     assert blocking_component.status.error is exc_info.value
-    assert [context for _, context in blocking_component.fatal_calls] == [
-        ComponentLifeCycleFatalContext.STOP,
+    assert [phase for _, phase in blocking_component.fatal_calls] == [
+        ComponentLifeCyclePhase.STOP,
     ]
     assert blocking_component.fatal_calls[0][0] is boom
 
@@ -953,8 +951,8 @@ async def test_cancel_hook_failure_goes_fatal_and_reraises(
     )
     assert blocking_component.status.state is State.FATAL
     assert blocking_component.status.error is exc_info.value
-    assert [context for _, context in blocking_component.fatal_calls] == [
-        ComponentLifeCycleFatalContext.CANCEL,
+    assert [phase for _, phase in blocking_component.fatal_calls] == [
+        ComponentLifeCyclePhase.CANCEL,
     ]
 
 

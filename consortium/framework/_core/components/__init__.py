@@ -1,7 +1,7 @@
 from consortium.framework._core.components.component_life_cycle import (
     ComponentLifeCycle,
     ComponentLifeCycleExceptions,
-    ComponentLifeCycleFatalContext,
+    ComponentLifeCyclePhase,
 )
 from consortium.framework._core.components.component_metadata import (
     ComponentMetadata,
@@ -13,7 +13,7 @@ from consortium.framework._core.components.component_status import State
 __all__ = [
     "ComponentLifeCycle",
     "ComponentLifeCycleExceptions",
-    "ComponentLifeCycleFatalContext",
+    "ComponentLifeCyclePhase",
     "State",
     "ComponentMetadata",
     "ComponentMetadataExceptions",

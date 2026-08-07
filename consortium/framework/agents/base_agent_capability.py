@@ -92,9 +92,7 @@ class AgentLifecycle(StrEnum):
 # The stages of `execute()` at which an unexpected exception can escape a capability. The
 # value is embedded verbatim in an `AgentCapabilityFatalError` message ("... during the
 # {phase} phase.") and its `detail`, so `execute()` can tell the task handler which stage
-# failed. Kept next to `execute()` (the layer that knows which stage is active) so the
-# framework exception stays decoupled from the lifecycle, mirroring how
-# `ComponentLifeCycleFatalContext` lives with the component lifecycle.
+# failed.
 class AgentCapabilityPhase(StrEnum):
     LAUNCH = "launch"
     DISPATCH = "dispatch"

@@ -10,7 +10,7 @@ import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.components import (
     ComponentLifeCycle,
     ComponentLifeCycleExceptions,
-    ComponentLifeCycleFatalContext,
+    ComponentLifeCyclePhase,
 )
 from consortium.framework._core.event_logging.event_log import EventLog
 from consortium.framework._core.event_logging.event_logger import EventLogger
@@ -245,7 +245,7 @@ class BaseListener(ComponentLifeCycle):
     async def on_fatal(
         self,
         exc: Exception,
-        fatal_context: ComponentLifeCycleFatalContext,
+        phase: ComponentLifeCyclePhase,
     ) -> None:
         """Called when an unhandled exception causes the listener to terminate fatally.
 
@@ -254,15 +254,15 @@ class BaseListener(ComponentLifeCycle):
 
         Args:
             exc: The unhandled exception that triggered the fatal shutdown.
-            fatal_context: The lifecycle phase during which the fatal exception
+            phase: The lifecycle phase during which the fatal exception
                 occurred (starting, running, stopping, cancelling, or error handling).
         """
-        ctx_to_str_map = {
-            ComponentLifeCycleFatalContext.START: "starting",
-            ComponentLifeCycleFatalContext.RUNNING: "running",
-            ComponentLifeCycleFatalContext.STOP: "stopping",
-            ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
-            ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
+        phase_to_str_map = {
+            ComponentLifeCyclePhase.START: "starting",
+            ComponentLifeCyclePhase.RUNNING: "running",
+            ComponentLifeCyclePhase.STOP: "stopping",
+            ComponentLifeCyclePhase.CANCEL: "being cancelled",
+            ComponentLifeCyclePhase.ERROR: "handling a runtime error",
         }
         # Pass the exception object rather than a pre-rendered traceback string: it
         # reaches sinks as `record["exception"]`, so a registered sink can walk the
@@ -270,7 +270,7 @@ class BaseListener(ComponentLifeCycle):
         self.logger.opt(colors=True, exception=exc).error(
             "<bold><red>Fatal error occurred within listener {} while it was {}:</></>",
             str(self),
-            ctx_to_str_map[fatal_context],
+            phase_to_str_map[phase],
         )
 
     # start(), stop() and cancel() below add no behaviour and exist purely to carry their

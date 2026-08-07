@@ -18,7 +18,7 @@ class AgentTemplate(BaseAgentTemplate):
         "No-op agent 1 used by API tests; does not generate a real agent binary."
     )
     version = "0.1.0"
-    compatible_framework_version = ">=0.1.0"
+    compatible_framework_version = ">=0.1.0a1"
     authors = {"test"}
     agent_generator = AgentGenerator
     agent_type = AgentType

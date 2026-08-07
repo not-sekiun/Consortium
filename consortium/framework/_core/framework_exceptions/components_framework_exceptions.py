@@ -265,7 +265,7 @@ class ComponentFatalError(ComponentOperationError):
         self,
         component_str: str,
         operation: str,
-        fatal_context: str,
+        phase: str,
         underlying_exception: Exception,
     ):
         # The secondary failure raised by the component's own `on_fatal` handler, when it
@@ -291,7 +291,7 @@ class ComponentFatalError(ComponentOperationError):
             detail={
                 "type": error_type,
                 "message": error_message,
-                "fatal_context": fatal_context,
+                "phase": phase,
             },
         )
 

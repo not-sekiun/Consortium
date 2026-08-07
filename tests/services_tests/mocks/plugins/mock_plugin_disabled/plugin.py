@@ -6,6 +6,6 @@ class Plugin(BasePlugin):
     name = "Mock Disabled Plugin"
     description = "Disabled plugin for loader tests."
     version = "0.1.0"
-    compatible_framework_version = ">=0.1.0"
+    compatible_framework_version = ">=0.1.0a1"
     authors = {"test"}
     autostart = False

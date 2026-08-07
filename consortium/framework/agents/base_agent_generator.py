@@ -10,7 +10,7 @@ import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.components import (
     ComponentLifeCycle,
     ComponentLifeCycleExceptions,
-    ComponentLifeCycleFatalContext,
+    ComponentLifeCyclePhase,
     State,
 )
 from consortium.framework._core.event_logging.event_log import EventLog
@@ -265,21 +265,21 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
     async def on_fatal(
         self,
         exc: Exception,
-        fatal_context: ComponentLifeCycleFatalContext,
+        phase: ComponentLifeCyclePhase,
     ) -> None:
         """Hook invoked when an unrecoverable error occurs in the build step lifecycle.
 
         Args:
             exc: The underlying exception that triggered the fatal transition.
-            fatal_context: The lifecycle phase (starting, running, stopping, etc.)
+            phase: The lifecycle phase (starting, running, stopping, etc.)
                 during which the fatal error occurred.
         """
-        ctx_to_str_map = {
-            ComponentLifeCycleFatalContext.START: "starting",
-            ComponentLifeCycleFatalContext.RUNNING: "running",
-            ComponentLifeCycleFatalContext.STOP: "stopping",
-            ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
-            ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
+        phase_to_str_map = {
+            ComponentLifeCyclePhase.START: "starting",
+            ComponentLifeCyclePhase.RUNNING: "running",
+            ComponentLifeCyclePhase.STOP: "stopping",
+            ComponentLifeCyclePhase.CANCEL: "being cancelled",
+            ComponentLifeCyclePhase.ERROR: "handling a runtime error",
         }
         # Pass the exception object rather than a pre-rendered traceback string: it
         # reaches sinks as `record["exception"]`, so a registered sink can walk the
@@ -287,7 +287,7 @@ class BaseAgentGeneratorBuildStep(ComponentLifeCycle):
         self.logger.opt(colors=True, exception=exc).error(
             "<bold><red>Fatal error occurred within agent generator build step {} while it was {}:</></>",
             str(self),
-            ctx_to_str_map[fatal_context],
+            phase_to_str_map[phase],
         )
 
     async def run(
@@ -673,21 +673,21 @@ class BaseAgentGenerator(ComponentLifeCycle):
     async def on_fatal(
         self,
         exc: Exception,
-        fatal_context: ComponentLifeCycleFatalContext,
+        phase: ComponentLifeCyclePhase,
     ) -> None:
         """Hook invoked when an unrecoverable error occurs in the generator lifecycle.
 
         Args:
             exc: The underlying exception that triggered the fatal transition.
-            fatal_context: The lifecycle phase (starting, running, stopping, etc.)
+            phase: The lifecycle phase (starting, running, stopping, etc.)
                 during which the fatal error occurred.
         """
-        ctx_to_str_map = {
-            ComponentLifeCycleFatalContext.START: "starting",
-            ComponentLifeCycleFatalContext.RUNNING: "running",
-            ComponentLifeCycleFatalContext.STOP: "stopping",
-            ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
-            ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
+        phase_to_str_map = {
+            ComponentLifeCyclePhase.START: "starting",
+            ComponentLifeCyclePhase.RUNNING: "running",
+            ComponentLifeCyclePhase.STOP: "stopping",
+            ComponentLifeCyclePhase.CANCEL: "being cancelled",
+            ComponentLifeCyclePhase.ERROR: "handling a runtime error",
         }
         # Pass the exception object rather than a pre-rendered traceback string: it
         # reaches sinks as `record["exception"]`, so a registered sink can walk the
@@ -695,7 +695,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
         self.logger.opt(colors=True, exception=exc).error(
             "<bold><red>Fatal error occurred within agent generator {} while it was {}:</></>",
             str(self),
-            ctx_to_str_map[fatal_context],
+            phase_to_str_map[phase],
         )
 
     # start() and cancel() below add no behaviour and exist purely to carry their

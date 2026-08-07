@@ -7,7 +7,7 @@ class EventHook(BaseEventHook):
     name = "Mock Valid Event Hook"
     description = "Valid no-op event hook for service loader tests."
     version = "0.1.0"
-    compatible_framework_version = ">=0.1.0"
+    compatible_framework_version = ">=0.1.0a1"
     authors = {"test"}
     event_types = {EventType.AGENT_REGISTERED}
 

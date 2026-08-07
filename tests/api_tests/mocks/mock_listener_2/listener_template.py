@@ -16,7 +16,7 @@ class ListenerTemplate(BaseListenerTemplate):
     name = "Mock Listener 2"
     description = "No-op listener 2 used by API tests; does not bind to any port."
     version = "0.1.0"
-    compatible_framework_version = ">=0.1.0"
+    compatible_framework_version = ">=0.1.0a1"
     authors = {"test"}
     listener = Listener
     listener_type = ListenerType

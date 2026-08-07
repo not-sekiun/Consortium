@@ -9,7 +9,7 @@ import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.components import (
     ComponentLifeCycle,
     ComponentLifeCycleExceptions,
-    ComponentLifeCycleFatalContext,
+    ComponentLifeCyclePhase,
     ComponentMetadata,
     ComponentMetadataExceptions,
     ComponentMetadataModel,
@@ -175,7 +175,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
     async def on_fatal(
         self,
         exc: Exception,
-        fatal_context: ComponentLifeCycleFatalContext,
+        phase: ComponentLifeCyclePhase,
     ) -> None:
         """Called when an unhandled exception causes the plugin to terminate fatally.
 
@@ -184,15 +184,15 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
 
         Args:
             exc: The unhandled exception that triggered the fatal shutdown.
-            fatal_context: The lifecycle phase during which the fatal exception
+            phase: The lifecycle phase during which the fatal exception
                 occurred (starting, running, stopping, cancelling, or error handling).
         """
-        ctx_to_str_map = {
-            ComponentLifeCycleFatalContext.START: "starting",
-            ComponentLifeCycleFatalContext.RUNNING: "running",
-            ComponentLifeCycleFatalContext.STOP: "stopping",
-            ComponentLifeCycleFatalContext.CANCEL: "being cancelled",
-            ComponentLifeCycleFatalContext.ERROR: "handling a runtime error",
+        phase_to_str_map = {
+            ComponentLifeCyclePhase.START: "starting",
+            ComponentLifeCyclePhase.RUNNING: "running",
+            ComponentLifeCyclePhase.STOP: "stopping",
+            ComponentLifeCyclePhase.CANCEL: "being cancelled",
+            ComponentLifeCyclePhase.ERROR: "handling a runtime error",
         }
         # Pass the exception object rather than a pre-rendered traceback string: it
         # reaches sinks as `record["exception"]`, so a registered sink can walk the
@@ -200,7 +200,7 @@ class BasePlugin(ComponentMetadata, ComponentLifeCycle):
         self.logger.opt(colors=True, exception=exc).error(
             "<bold><red>Fatal error occurred within plugin {} while it was {}:</></>",
             str(self),
-            ctx_to_str_map[fatal_context],
+            phase_to_str_map[phase],
         )
 
     # start(), stop() and cancel() below add no behaviour and exist purely to carry their
