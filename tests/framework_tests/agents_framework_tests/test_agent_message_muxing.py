@@ -73,7 +73,7 @@ def _make_agent(
 def _add_outbox(agent: Agent) -> tuple[Task, TaskMessagesQueue]:
     task = Task(agent_id=agent.agent_id, command="mock_cmd", arguments={})
     agent._tasks_service._register_task(task=task, agent=agent)
-    outbox = TaskMessagesQueue(agent=agent)
+    outbox = TaskMessagesQueue(queue_activity_notifier=agent._outbox_activity)
     runtime = TaskRuntime()
     runtime.attach(handler=None, inbox=None, outbox=outbox)
     agent._task_runtime_service.attach_task_runtime(
@@ -390,7 +390,7 @@ async def test_queued_deletion_detaches_runtime_cancels_handler_and_shuts_queues
     task = Task(agent_id=agent.agent_id, command="mock_cmd", arguments={})
     agent._tasks_service._register_task(task=task, agent=agent)
     inbox = TaskMessagesQueue()
-    outbox = TaskMessagesQueue(agent=agent)
+    outbox = TaskMessagesQueue(queue_activity_notifier=agent._outbox_activity)
     handler = asyncio.create_task(asyncio.Event().wait())
     runtime = TaskRuntime()
     runtime.attach(handler=handler, inbox=inbox, outbox=outbox)
@@ -442,8 +442,8 @@ async def test_sequential_muxer_advances_when_selected_task_is_deleted():
 
 
 class _PausingTaskMessagesQueue(TaskMessagesQueue):
-    def __init__(self, agent: Agent):
-        super().__init__(agent=agent)
+    def __init__(self, queue_activity_notifier: asyncio.Condition):
+        super().__init__(queue_activity_notifier=queue_activity_notifier)
         self.message_dequeued = asyncio.Event()
         self.resume_reader = asyncio.Event()
 
@@ -459,7 +459,7 @@ async def test_message_dequeued_before_deletion_is_not_returned():
     agent = _make_agent()
     task = Task(agent_id=agent.agent_id, command="mock_cmd", arguments={})
     agent._tasks_service._register_task(task=task, agent=agent)
-    outbox = _PausingTaskMessagesQueue(agent=agent)
+    outbox = _PausingTaskMessagesQueue(queue_activity_notifier=agent._outbox_activity)
     runtime = TaskRuntime()
     runtime.attach(handler=None, inbox=None, outbox=outbox)
     agent._task_runtime_service.attach_task_runtime(
@@ -484,7 +484,9 @@ async def test_any_muxer_advances_when_dequeued_task_is_deleted():
     agent = _make_agent()
     first_task = Task(agent_id=agent.agent_id, command="mock_cmd", arguments={})
     agent._tasks_service._register_task(task=first_task, agent=agent)
-    first_outbox = _PausingTaskMessagesQueue(agent=agent)
+    first_outbox = _PausingTaskMessagesQueue(
+        queue_activity_notifier=agent._outbox_activity
+    )
     runtime = TaskRuntime()
     runtime.attach(handler=None, inbox=None, outbox=first_outbox)
     agent._task_runtime_service.attach_task_runtime(
@@ -788,7 +790,7 @@ async def test_error_pending_tasks_keeps_records_and_releases_runtime():
     task = Task(agent_id=agent.agent_id, command="mock_cmd", arguments={})
     agent._tasks_service._register_task(task=task, agent=agent)
     inbox = TaskMessagesQueue()
-    outbox = TaskMessagesQueue(agent=agent)
+    outbox = TaskMessagesQueue(queue_activity_notifier=agent._outbox_activity)
     handler = asyncio.create_task(asyncio.Event().wait())
     runtime = TaskRuntime()
     runtime.attach(handler=handler, inbox=inbox, outbox=outbox)
@@ -916,7 +918,7 @@ async def test_terminal_retention_evicts_oldest_record_from_agent_getters():
     oldest_task = Task(agent_id=agent.agent_id, command="mock_cmd", arguments={})
     oldest_task.status._transition_to_succeeded()
     oldest_task.datetime_completed = utc_now()
-    oldest_outbox = TaskMessagesQueue(agent=agent)
+    oldest_outbox = TaskMessagesQueue(queue_activity_notifier=agent._outbox_activity)
     tasks_service._register_task(task=oldest_task, agent=agent)
     runtime = TaskRuntime()
     runtime.attach(handler=None, inbox=None, outbox=oldest_outbox)

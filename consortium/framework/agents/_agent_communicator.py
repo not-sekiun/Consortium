@@ -39,7 +39,10 @@ class _AgentCommunicator:
         # that fan-in so it is left without an agent reference.
         self._task_messages_outbox = TaskMessagesQueue[
             TaskLaunchMessageModel | TaskInputMessageModel
-        ](maximum_memory_size=message_queue_size, agent=agent)
+        ](
+            maximum_memory_size=message_queue_size,
+            queue_activity_notifier=agent._outbox_activity,
+        )
 
     async def send_to_agent(
         self,

@@ -45,6 +45,24 @@ class ComponentMetadataExceptions:
     ] = InvalidComponentDependencyVersionSpecifierError
 
 
+def _as_declared_value(value: Any) -> Any:
+    # `_validate_metadata` coerces some declarations in place: a version string becomes a
+    # `Version`, a framework specifier a `SpecifierSet` and each dependency entry a
+    # `Requirement`. A subclass inherits those already coerced values and is validated
+    # again by its own `__init_subclass__`, where they no longer match the declared
+    # `str` types. Mapping them back to the string form they were declared in makes
+    # validation idempotent: parsing a coerced value's string yields an equal value, so
+    # the subclass ends up with the same metadata as the parent.
+    if isinstance(
+        value,
+        (version.Version, specifiers.SpecifierSet, requirements.Requirement),
+    ):
+        return str(value)
+    if isinstance(value, (set, frozenset)):
+        return {_as_declared_value(item) for item in value}
+    return value
+
+
 class ComponentMetadataModel(BaseModel):
     label: str
     name: str | None = None
@@ -74,7 +92,7 @@ class ComponentMetadata:
     @classmethod
     def _get_metadata_fields(cls) -> dict[str, Any]:
         return {
-            key: getattr(cls, key)
+            key: _as_declared_value(getattr(cls, key))
             for key in cls._component_metadata_model.model_fields.keys()
             if hasattr(cls, key)
         }
@@ -104,10 +122,14 @@ class ComponentMetadata:
                     parameter_name=attr,
                 )
 
-        # Check all class attributes are of the expected type
+        # Check all class attributes are of the expected type. The semantic checks below
+        # read from this same mapping rather than off the class, so a subclass that
+        # inherited its parent's coerced values is parsed from their declared string
+        # form instead of being handed a `Version`/`SpecifierSet`/`Requirement`.
+        metadata_fields = cls._get_metadata_fields()
         try:
             cls._component_metadata_model(
-                **cls._get_metadata_fields(),
+                **metadata_fields,
             )
         except ValidationError as exc:
             # A model level error carries an empty location, so fall back to the first
@@ -115,7 +137,7 @@ class ComponentMetadata:
             parameter_name, parameter_type = resolve_validation_error_parameter(
                 exc=exc,
                 parameter_types=expected_attrs_and_types_map,
-                fallback_parameter_name=next(iter(cls._get_metadata_fields()), "label"),
+                fallback_parameter_name=next(iter(metadata_fields), "label"),
             )
             raise cls._component_metadata_exceptions.invalid_configuration_parameter_type(
                 component_str=component_str,
@@ -129,26 +151,30 @@ class ComponentMetadata:
                 component_filepath=resolve_component_filepath(cls),
             )
         cls.name = cls.label if cls.name is None else cls.name
+        declared_version = metadata_fields.get("version")
         try:
-            cls.version = version.Version(cls.version) if cls.version else None
+            cls.version = (
+                version.Version(declared_version) if declared_version else None
+            )
         except version.InvalidVersion:
             raise cls._component_metadata_exceptions.invalid_version(
                 component_str=cls.label,
-                version=cls.version,
+                version=declared_version,
             ) from None
+        declared_framework_version = metadata_fields.get("compatible_framework_version")
         try:
             cls.compatible_framework_version = (
-                specifiers.SpecifierSet(cls.compatible_framework_version)
-                if cls.compatible_framework_version
+                specifiers.SpecifierSet(declared_framework_version)
+                if declared_framework_version
                 else None
             )
         except specifiers.InvalidSpecifier:
             raise cls._component_metadata_exceptions.invalid_framework_version_specifier(
-                framework_version_specifier=cls.compatible_framework_version,
+                framework_version_specifier=declared_framework_version,
                 component_str=cls.label,
             ) from None
         new_dependencies = set()
-        for entry in cls.component_dependencies:
+        for entry in metadata_fields.get("component_dependencies", set()):
             try:
                 new_dependencies.add(requirements.Requirement(entry))
             except requirements.InvalidRequirement:

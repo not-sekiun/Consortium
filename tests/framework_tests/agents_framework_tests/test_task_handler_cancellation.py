@@ -47,7 +47,9 @@ class _StubCapability:
         self.agent = agent
         self.task = task
         self._task_messages_inbox = TaskMessagesQueue()
-        self._task_messages_outbox = TaskMessagesQueue(agent=agent)
+        self._task_messages_outbox = TaskMessagesQueue(
+            queue_activity_notifier=agent._outbox_activity
+        )
         self.started = asyncio.Event()
 
     async def execute(self, task_launch_message: TaskLaunchMessageModel):

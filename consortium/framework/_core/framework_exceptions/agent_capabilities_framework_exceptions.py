@@ -166,10 +166,10 @@ class AgentCapabilityFatalError(AgentCapabilitiesFrameworkError):
     This is the agent capability analogue of `ComponentFatalError`. Unlike
     `AgentCapabilityLaunchError` and `AgentCapabilityExecutionError`, which report the
     capability's deliberate, typed failure paths, this reports an unhandled exception that
-    escaped `on_launch`, message dispatch, `on_execute`, or queue cleanup. The `phase`
-    identifies which of those stages failed. The original exception is preserved as the
-    cause when this error is re-raised, so its traceback survives server side; only the
-    type and message cross the API boundary through `detail`.
+    escaped `on_launch`, message dispatch, or `on_execute`. The `phase` identifies which of
+    those stages failed. The original exception is preserved as the cause when this error
+    is re-raised, so its traceback survives server side; only the type and message cross
+    the API boundary through `detail`.
     """
 
     code = "AGENT_CAPABILITY_FATAL_ERROR"
@@ -197,6 +197,43 @@ class AgentCapabilityFatalError(AgentCapabilitiesFrameworkError):
                 "type": error_type,
                 "message": error_message,
                 "phase": phase,
+            },
+        )
+
+
+class AgentCapabilityTaskHandlerError(AgentCapabilitiesFrameworkError):
+    """Raised when an unexpected exception escapes the task handler itself, outside the
+    agent capability's execution contract.
+
+    `AgentCapabilityFatalError` covers the stages the handler can attribute to a
+    capability (`launch`, `dispatch`, `execution`), so it carries a `phase`. Reaching this
+    error instead means the failure happened in the handler surrounding those stages,
+    where no phase applies: it is a framework defect rather than a capability one. It is
+    recorded on the task so the task does not sit non-terminal forever rather than being
+    raised, so it carries no cause; the original exception's traceback is logged where it
+    is caught.
+    """
+
+    code = "AGENT_CAPABILITY_TASK_HANDLER_ERROR"
+
+    def __init__(
+        self,
+        agent_capability_name: str,
+        underlying_exception: BaseException,
+    ):
+        error_type = type(underlying_exception).__name__
+        error_message = str(underlying_exception)
+        # Message and detail follow `AgentCapabilityFatalError` above, minus the phase.
+        super().__init__(
+            message=(
+                f"Failed to run agent capability '{agent_capability_name}'. An unhandled "
+                f"exception escaped the task handler. This is a framework defect, not a "
+                f"failure reported by the capability. "
+                + (f"{error_type}: {error_message}" if error_message else error_type)
+            ),
+            detail={
+                "type": error_type,
+                "message": error_message,
             },
         )
 

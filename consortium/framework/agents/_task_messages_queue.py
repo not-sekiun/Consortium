@@ -1,6 +1,5 @@
 import asyncio
 import sys
-import typing
 
 from consortium.framework.agents.agent_message_models import (
     Payload,
@@ -8,9 +7,6 @@ from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
-
-if typing.TYPE_CHECKING:
-    from consortium.server.objects.agent_objects import Agent
 
 TaskMessage = TaskLaunchMessageModel | TaskInputMessageModel | TaskOutputMessageModel
 
@@ -50,7 +46,7 @@ class TaskMessagesQueue[T: TaskMessage]:
     def __init__(
         self,
         maximum_memory_size: int | None = None,
-        agent: Agent | None = None,
+        queue_activity_notifier: asyncio.Condition | None = None,
     ):
         self._queue: asyncio.Queue[tuple[T, int]] = asyncio.Queue()
         if maximum_memory_size is not None and maximum_memory_size <= 0:
@@ -64,12 +60,12 @@ class TaskMessagesQueue[T: TaskMessage]:
         # buffered messages, then `get` returns END_OF_STREAM. This is the single signal
         # the `drain_*` loops use to know a producer has finished.
         self._shutdown = False
-        # When set (the outbox queues are constructed with the owning agent), every
-        # successful put also signals the agent's shared outbox activity condition. That
+        # When set (the outbox queues are constructed with the owning agent's shared
+        # outbox activity condition), every successful put also signals it. That
         # lets Agent.get_next_task_message_any wait across all of an agent's capability
         # outboxes at once and wake as soon as any of them receives a message. Left None
         # for queues that do not participate in that fan-in (for example the inbox).
-        self._agent = agent
+        self._queue_activity_notifier = queue_activity_notifier
 
     def _estimate_payload_size(self, payload: Payload) -> int:
         # A streaming payload has no known length until it is consumed, so it
@@ -158,9 +154,9 @@ class TaskMessagesQueue[T: TaskMessage]:
         # never overlapping no lock ordering cycle can form. The message is already
         # enqueued, so a waiter that scans between the release and this notify finds it
         # directly.
-        if self._agent is not None:
-            async with self._agent._outbox_activity:
-                self._agent._outbox_activity.notify_all()
+        if self._queue_activity_notifier is not None:
+            async with self._queue_activity_notifier:
+                self._queue_activity_notifier.notify_all()
 
     async def get(
         self,
@@ -214,6 +210,6 @@ class TaskMessagesQueue[T: TaskMessage]:
         # outbox. Done after releasing `self._condition` so this queue's lock and the
         # agent's `_outbox_activity` are never held at once, preserving the lock ordering
         # that put relies on.
-        if self._agent is not None:
-            async with self._agent._outbox_activity:
-                self._agent._outbox_activity.notify_all()
+        if self._queue_activity_notifier is not None:
+            async with self._queue_activity_notifier:
+                self._queue_activity_notifier.notify_all()

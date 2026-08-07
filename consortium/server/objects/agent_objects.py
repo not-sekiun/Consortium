@@ -11,6 +11,7 @@ from consortium.framework._core.framework_exceptions.agent_capabilities_framewor
     AgentCapabilityExecutionError,
     AgentCapabilityFatalError,
     AgentCapabilityLaunchError,
+    AgentCapabilityTaskHandlerError,
 )
 from consortium.framework._core.framework_exceptions.options_framework_exceptions import (
     OptionValueValidationError as OptionValueValidationFrameworkError,
@@ -61,6 +62,7 @@ from consortium.server.objects.task_runtime import TaskRuntime
 from consortium.server.utils import (
     generate_random_human_readable_name,
     normalize_uuid,
+    run_async_background_task,
     utc_now,
 )
 
@@ -954,14 +956,20 @@ class Agent:
                         )
                     task.status._transition_to_succeeded()
                 else:
+                    # Treated as the None case: the capability returned, so it completed,
+                    # and an unrecognised return value is not grounds to report a failure
+                    # that never happened. Leaving it non-terminal is not an option either,
+                    # since the task would sit in RUNNING forever over a return value.
                     self.logger.warning(
                         "Agent {} had a task {} that completed but returned a value "
-                        "that was `{!r}` instead of `Success`, `Failure` or `None`. "
-                        "This return value was ignored but should be fixed.",
+                        "that was `{!r}` instead of `Success`, `Failure` or `None`. The "
+                        "return value was ignored and the task was completed normally, "
+                        "but this should be fixed.",
                         self,
                         task,
                         task_outcome,
                     )
+                    task.status._transition_to_succeeded()
             except AgentCapabilityLaunchSignalError as exc:
                 # Deliberately raised from on_launch to deny a task from starting, for
                 # example when a pre-launch validation check fails. This is the launch
@@ -1026,24 +1034,10 @@ class Agent:
                         task,
                         task.status.state,
                     )
-            except Exception:
-                # Reaching here is a framework defect, not a capability error: execute()
-                # classifies every exception within the capability contract (launch,
-                # dispatch, execution, cleanup) into an AgentCapabilityFatalError, and the
-                # deliberate paths are handled above. Anything left is a bug in the handler
-                # itself. Surface it loudly and let it propagate rather than disguising it
-                # as a capability failure and firing a spurious completion: the task is
-                # deliberately left non-terminal so the broken invariant looks broken.
-                self.logger.critical(
-                    "An unexpected exception escaped the task handler "
-                    "for agent {} capability '{}' on task {}. This is not a capability "
-                    "error and the task was left non-terminal so it is not silently "
-                    "reported as completed.",
-                    self,
-                    agent_capability.name,
-                    task.task_id,
-                )
-                raise
+            # No catch-all: execute() classifies everything within the capability contract
+            # (launch, dispatch, execution) and the deliberate paths are handled above, so
+            # anything left is a bug in this handler. Catching it here could only disguise
+            # it as a capability failure, so it propagates to the handler's done callback.
 
             # Upon returning from the task's execution method the capability is no
             # longer running, so release its inbox (no more results will be routed to
@@ -1061,6 +1055,68 @@ class Agent:
                     "agent_id": str(self.agent_id),
                     "task": task.to_json(),
                 },
+            )
+
+        # Nothing awaits this handler, so this callback is the only place a failure in it
+        # can be reported. Calling `exception()` is also what marks the exception as
+        # retrieved: without it asyncio reports it as "Task exception was never retrieved"
+        # at an arbitrary later point during garbage collection. Mirrors the same handling
+        # applied to fire and forget background tasks in `_log_background_task_error`.
+        def _on_agent_capability_task_done(handler: asyncio.Task) -> None:
+            # Also runs on cancellation after agent or record teardown, so a missing
+            # registry entry is a normal outcome.
+            self._task_runtime_service.release_handler(task_id=str(task.task_id))
+
+            # Cancellation is the normal teardown path, and asking a cancelled task for its
+            # exception re-raises that cancellation, so this has to come first.
+            if handler.cancelled():
+                return
+            escaped_exception = handler.exception()
+            if escaped_exception is None:
+                return
+
+            # An exception reaching here escaped the handler itself, which is a framework
+            # defect: execute() classifies everything within the capability contract and
+            # the handler reports all of those outcomes. It also means the handler skipped
+            # its own epilogue, so the inbox, the task's terminal state and its completion
+            # event are all left to this callback.
+            self.logger.opt(exception=escaped_exception).critical(
+                "An unexpected exception escaped the task handler for agent {} "
+                "capability '{}' on task {}. {}: {}",
+                self,
+                agent_capability.name,
+                task.task_id,
+                type(escaped_exception).__name__,
+                escaped_exception,
+            )
+            self._task_runtime_service.release_inbox(task_id=task.task_id)
+
+            task_handler_error = AgentCapabilityTaskHandlerError(
+                agent_capability_name=agent_capability.name,
+                underlying_exception=escaped_exception,
+            )
+            # A lost compare and swap means teardown already drove the task terminal. That
+            # outcome stands and the completion event belongs to whoever won.
+            if not task.status._try_transition_to_errored(error=task_handler_error):
+                return
+
+            task.datetime_completed = utc_now()
+            task.event_logger.error(
+                message=str(task_handler_error),
+                data=task_handler_error.detail,
+            )
+            # Scheduled rather than awaited since a done callback cannot await.
+            run_async_background_task(
+                coroutine=server_singletons.events_service.trigger_event(
+                    event_type=EventType.AGENT_TASK_COMPLETED,
+                    message=(
+                        f"Agent {self} completed task {task} with status {task.status}"
+                    ),
+                    data={
+                        "agent_id": str(self.agent_id),
+                        "task": task.to_json(),
+                    },
+                )
             )
 
         running_agent_capability = agent_capability(agent=self, task=task)
@@ -1082,11 +1138,4 @@ class Agent:
             task_runtime=runtime,
         )
 
-        # Once the handler is finished, release the registry's reference to it. The
-        # callback also runs on cancellation after agent or record teardown, so a
-        # missing registry entry is a normal outcome.
-        agent_capability_task.add_done_callback(
-            lambda _task, task_id=str(task.task_id): (
-                self._task_runtime_service.release_handler(task_id=task_id)
-            )
-        )
+        agent_capability_task.add_done_callback(_on_agent_capability_task_done)

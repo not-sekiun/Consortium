@@ -1347,20 +1347,49 @@ def test_metadata_invalid_dependency_entry_raises():
     assert "==" in exc_info.value.message
 
 
-# CONTRACT (F10/F11, accepted as designed): _validate_metadata() is a one shot. It gates
-# the declared types with the pydantic model and then normalizes the class attributes in
-# place into the packaging objects the framework consumes, so the class no longer matches
-# the model afterwards. The loader calls it exactly once per component class. This test
-# pins that contract so a future refactor cannot silently change it.
-def test_metadata_validation_is_a_one_shot():
+# CONTRACT: _validate_metadata() is idempotent. It normalizes the class attributes in
+# place into the packaging objects the framework consumes, so a second pass no longer
+# sees the declared strings; it reads them back in their declared form to stay valid.
+# This matters because a subclass of an already validated component class is validated
+# again by __init_subclass__ against the values it inherited.
+def test_metadata_validation_is_idempotent():
     class _Component(ComponentMetadata):
-        label = "one-shot"
+        label = "idempotent"
         version = "1.0.0"
+        compatible_framework_version = ">=0.1.0a1"
+        component_dependencies = {"some-component==1.0.0"}
+
+    _Component._validate_metadata()
+    _Component._validate_metadata()
+
+    assert _Component.version == version.Version("1.0.0")
+    assert _Component.compatible_framework_version == specifiers.SpecifierSet(
+        ">=0.1.0a1"
+    )
+    assert {str(entry) for entry in _Component.component_dependencies} == {
+        "some-component==1.0.0"
+    }
+
+
+# A subclass inherits the parent's normalized attributes and is validated again by
+# __init_subclass__, so the normalized values have to survive that second pass.
+def test_a_subclass_of_a_validated_component_keeps_the_inherited_metadata():
+    class _Component(ComponentMetadata):
+        label = "parent"
+        version = "1.0.0"
+        compatible_framework_version = ">=0.1.0a1"
 
     _Component._validate_metadata()
 
-    with pytest.raises(frmwrk_excs.InvalidComponentConfigurationParameterTypeError):
-        _Component._validate_metadata()
+    class _Subcomponent(_Component):
+        label = "child"
+
+    _Subcomponent._validate_metadata()
+
+    assert _Subcomponent.version == version.Version("1.0.0")
+    assert _Subcomponent.compatible_framework_version == specifiers.SpecifierSet(
+        ">=0.1.0a1"
+    )
 
 
 # ---------------------------------------------------------------------------
