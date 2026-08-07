@@ -41,16 +41,17 @@ Service calls are synchronous and should be used in `on_triggered()` without awa
 
 ## What lives on self
 
-| Attribute                        | Type              | Description                              |
-|----------------------------------|-------------------|------------------------------------------|
-| `self.event_hook_id`             | `uuid.UUID`       | Unique identifier for this hook instance |
-| `self.name`                      | `str`             | Display name from the class attribute    |
-| `self.label`                     | `str`             | Stable label from the class attribute    |
-| `self.event_types`               | `set[EventType]`  | Events this hook subscribes to           |
-| `self.environment`               | `SimpleNamespace` | Mutable runtime state namespace          |
-| `self.services`                  | `SimpleNamespace` | Framework services namespace             |
-| `self.logger`                    | `loguru.Logger`   | Hook-scoped logger                       |
-| `self.root_directory`            | `pathlib.Path`    | Path to this hook's source directory     |
+| Attribute                     | Type                   | Description                                  |
+|-------------------------------|------------------------|----------------------------------------------|
+| `self.event_hook_id`          | `uuid.UUID`            | Unique identifier for this hook instance     |
+| `self.name`                   | `str`                  | Display name from the class attribute        |
+| `self.label`                  | `str`                  | Stable label from the class attribute        |
+| `self.event_types`            | `frozenset[EventType]` | Events declared in the class body            |
+| `self.subscribed_event_types` | `frozenset[EventType]` | Events subscribed to right now, read-only    |
+| `self.environment`            | `SimpleNamespace`      | Mutable runtime state namespace              |
+| `self.services`               | `SimpleNamespace`      | Framework services namespace                 |
+| `self.logger`                 | `loguru.Logger`        | Hook-scoped logger                           |
+| `self.root_directory`         | `pathlib.Path`         | Path to this hook's source directory         |
 
 See the [Complete Event Hook Example](complete-event-hook-example.md) for all of these
 concepts combined into one event hook.

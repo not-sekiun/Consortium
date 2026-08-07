@@ -18,6 +18,7 @@ data/client/logs/**
 
 consortium/components/plugins/persistent_agent_generators/persistent_agent_generators.json
 consortium/components/plugins/persistent_listeners/persistent_listeners.json
+consortium/components/event_hooks/webhook_sender/config.json
 
 .pytest_cache/
 .uv-cache/

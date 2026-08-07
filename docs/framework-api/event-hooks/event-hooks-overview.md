@@ -20,8 +20,9 @@ runs independently of individual events.
 ## How event hooks work
 
 A event hook is a Python class that inherits from `BaseEventHook`. The set of events it
-subscribes to is declared as a class-level `event_types` attribute. The framework calls
-three hook methods:
+subscribes to is declared as a class-level `event_types` attribute, and can be changed
+while the hook is running with `subscribe_to_event_type()` and
+`unsubscribe_from_event_type()`. The framework calls three hook methods:
 
 | Method           | Called                                               |
 |------------------|------------------------------------------------------|

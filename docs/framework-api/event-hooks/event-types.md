@@ -9,6 +9,11 @@ Because `EventType` is a `StrEnum`, its values compare equal to their string
 representations. A set literal of strings like `{"AGENT_REGISTERED", "STOP_SERVER"}`
 works anywhere a `set[EventType]` is expected.
 
+`event_types` is the declaration and nothing more: it is read off the class when the
+hook is validated and loaded. To see or change what a hook is subscribed to while it is
+running, use `subscribed_event_types`, `subscribe_to_event_type()` and
+`unsubscribe_from_event_type()`.
+
 ## Server events
 
 | EventType      | Fires when                                                             |
@@ -123,7 +128,12 @@ Dynamic subscription from a config file (as used by `webhook_sender`):
 async def on_setup(self) -> None:
     for event_name in self.environment.config["events"]:
         if event_name in EventType:
-            self.event_types.add(event_name)
+            self.subscribe_to_event_type(event_name)
         else:
             self.logger.warning("'{}' is not a valid EventType.", event_name)
 ```
+
+`subscribe_to_event_type()` works at any point in the hook's lifecycle, including from
+`on_triggered()`. Subscribing to an event type the hook already handles is a no-op, and
+an event name that is not a valid `EventType` raises `InvalidEventTypeError`, which is
+why the example filters first rather than letting it raise.

@@ -1,0 +1,19 @@
+{
+    "events": [
+        "STOP_SERVER",
+        "START_SERVER",
+        "AGENT_REGISTERED"
+    ],
+    "webhooks": [
+        {
+            "platform": "discord",
+            "url": "https://discord.com/api/webhooks/<webhook_id>/<webhook_token>"
+        },
+        {
+            "platform": "slack",
+            "url": "https://hooks.slack.com/services/<team_id>/<channel_id>/<webhook_token>"
+        }
+    ],
+    "max_retries": 3,
+    "retry_delay_seconds": 5
+}

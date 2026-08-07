@@ -87,13 +87,13 @@ class EventsService:
         try:
             event_handlers = self._event_handlers[str(event_type)]
         except KeyError:
-            raise EventHandlerNotRegisteredError from None
+            raise EventHandlerNotRegisteredError(event_type=event_type) from None
 
         try:
             # `event_handlers` is passed by reference here.
             event_handlers.remove(event_handler)
         except ValueError:
-            raise EventHandlerNotRegisteredError from None
+            raise EventHandlerNotRegisteredError(event_type=event_type) from None
 
     @log_and_propagate_error_on_service_method
     def get_registered_event_handlers_from_event_type(

@@ -73,7 +73,8 @@ class EventHook(BaseEventHook):
 reference implementation available. Beyond the basic pattern above, it demonstrates:
 
 - Validating config against a JSON schema in `on_setup` using `jsonschema`
-- Dynamic `event_types` population at setup time from a config file
+- Dynamic subscription at setup time from a config file, via
+  `subscribe_to_event_type()`
 - Async HTTP requests with retry logic in a private helper
 - Handling multiple webhook platform formats inside `on_triggered`
 - Raising `EventHookSetupError` and `EventHookTriggerError` (see

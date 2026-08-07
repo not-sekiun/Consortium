@@ -42,11 +42,11 @@ class EventHookRegistryService(
         component: BaseEventHook,
         context: dict,
     ) -> BaseEventHook:
-        for event_type in component.event_types:
-            self._events_service.register_event_handler_to_event_type(
-                event_type=event_type,
-                event_handler=component.on_triggered,
-            )
+        # `on_setup` runs before the handlers are registered so that a hook which
+        # resolves its subscriptions at runtime (from a configuration file, for example)
+        # has them honoured: registering first would snapshot only the statically
+        # declared types and silently ignore everything setup added. It also means a
+        # hook whose setup fails leaves no handlers behind.
         try:
             await component.on_setup()
         except event_hook_framework_excs.EventHookSetupError as exc:
@@ -64,6 +64,15 @@ class EventHookRegistryService(
                 ),
                 detail={"type": type(exc).__name__, "message": str(exc)},
             ) from exc
+
+        for event_type in component.subscribed_event_types:
+            self._events_service.register_event_handler_to_event_type(
+                event_type=event_type,
+                event_handler=component.on_triggered,
+            )
+        # From here on the events service holds this hook's registrations, so the hook
+        # mirrors any further subscription change straight into it.
+        component._is_dispatch_registered = True
         return component
 
     async def _component_unload_procedure(
@@ -88,7 +97,17 @@ class EventHookRegistryService(
                 ),
                 detail={"type": type(exc).__name__, "message": str(exc)},
             ) from None
-        for event_type in component.event_types:
+        # Deregistration is driven by what is actually registered rather than by
+        # `subscribed_event_types`, which a hook may have changed after (or during)
+        # loading. Using the declared set would try to remove subscriptions that were
+        # never registered and leave behind ones added at runtime.
+        component._is_dispatch_registered = False
+        registered_event_types = (
+            self._events_service.get_event_types_from_registered_event_handler(
+                event_handler=component.on_triggered,
+            )
+        )
+        for event_type in registered_event_types:
             self._events_service.deregister_event_handler_from_event_type(
                 event_type=event_type,
                 event_handler=component.on_triggered,

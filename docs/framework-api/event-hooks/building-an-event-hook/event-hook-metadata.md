@@ -29,12 +29,15 @@ class EventHook(BaseEventHook):
 
 ## event_types
 
-`event_types` is a set of `EventType` values. The framework only calls `on_triggered()`
-for events whose type is in this set. If `event_types` is empty or not declared, the
-hook is registered but `on_triggered()` is never called.
+`event_types` is a set of `EventType` values declaring what the hook subscribes to when
+it is loaded. The framework only calls `on_triggered()` for events whose type the hook
+is subscribed to. If `event_types` is empty or not declared, the hook is registered but
+`on_triggered()` is never called unless it subscribes to something at runtime.
 
-You can also add to `event_types` dynamically in `on_setup()` based on loaded
-configuration, as `webhook_sender` does:
+The declaration is read off the class, before any instance exists, so it is fixed once
+the class is defined. To change subscriptions while the hook is running, call
+`subscribe_to_event_type()` in `on_setup()` based on loaded configuration, as
+`webhook_sender` does:
 
 ```python
 # From consortium/components/event_hooks/webhook_sender/event_hook.py
@@ -42,8 +45,18 @@ for event in config["events"]:
     if event not in EventType:
         self.logger.warning("'{}' is not a valid event type.", event)
         continue
-    self.event_types.add(event)
+    self.subscribe_to_event_type(event)
 ```
+
+## subscribed_event_types
+
+`event_types` is the declaration; `self.subscribed_event_types` is what the hook is
+actually subscribed to right now. It starts as the declared set and reflects every
+`subscribe_to_event_type()` and `unsubscribe_from_event_type()` call.
+
+It is a read-only `frozenset`, so it cannot be mutated or reassigned. Those two methods
+are the only supported way to change subscriptions: a set that dispatch does not read
+back would silently disagree with what the hook actually receives.
 
 `EventType` is a `StrEnum`, so its values compare equal to their string representations.
 String literals work anywhere an `EventType` is expected.
