@@ -8,6 +8,7 @@ from pydantic import JsonValue
 from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
     AgentCommunicationEndOfStreamError,
 )
+from consortium.framework.agents._resource_limits import QUEUE_MEMORY_LIMIT
 from consortium.framework.agents._task_messages_queue import END_OF_STREAM
 from consortium.framework.agents.agent_message_models import (
     TaskInputMessageModel,
@@ -28,10 +29,11 @@ class _AgentCommunicator:
         self.agent = agent
         self.task = task
 
-        # 8 MB memory capacity for the inbox and outbox
-        message_queue_size = 8 * 1024 * 1024
+        # Both directions get the same budget. It bounds one task, not the server: every
+        # task holds one of each, so what is resident overall is the number of running
+        # tasks times twice this.
         self._task_messages_inbox = TaskMessagesQueue[TaskOutputMessageModel](
-            maximum_memory_size=message_queue_size
+            maximum_memory_size=QUEUE_MEMORY_LIMIT
         )
         # The outbox is constructed with the owning agent so every put also signals the
         # agent's shared outbox activity condition, letting Agent.get_next_task_message_any
@@ -40,7 +42,7 @@ class _AgentCommunicator:
         self._task_messages_outbox = TaskMessagesQueue[
             TaskLaunchMessageModel | TaskInputMessageModel
         ](
-            maximum_memory_size=message_queue_size,
+            maximum_memory_size=QUEUE_MEMORY_LIMIT,
             queue_activity_notifier=agent._outbox_activity,
         )
 
