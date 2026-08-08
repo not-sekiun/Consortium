@@ -34,7 +34,7 @@ async def test_recv_returns_message_from_inbox():
     message = _output_message(task.task_id)
     await communicator._task_messages_inbox.put(message)
 
-    assert await communicator.recv_from_agent() is message
+    assert await communicator.recv_from_agent() == message
 
 
 @pytest.mark.anyio
@@ -71,7 +71,7 @@ async def test_recv_drains_buffered_message_before_raising():
     await communicator._task_messages_inbox.shutdown()
 
     # The buffered message is served first.
-    assert await communicator.recv_from_agent() is message
+    assert await communicator.recv_from_agent() == message
     # Only once drained does end of stream raise.
     with pytest.raises(AgentCommunicationEndOfStreamError):
         await communicator.recv_from_agent()

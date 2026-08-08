@@ -102,7 +102,7 @@ async def test_get_by_id_returns_message():
         task_id=task.task_id, timeout=0
     )
 
-    assert result is message
+    assert result == message
 
 
 @pytest.mark.anyio
@@ -163,7 +163,12 @@ async def test_get_by_id_launch_message_transitions_task_to_running():
         task_id=task.task_id, timeout=0
     )
 
-    assert result is launch
+    # The QUEUED -> RUNNING transition is driven by an isinstance check on what the
+    # outbox returns, so the decode has to hand back a real launch model and not a dict
+    # or a message of another type: assert the type explicitly rather than leaving the
+    # state transition below as the only thing that would notice.
+    assert isinstance(result, TaskLaunchMessageModel)
+    assert result == launch
     assert task.status.state == TaskState.RUNNING
     assert task.datetime_started is not None
 
@@ -198,7 +203,7 @@ async def test_get_sequential_returns_message():
 
     result = await agent.get_next_task_message_sequential(timeout=0)
 
-    assert result is message
+    assert result == message
 
 
 @pytest.mark.anyio
@@ -224,7 +229,7 @@ async def test_get_sequential_advances_past_exhausted_outbox():
 
     result = await agent.get_next_task_message_sequential(timeout=None)
 
-    assert result is message
+    assert result == message
     # The exhausted earliest outbox was dropped as it was passed.
     assert (
         agent._task_runtime_service.get_task_runtime(task_id=first_task.task_id) is None
@@ -244,7 +249,7 @@ async def test_get_sequential_polls_past_exhausted_outbox_with_zero_timeout():
 
     result = await agent.get_next_task_message_sequential(timeout=0)
 
-    assert result is message
+    assert result == message
 
 
 @pytest.mark.anyio
@@ -274,7 +279,7 @@ async def test_sequential_muxer_does_not_scan_retained_terminal_records():
     finally:
         agent._tasks_service.get_all_tasks = original_get_all_tasks
 
-    assert result is message
+    assert result == message
 
 
 # --- get_next_task_message_any ---
@@ -289,7 +294,7 @@ async def test_get_any_returns_available_message():
 
     result = await agent.get_next_task_message_any(timeout=0)
 
-    assert result is message
+    assert result == message
 
 
 @pytest.mark.anyio
@@ -313,7 +318,7 @@ async def test_get_any_skips_exhausted_outbox():
 
     result = await agent.get_next_task_message_any(timeout=0)
 
-    assert result is message
+    assert result == message
 
 
 # --- drain generators (any / sequential) ---
@@ -332,7 +337,7 @@ async def test_drain_any_yields_available_message():
     finally:
         await generator.aclose()
 
-    assert first is message
+    assert first == message
 
 
 @pytest.mark.anyio
@@ -348,7 +353,7 @@ async def test_drain_sequential_yields_available_message():
     finally:
         await generator.aclose()
 
-    assert first is message
+    assert first == message
 
 
 # --- registry ownership and deletion races ---
@@ -438,7 +443,7 @@ async def test_sequential_muxer_advances_when_selected_task_is_deleted():
 
     await agent._tasks_service.delete_task_by_task_id(task_id=first_task.task_id)
 
-    assert await asyncio.wait_for(reader, timeout=1) is message
+    assert await asyncio.wait_for(reader, timeout=1) == message
 
 
 class _PausingTaskMessagesQueue(TaskMessagesQueue):
@@ -504,7 +509,7 @@ async def test_any_muxer_advances_when_dequeued_task_is_deleted():
     await agent._tasks_service.delete_task_by_task_id(task_id=first_task.task_id)
     first_outbox.resume_reader.set()
 
-    assert await asyncio.wait_for(reader, timeout=1) is second_message
+    assert await asyncio.wait_for(reader, timeout=1) == second_message
 
 
 @pytest.mark.anyio

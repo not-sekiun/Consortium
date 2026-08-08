@@ -1,6 +1,8 @@
 import asyncio
 import sys
 
+import orjson
+
 from consortium.framework.agents.agent_message_models import (
     Payload,
     TaskInputMessageModel,
@@ -9,6 +11,23 @@ from consortium.framework.agents.agent_message_models import (
 )
 
 TaskMessage = TaskLaunchMessageModel | TaskInputMessageModel | TaskOutputMessageModel
+
+# An entry is the wire form of a message, the payload kept out of it, and the type it
+# was put as. The payload can wrap a live async stream, so it is carried by reference
+# rather than serialized. The type is recorded rather than inferred on the way out: a
+# blob does not say what it is, and the models overlap enough that deciding from its
+# contents means guessing (every field but task_id has a default and extra keys are
+# ignored, so an output message validates as an input message too). The producer knows,
+# so it is written down. Costs one shared class pointer per entry.
+_QueueEntry = tuple[bytes, Payload | None, type[TaskMessage]]
+
+# What a queued message costs on top of the bytes it carries: the `bytes` object header
+# for the encoded blob (33) plus the 3-tuple that holds the blob, its payload and its
+# type (72). The type is a shared class object, so only the tuple slot pointing at it is
+# charged. Both are CPython object header sizes rather than anything about the message,
+# so they move between interpreter versions: re-derive this with
+# tools/message_sizing_benchmark.py after a Python upgrade rather than assuming it holds.
+_MESSAGE_ENTRY_OVERHEAD = 105
 
 # END_OF_STREAM is the marker `get` returns once a queue has been shut down and fully
 # drained: no further messages will ever be produced. It lets readers distinguish an
@@ -22,23 +41,42 @@ TaskMessage = TaskLaunchMessageModel | TaskInputMessageModel | TaskOutputMessage
 END_OF_STREAM = object()
 
 
-def _deep_getsizeof(obj, seen: set[int]) -> int:
-    # Recursively estimate the in-memory footprint of a container and its
-    # contents. Track seen object ids so shared/cyclic references are only
-    # counted once.
-    obj_id = id(obj)
-    if obj_id in seen:
-        return 0
-    seen.add(obj_id)
+def _encode_task_message(task_message: TaskMessage) -> bytes:
+    # Serialize a message to the JSON the queue stores in place of the model. The payload
+    # is left out because it can wrap a live async stream, which must not be buffered to
+    # be measured or moved.
+    try:
+        return orjson.dumps(task_message.to_json())
+    except TypeError:
+        # orjson raises on integers outside the 64-bit range, and its `default=` hook is
+        # not consulted for `int` (a natively supported type) so the hook cannot cover
+        # them. Fallback to Pydantic's serializer.
+        return task_message.model_dump_json(exclude={"payload"}).encode()
 
-    size = sys.getsizeof(obj)
-    if isinstance(obj, dict):
-        for key, value in obj.items():
-            size += _deep_getsizeof(key, seen)
-            size += _deep_getsizeof(value, seen)
-    elif isinstance(obj, (list, tuple, set, frozenset)):
-        for item in obj:
-            size += _deep_getsizeof(item, seen)
+
+def _decode_task_message(
+    json_blob: bytes,
+    message_type: type[TaskMessage],
+    payload: Payload | None = None,
+) -> TaskMessage:
+    # do not use orjson, it will parse integers greater than 64 bits as floats losing
+    # precision. Pydantic parses them exactly, and goes from bytes to model entirely in
+    # Rust, so it is also around twice as fast as orjson.loads plus model construction.
+    task_message = message_type.model_validate_json(json_blob)
+    task_message.payload = payload
+    return task_message
+
+
+def _task_message_entry_size(json_blob: bytes, payload: Payload | None) -> int:
+    # What one entry occupies, which is what the queue charges against its cap. This is
+    # an accounting fact rather than an estimate: every term is exact and O(1).
+    size = len(json_blob) + _MESSAGE_ENTRY_OVERHEAD
+    if payload is not None:
+        # A streaming payload has no known length until it is consumed, so it cannot be
+        # measured up front and only its object overhead is counted.
+        size += sys.getsizeof(payload)
+        if not payload.is_stream:
+            size += len(payload.data)
     return size
 
 
@@ -48,11 +86,11 @@ class TaskMessagesQueue[T: TaskMessage]:
         maximum_memory_size: int | None = None,
         queue_activity_notifier: asyncio.Condition | None = None,
     ):
-        self._queue: asyncio.Queue[tuple[T, int]] = asyncio.Queue()
+        self._queue: asyncio.Queue[_QueueEntry] = asyncio.Queue()
         if maximum_memory_size is not None and maximum_memory_size <= 0:
             raise ValueError("maximum_memory_size must be greater than 0")
         self._maximum_memory_size = maximum_memory_size
-        self._current_estimated_memory_size = 0
+        self._current_memory_size = 0
         # Coordinates producers waiting for space and consumers waiting for
         # messages. notify_all is used whenever either side changes state.
         self._condition = asyncio.Condition()
@@ -67,31 +105,10 @@ class TaskMessagesQueue[T: TaskMessage]:
         # for queues that do not participate in that fan-in (for example the inbox).
         self._queue_activity_notifier = queue_activity_notifier
 
-    def _estimate_payload_size(self, payload: Payload) -> int:
-        # A streaming payload has no known length until it is consumed, so it
-        # cannot be measured up front. Only the object overhead is counted.
-        if payload.is_stream:
-            return sys.getsizeof(payload)
-        return sys.getsizeof(payload) + len(payload.data)
-
-    def _estimate_size(self, task_message: TaskMessage) -> int:
-        # Estimate the memory footprint of a message. The binary payload
-        # dominates and is measured directly by its byte length; the remaining
-        # pydantic fields (dicts, strings, scalars) are estimated recursively.
-        seen: set[int] = set()
-        size = sys.getsizeof(task_message)
-        for field_name in type(task_message).model_fields:
-            value = getattr(task_message, field_name)
-            if isinstance(value, Payload):
-                size += self._estimate_payload_size(value)
-            else:
-                size += _deep_getsizeof(value, seen)
-        return size
-
     def _can_fit(self, size: int) -> bool:
         if self._maximum_memory_size is None:
             return True
-        if self._current_estimated_memory_size + size <= self._maximum_memory_size:
+        if self._current_memory_size + size <= self._maximum_memory_size:
             return True
         # One-time exception: if the queue is empty the message cannot fit
         # anywhere, so admit it regardless of size to avoid blocking forever.
@@ -110,7 +127,7 @@ class TaskMessagesQueue[T: TaskMessage]:
     def full(self) -> bool:
         if self._maximum_memory_size is None:
             return False
-        return self._current_estimated_memory_size >= self._maximum_memory_size
+        return self._current_memory_size >= self._maximum_memory_size
 
     async def put(
         self,
@@ -118,7 +135,13 @@ class TaskMessagesQueue[T: TaskMessage]:
         # 0 means get without waiting, None means no timeout
         timeout: float | None = None,
     ) -> None:
-        size = self._estimate_size(task_message)
+        # Serializing here, at the boundary, is the whole point: from this line on the
+        # queue deals in bytes it can count rather than an object graph it would have to
+        # walk.
+        json_blob = _encode_task_message(task_message)
+        payload = task_message.payload
+        message_type = type(task_message)
+        size = _task_message_entry_size(json_blob, payload)
         loop = asyncio.get_running_loop()
         deadline = None if timeout is None else loop.time() + timeout
 
@@ -141,8 +164,8 @@ class TaskMessagesQueue[T: TaskMessage]:
                 if self._shutdown:
                     raise asyncio.QueueShutDown
 
-            self._queue.put_nowait((task_message, size))
-            self._current_estimated_memory_size += size
+            self._queue.put_nowait((json_blob, payload, message_type))
+            self._current_memory_size += size
             self._condition.notify_all()
 
         # Signal the agent wide outbox activity after releasing our own condition so a
@@ -182,10 +205,22 @@ class TaskMessagesQueue[T: TaskMessage]:
                     raise TimeoutError
                 await asyncio.wait_for(self._condition.wait(), remaining)
 
-            task_message, size = self._queue.get_nowait()
-            self._current_estimated_memory_size -= size
+            json_blob, payload, message_type = self._queue.get_nowait()
+            # Recomputed rather than stored alongside the entry: it is a pure function
+            # of the entry, so it cannot drift from what `put` charged, and keeping it
+            # out leaves the entry the 3-tuple the entry overhead accounts for.
+            self._current_memory_size -= _task_message_entry_size(json_blob, payload)
             self._condition.notify_all()
-            return task_message
+
+        # Decoded after releasing the condition. It is synchronous work with no await in
+        # it, so holding the lock across it would change nothing about correctness, but
+        # there is no reason for one reader's decode to sit inside the lock every other
+        # producer and consumer of this queue has to take.
+        return _decode_task_message(
+            json_blob=json_blob,
+            message_type=message_type,
+            payload=payload,
+        )
 
     async def shutdown(self, immediate: bool = False) -> None:
         # Manage our own shutdown state rather than delegating to the underlying
@@ -199,7 +234,7 @@ class TaskMessagesQueue[T: TaskMessage]:
                 # instead of draining the backlog first.
                 while not self._queue.empty():
                     self._queue.get_nowait()
-                self._current_estimated_memory_size = 0
+                self._current_memory_size = 0
             self._condition.notify_all()
 
         # Shutdown is a state change the agent wide fan-in must observe, exactly like a
