@@ -20,6 +20,7 @@ dependencies = [
     "slowapi>=0.1.10",
     "sqlalchemy>=2.0.51",
     "psycopg[binary]>=3.3.4",
+    "orjson>=3.11.9",
 ]
 
 [dependency-groups]
