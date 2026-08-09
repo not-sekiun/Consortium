@@ -37,11 +37,12 @@ class DownloadCapability(BaseAgentCapability):
         ),
         SingleValueOption(
             name="chunk_size",
-            description="Chunk size in bytes. Larger values improve speed but use more memory.",
+            description="Chunk size in bytes. Larger values improve speed but use more memory. Chunk size is limited to 8MiB",
             required=False,
             value_type=int,
-            default_value=1000000,
+            default_value=1024 * 1024,
             greater_than_or_equal_to=1,
+            less_than_or_equal_to=8 * 1024 * 1024,
         ),
         SingleValueOption(
             name="ignore_empty_dirs",
@@ -123,7 +124,7 @@ class DownloadCapability(BaseAgentCapability):
                         current_file.touch()
                     case "chunk":
                         try:
-                            chunk = zlib.decompress(response.payload.data)
+                            chunk = zlib.decompress(await response.payload.read())
                         except zlib.error as exc:
                             return Failure(
                                 message=f"Failed to decompress file chunk: {exc}"
