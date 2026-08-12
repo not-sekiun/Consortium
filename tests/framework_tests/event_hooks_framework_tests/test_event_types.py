@@ -1,10 +1,37 @@
+import pathlib
+from unittest.mock import MagicMock
+
 import pytest
 
+import consortium.server.server_singletons as server_singletons
 from consortium.framework.event_hooks import BaseEventHook
 from consortium.framework.event_hooks.event_type import EventType
 from consortium.server.exceptions.service_exceptions.events_service_exceptions import (
     InvalidEventTypeError,
 )
+from consortium.server.services.component_registry_services.event_hook_registry_service import (
+    EventHookRegistryService,
+)
+
+
+@pytest.fixture(scope="session")
+def anyio_backend():
+    return "asyncio"
+
+
+@pytest.fixture(autouse=True)
+def _reset_events_service():
+    # These hooks are built without a running server, so `__init_subclass__` wires them
+    # to the real module-level `server_singletons.events_service` (see
+    # `BaseEventHook.__init_subclass__`). Subscriptions now live only in that service, so
+    # without a reset every test in this module would share one global registration
+    # table and could observe registrations a previous test left behind.
+    events_service = server_singletons.events_service
+    events_service._event_handlers.clear()
+    events_service._handler_event_types.clear()
+    yield
+    events_service._event_handlers.clear()
+    events_service._handler_event_types.clear()
 
 
 def _make_event_hook_class(event_types=None, label="test.event_hook"):
@@ -34,9 +61,12 @@ def test_undeclared_event_types_defaults_to_an_empty_set_on_the_class():
     assert _make_event_hook_class().event_types == set()
 
 
-def test_declaration_is_the_starting_subscription():
+def test_an_unloaded_hook_reports_no_subscriptions_even_with_a_declaration():
+    # `subscribed_event_types` reads live registration state from the events service. A
+    # hook that has never been loaded through the registry has no registration there,
+    # regardless of what its class body declares.
     hook = _make_event_hook_class({"START_SERVER"})()
-    assert hook.subscribed_event_types == {EventType.START_SERVER}
+    assert hook.subscribed_event_types == frozenset()
 
 
 def test_undeclared_event_types_subscribes_to_nothing():
@@ -51,14 +81,17 @@ def test_a_subclass_inherits_the_declaration_of_its_parent():
         (parent,),
         {"label": "test.child", "name": "Child Event Hook"},
     )
-    assert child_class().subscribed_event_types == {EventType.START_SERVER}
+    assert child_class.event_types == {"START_SERVER"}
 
 
 def test_instances_do_not_share_the_declared_set():
     hook_class = _make_event_hook_class({"START_SERVER"})
     first, second = hook_class(), hook_class()
     first.subscribe_to_event_type(EventType.PAYLOAD_CREATED)
-    assert second.subscribed_event_types == {EventType.START_SERVER}
+    assert first.subscribed_event_types == {EventType.PAYLOAD_CREATED}
+    # Two instances of the same class have distinct bound `on_triggered` methods, so a
+    # runtime subscription made on one is never observed on the other.
+    assert second.subscribed_event_types == frozenset()
     assert hook_class.event_types == {"START_SERVER"}
 
 
@@ -83,6 +116,7 @@ def test_view_cannot_be_rebound():
 
 def test_subscribe_updates_the_view():
     hook = _make_event_hook_class({"START_SERVER"})()
+    hook.subscribe_to_event_type(EventType.START_SERVER)
     hook.subscribe_to_event_type(EventType.PAYLOAD_CREATED)
     assert hook.subscribed_event_types == {
         EventType.START_SERVER,
@@ -98,6 +132,7 @@ def test_subscribing_does_not_change_the_declaration():
 
 def test_unsubscribe_updates_the_view():
     hook = _make_event_hook_class({"START_SERVER"})()
+    hook.subscribe_to_event_type(EventType.START_SERVER)
     hook.unsubscribe_from_event_type(EventType.START_SERVER)
     assert hook.subscribed_event_types == frozenset()
 
@@ -111,11 +146,13 @@ def test_subscribe_accepts_a_plain_string_and_normalizes_it():
 def test_subscribe_is_idempotent():
     hook = _make_event_hook_class({"START_SERVER"})()
     hook.subscribe_to_event_type(EventType.START_SERVER)
+    hook.subscribe_to_event_type(EventType.START_SERVER)
     assert hook.subscribed_event_types == {EventType.START_SERVER}
 
 
 def test_unsubscribe_from_an_unhandled_event_type_is_a_no_op():
     hook = _make_event_hook_class({"START_SERVER"})()
+    hook.subscribe_to_event_type(EventType.START_SERVER)
     hook.unsubscribe_from_event_type(EventType.PAYLOAD_CREATED)
     assert hook.subscribed_event_types == {EventType.START_SERVER}
 
@@ -124,4 +161,24 @@ def test_subscribe_rejects_an_invalid_event_type():
     hook = _make_event_hook_class()()
     with pytest.raises(InvalidEventTypeError):
         hook.subscribe_to_event_type("NOT_AN_EVENT_TYPE")
+    assert hook.subscribed_event_types == frozenset()
+
+
+# --- Registry lifecycle ---
+
+
+@pytest.mark.anyio
+async def test_a_hook_reports_its_declared_types_once_loaded_and_loses_them_on_unload():
+    hook_class = _make_event_hook_class({"START_SERVER"})
+    hook = hook_class()
+    registry = EventHookRegistryService(
+        component_loader_service=MagicMock(),
+        component_framework_directory=pathlib.Path("/tmp"),
+        events_service=server_singletons.events_service,
+    )
+
+    await registry._component_load_procedure(hook, {})
+    assert hook.subscribed_event_types == {EventType.START_SERVER}
+
+    await registry._component_unload_procedure(hook, {})
     assert hook.subscribed_event_types == frozenset()

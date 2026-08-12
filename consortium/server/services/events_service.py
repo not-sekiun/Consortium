@@ -26,6 +26,16 @@ from consortium.server.utils import log_and_propagate_error_on_service_method
 class EventsService:
     def __init__(self):
         self._event_handlers = {}
+        # Reverse index, `handler -> set[event_type str]`, kept in lockstep with
+        # `_event_handlers` by the register/deregister methods below so the two can never
+        # diverge. Keys on bound methods (e.g. `hook.on_triggered`, the websocket
+        # sender): bound methods hash and compare by `(__func__, __self__)`, so repeated
+        # attribute accesses key consistently, but this requires the handler's `__self__`
+        # to be hashable, where the old list-scan only ever needed `__eq__`. The key is
+        # deleted once its set is empty, otherwise this index would hold a strong
+        # reference to every hook and websocket connection that ever registered, for as
+        # long as the service lives.
+        self._handler_event_types = {}
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
         )
@@ -63,10 +73,11 @@ class EventsService:
 
         if str(event_type) in self._event_handlers:
             if event_handler in self._event_handlers[str(event_type)]:
-                raise EventHandlerAlreadyRegisteredError
+                raise EventHandlerAlreadyRegisteredError(event_type=event_type)
             self._event_handlers[str(event_type)].append(event_handler)
         else:
             self._event_handlers[str(event_type)] = [event_handler]
+        self._handler_event_types.setdefault(event_handler, set()).add(str(event_type))
 
     @log_and_propagate_error_on_service_method
     def deregister_event_handler_from_event_type(
@@ -94,6 +105,11 @@ class EventsService:
             event_handlers.remove(event_handler)
         except ValueError:
             raise EventHandlerNotRegisteredError(event_type=event_type) from None
+
+        handler_event_types = self._handler_event_types[event_handler]
+        handler_event_types.discard(str(event_type))
+        if not handler_event_types:
+            del self._handler_event_types[event_handler]
 
     @log_and_propagate_error_on_service_method
     def get_registered_event_handlers_from_event_type(
@@ -130,11 +146,10 @@ class EventsService:
             A list of event types the handler is subscribed to. Empty if the handler is
             not registered for any event type.
         """
-        handled_events = []
-        for event_type, handlers in self._event_handlers.items():
-            if event_handler in handlers:
-                handled_events.append(EventType(event_type))
-        return handled_events
+        return [
+            EventType(event_type)
+            for event_type in self._handler_event_types.get(event_handler, ())
+        ]
 
     @log_and_propagate_error_on_service_method
     def get_all_event_types(self) -> list[str]:

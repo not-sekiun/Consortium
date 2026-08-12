@@ -42,20 +42,33 @@ class EventHookRegistryService(
         component: BaseEventHook,
         context: dict,
     ) -> BaseEventHook:
-        # `on_setup` runs before the handlers are registered so that a hook which
-        # resolves its subscriptions at runtime (from a configuration file, for example)
-        # has them honoured: registering first would snapshot only the statically
-        # declared types and silently ignore everything setup added. It also means a
-        # hook whose setup fails leaves no handlers behind.
+        # Declared types are registered before `on_setup` runs, not after. The events
+        # service is the single source of truth for a hook's subscriptions and
+        # `subscribe_to_event_type`/`unsubscribe_from_event_type` reach it unconditionally,
+        # so a hook that resolves further subscriptions at runtime (from a configuration
+        # file, for example) needs the declared set already registered by the time
+        # `on_setup` runs: otherwise a subscribe call from `on_setup` would race the bulk
+        # registration below (double-registering the same type), and an unsubscribe call
+        # for a declared type would find nothing registered yet and silently no-op.
+        # Registering first means a failed `on_setup` can leave the declared handlers
+        # behind, so both except blocks below roll the registration back explicitly.
+        for event_type in type(component).event_types:
+            self._events_service.register_event_handler_to_event_type(
+                event_type=event_type,
+                event_handler=component.on_triggered,
+            )
+
         try:
             await component.on_setup()
         except event_hook_framework_excs.EventHookSetupError as exc:
+            self._deregister_all_event_types(component)
             raise EventHookSetupError(
                 event_hook_str=str(component),
                 error_message=exc.message,
                 detail=exc.detail,
             ) from None
         except Exception as exc:
+            self._deregister_all_event_types(component)
             raise EventHookSetupError(
                 event_hook_str=str(component),
                 error_message=(
@@ -65,14 +78,6 @@ class EventHookRegistryService(
                 detail={"type": type(exc).__name__, "message": str(exc)},
             ) from exc
 
-        for event_type in component.subscribed_event_types:
-            self._events_service.register_event_handler_to_event_type(
-                event_type=event_type,
-                event_handler=component.on_triggered,
-            )
-        # From here on the events service holds this hook's registrations, so the hook
-        # mirrors any further subscription change straight into it.
-        component._is_dispatch_registered = True
         return component
 
     async def _component_unload_procedure(
@@ -97,11 +102,16 @@ class EventHookRegistryService(
                 ),
                 detail={"type": type(exc).__name__, "message": str(exc)},
             ) from None
-        # Deregistration is driven by what is actually registered rather than by
-        # `subscribed_event_types`, which a hook may have changed after (or during)
-        # loading. Using the declared set would try to remove subscriptions that were
-        # never registered and leave behind ones added at runtime.
-        component._is_dispatch_registered = False
+        self._deregister_all_event_types(component)
+        return component
+
+    # Deregistration is driven by what is actually registered with the events service,
+    # rather than by the hook's declared or (formerly) locally-tracked subscriptions,
+    # which may have changed after (or during) loading. Using the declared set would try
+    # to remove subscriptions that were never registered and leave behind ones added at
+    # runtime. Shared by both `_component_load_procedure` except blocks (rolling back a
+    # failed setup) and `_component_unload_procedure`.
+    def _deregister_all_event_types(self, component: BaseEventHook) -> None:
         registered_event_types = (
             self._events_service.get_event_types_from_registered_event_handler(
                 event_handler=component.on_triggered,
@@ -112,4 +122,3 @@ class EventHookRegistryService(
                 event_type=event_type,
                 event_handler=component.on_triggered,
             )
-        return component
