@@ -83,7 +83,7 @@ class UserPermissions(StrEnum):
     DELETE_AGENT_BY_AGENT_ID = "DELETE_AGENT_BY_AGENT_ID"
     DELETE_AGENT_TASK_BY_TASK_ID = "DELETE_AGENT_TASK_BY_TASK_ID"
 
-    # Permissions for the /api/events endpoint
+    # Permissions for the /api/ws/events endpoint
     USE_EVENTS_WEBSOCKET = "USE_EVENTS_WEBSOCKET"
 
     # Permissions for the /api/assets endpoint

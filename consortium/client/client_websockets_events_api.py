@@ -83,7 +83,7 @@ class WebsocketsEventsAPI:
 
         try:
             self._websocket = await websockets.connect(
-                f"ws://{self.remote_host}:{self.remote_port}/api/events",
+                f"ws://{self.remote_host}:{self.remote_port}/api/ws/events",
                 additional_headers={"Authorization": f"Bearer {json_web_token}"},
                 open_timeout=10,
             )

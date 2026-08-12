@@ -73,7 +73,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MGNkMmE1YS1jMGYyLTQ5OGUtYjljZC1
 ## Connecting to the websocket endpoint
 
 Now that you have a valid JSON Web Token you can connect to the websocket endpoint at
-`ws://localhost:9999/api/events`. The initial request to that endpoint must be made
+`ws://localhost:9999/api/ws/events`. The initial request to that endpoint must be made
 with the JSON Web Token present in the Authorization header.
 
 !!! note
@@ -94,7 +94,7 @@ import asyncio
 import websockets
 
 JWT = "YOUR_JWT" # (1)
-EVENTS_API_URL = "ws://localhost:9999/api/events"
+EVENTS_API_URL = "ws://localhost:9999/api/ws/events"
 
 
 async def main():
@@ -141,7 +141,7 @@ import websockets
 USERNAME = "admin"
 PASSWORD = "admin"
 AUTHORIZATION_URL = "http://localhost:9999/api/login"
-EVENTS_API_URL = "ws://localhost:9999/api/events"
+EVENTS_API_URL = "ws://localhost:9999/api/ws/events"
 
 
 def get_jwt(username: str, password: str, authorization_url: str) -> str:

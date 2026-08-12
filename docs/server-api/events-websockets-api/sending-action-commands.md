@@ -131,7 +131,7 @@ import websockets
 USERNAME = "admin"
 PASSWORD = "admin"
 AUTHORIZATION_URL = "http://localhost:9999/api/login"
-EVENTS_API_URL = "ws://localhost:9999/api/events"
+EVENTS_API_URL = "ws://localhost:9999/api/ws/events"
 
 
 def get_jwt(username: str, password: str, authorization_url: str) -> str:
@@ -225,7 +225,7 @@ import websockets
 USERNAME = "admin"
 PASSWORD = "admin"
 AUTHORIZATION_URL = "http://localhost:9999/api/login"
-EVENTS_API_URL = "ws://localhost:9999/api/events"
+EVENTS_API_URL = "ws://localhost:9999/api/ws/events"
 
 
 def get_jwt(username: str, password: str, authorization_url: str) -> str:
@@ -274,7 +274,7 @@ import websockets
 USERNAME = "admin"
 PASSWORD = "admin"
 AUTHORIZATION_URL = "http://localhost:9999/api/login"
-EVENTS_API_URL = "ws://localhost:9999/api/events"
+EVENTS_API_URL = "ws://localhost:9999/api/ws/events"
 
 EventHandler = Callable[[dict], None]
 

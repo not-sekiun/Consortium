@@ -7,6 +7,7 @@ import httpx
 import pytest
 
 import consortium.server.server_singletons as server_singletons
+from consortium.framework.agents.agent_message_models import RegistrationMessageModel
 from consortium.server.api import login_api
 from consortium.server.models.logging_models import LoggingConfigModel
 from consortium.server.models.server_models import ServerConfigModel
@@ -312,7 +313,7 @@ async def mock_agent(
     # Register an agent directly via the service; no listener start is required.
     agent = server_singletons.agents_service.register_agent(
         listener_id=listener_id,
-        agent_type="mock_alpha",
+        registration_message=RegistrationMessageModel(agent_type="mock_alpha"),
         name="test-agent",
     )
     agent_id = str(agent.agent_id)

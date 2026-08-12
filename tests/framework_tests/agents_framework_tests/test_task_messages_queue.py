@@ -178,6 +178,15 @@ def _launch() -> TaskLaunchMessageModel:
     )
 
 
+async def _spooled_payload(data: bytes) -> Payload:
+    # A payload whose bytes are on disk rather than resident. The zero threshold forces
+    # the spill rather than relying on the size of the test data.
+    async def _chunks():
+        yield data
+
+    return await Payload.from_async_iterable(_chunks(), spool_to_disk_above=1)
+
+
 def _output() -> TaskOutputMessageModel:
     return TaskOutputMessageModel(
         task_id=uuid.uuid4(),
@@ -266,24 +275,23 @@ async def test_get_returns_each_message_as_the_type_it_was_put_as():
 
 @pytest.mark.anyio
 async def test_payloads_are_carried_by_reference_and_never_serialized():
-    # A payload can wrap a live async stream, so it is held as-is rather than encoded:
-    # the same object has to come back out, unconsumed.
-    async def _chunks():
-        yield b"streamed"
-
+    # A payload's bytes stay out of the blob and the payload is carried by reference, so
+    # the same object comes back out and is still readable, however it is backed. The
+    # spooled case is the one that matters: its bytes are in a temporary file whose
+    # lifetime is the payload's, so serializing a copy would be both wasteful and wrong.
     queue = TaskMessagesQueue()
-    streaming = Payload(_chunks())
-    in_memory = Payload(b"bytes")
-    await queue.put(TaskInputMessageModel(task_id=uuid.uuid4(), payload=streaming))
+    in_memory = Payload.from_bytes(b"resident")
+    spooled = await _spooled_payload(b"spilled to disk")
     await queue.put(TaskInputMessageModel(task_id=uuid.uuid4(), payload=in_memory))
+    await queue.put(TaskInputMessageModel(task_id=uuid.uuid4(), payload=spooled))
 
-    streamed_message = await queue.get()
-    bytes_message = await queue.get()
+    resident_message = await queue.get()
+    spooled_message = await queue.get()
 
-    assert streamed_message.payload is streaming
-    assert await streamed_message.payload.load() == b"streamed"
-    assert bytes_message.payload is in_memory
-    assert bytes_message.payload.data == b"bytes"
+    assert resident_message.payload is in_memory
+    assert await resident_message.payload.read() == b"resident"
+    assert spooled_message.payload is spooled
+    assert await spooled_message.payload.read() == b"spilled to disk"
 
 
 @pytest.mark.anyio
@@ -325,23 +333,24 @@ def test_entry_size_is_exact_against_getsizeof_composition():
     ) + sys.getsizeof(entry)
 
 
-def test_entry_size_counts_payload_bytes_but_not_stream_contents():
-    async def _chunks():
-        yield b"streamed"
-
+@pytest.mark.anyio
+async def test_entry_size_counts_resident_payload_bytes_but_not_spooled_ones():
     json_blob = _encode_task_message(_message())
-    in_memory = Payload(b"x" * 1000)
-    streaming = Payload(_chunks())
+    in_memory = Payload.from_bytes(b"x" * 1000)
+    spooled = await _spooled_payload(b"y" * 1000)
 
-    # In-memory payload bytes are an O(1) measurement, so they are charged in full.
+    # A payload held in memory is charged in full: those bytes are resident whether the
+    # queue counts them or not.
     assert (
         _task_message_entry_size(json_blob, in_memory)
         == _task_message_entry_size(json_blob, None) + sys.getsizeof(in_memory) + 1000
     )
-    # A stream has no length until it is consumed, so only the wrapper is charged.
-    assert _task_message_entry_size(json_blob, streaming) == _task_message_entry_size(
+    # One spilled to disk holds nothing in memory, so only the wrapper is charged. This
+    # is what lets the payload cap exceed a queue's memory budget.
+    assert spooled._resident_size == 0
+    assert _task_message_entry_size(json_blob, spooled) == _task_message_entry_size(
         json_blob, None
-    ) + sys.getsizeof(streaming)
+    ) + sys.getsizeof(spooled)
 
 
 @pytest.mark.anyio

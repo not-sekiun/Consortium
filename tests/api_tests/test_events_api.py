@@ -1,4 +1,4 @@
-"""E2E tests for the WebSocket events API (/api/events)."""
+"""E2E tests for the WebSocket events API (/api/ws/events)."""
 
 import asyncio
 import json
@@ -42,7 +42,7 @@ class _WebSocketSession:
             "asgi": {"version": "3.0"},
             "http_version": "1.1",
             "scheme": "ws",
-            "path": "/api/events",
+            "path": "/api/ws/events",
             "query_string": b"",
             "root_path": "",
             "headers": [(k.lower().encode(), v.encode()) for k, v in headers.items()],

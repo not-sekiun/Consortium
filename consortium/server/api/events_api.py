@@ -36,7 +36,7 @@ from consortium.server.server_jwt_config import (
 )
 
 router = APIRouter(
-    prefix="/api/events",
+    prefix="/api/ws/events",
     responses={
         401: {"description": "Unauthorized"},
         403: {"model": ForbiddenError().to_pydantic_model()},

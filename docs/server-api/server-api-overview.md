@@ -19,9 +19,9 @@ documentation, and authentication.
 
 The [Events Websockets API](events-websockets-api/introduction.md) provides real-time,
 server-push notifications. Instead of polling the REST API, you open a websocket to
-`/api/events`, subscribe to the events you care about, and receive their payloads as JSON
-the moment they fire. This suits both clients reacting to server activity and standalone
-scripts for automation.
+`/api/ws/events`, subscribe to the events you care about, and receive their payloads as
+JSON the moment they fire. This suits both clients reacting to server activity and
+standalone scripts for automation.
 
 See the [Events Websockets API introduction](events-websockets-api/introduction.md) to
 get started with subscriptions and action commands.
