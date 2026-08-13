@@ -11,8 +11,11 @@ from consortium.framework.agents.agent_message_models import RegistrationMessage
 from consortium.server.api import login_api, websocket_tickets_api
 from consortium.server.models.logging_models import LoggingConfigModel
 from consortium.server.models.server_models import ServerConfigModel
+from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server import Server
+from consortium.server.services import websocket_tickets_service as tickets_module
 from consortium.server.services.repository_service import RepositoryService
+from tests.api_tests.websocket_helpers import FakeClock, WebSocketSession
 
 _MOCK_LISTENER_LABELS = {"consortium.listeners.mock_1", "consortium.listeners.mock_2"}
 _MOCK_AGENT_LABELS = {"consortium.agents.mock_1", "consortium.agents.mock_2"}
@@ -391,3 +394,80 @@ def restore_user_accounts_file_after_tests():
     ]
     with open("data/server/user_accounts.json", "w") as file:
         json.dump(default_user_accounts, file, indent=4)
+
+
+# ---------------------------------------------------------------------------
+# WebSocket handshake fixtures
+#
+# Shared by test_events_api.py and test_websocket_authentication_e2e.py: both drive the
+# /api/ws/events handshake through the same ASGI transport, controllable clock, and
+# permission-stripping fixture, so these live in conftest as the single source of truth.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+async def ws_factory(app):
+    """
+    Factory fixture for creating `WebSocketSession` instances bound to `app`.
+
+    Every session produced by the returned factory is tracked and closed
+    automatically on teardown, so tests no longer need to call `await
+    ws.close()` themselves (closing early inside a test, e.g. to assert
+    post-disconnect behavior, still works fine - `close()` is a no-op on an
+    already-finished session).
+    """
+    sessions: list[WebSocketSession] = []
+
+    def _make() -> WebSocketSession:
+        ws = WebSocketSession(app)
+        sessions.append(ws)
+        return ws
+
+    yield _make
+
+    for ws in sessions:
+        await ws.close()
+
+
+@pytest.fixture
+async def ws(ws_factory):
+    """A single, unopened `WebSocketSession` for tests that need only one."""
+    return ws_factory()
+
+
+@pytest.fixture
+def ticket_clock(monkeypatch):
+    """Replaces the clock the tickets service reads, for the test's duration."""
+    fake_clock = FakeClock()
+    # The service's whole `time` name is swapped rather than `time.monotonic` being
+    # patched on the real `time` module (which is what the service unit tests do). These
+    # tests drive an asyncio event loop, and the loop reads `time.monotonic` for its own
+    # timers: moving the real clock forward by a ticket lifetime would fire every pending
+    # timeout in the loop as a side effect. Swapping the name confines the fake to the one
+    # module under test. The service uses `time` for nothing but `monotonic`.
+    monkeypatch.setattr(tickets_module, "time", fake_clock)
+    return fake_clock
+
+
+@pytest.fixture
+async def spectator_role_without_events_websocket_permission(spectator_client):
+    """Strips USE_EVENTS_WEBSOCKET from the spectator's role for the test's duration.
+
+    All three default roles hold the permission, so a role that lacks it has to be
+    manufactured. Only the authorization service's in-memory mapping is touched:
+    `save_server_role_permissions` is never called, so data/server/role_permissions.json
+    is left exactly as it was on disk.
+    """
+    role = (await spectator_client.get("/api/users/me")).json()["role"]
+    permission = str(UserPermissions.USE_EVENTS_WEBSOCKET)
+    authorization_service = server_singletons.authorization_service
+
+    authorization_service.remove_permission_from_role(
+        role=role,
+        permission=permission,
+    )
+    assert not authorization_service.has_permission(role, permission)
+
+    yield role
+
+    authorization_service.add_permission_to_role(role=role, permission=permission)

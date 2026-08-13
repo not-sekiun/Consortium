@@ -1,231 +1,36 @@
 """E2E tests for the WebSocket events API (/api/ws/events) and the websocket ticket
 issuing endpoint that authenticates handshakes to it (/api/ws/ticket)."""
 
-import asyncio
 import json
-import time
-import urllib.parse
 
 import httpx
-import jwt
 import pytest
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework.event_hooks.event_type import EventType
-from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.server_jwt_config import (
-    JSON_WEB_TOKEN_ALGORITHMS,
-    JSON_WEB_TOKEN_SECRET_KEY,
-)
-from consortium.server.services import websocket_tickets_service as tickets_module
 from consortium.server.services.websocket_tickets_service import (
     TICKET_TIME_TO_LIVE_SECONDS,
 )
 from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
 from tests.api_tests.utils import validate_response
+from tests.api_tests.websocket_helpers import (
+    TICKET_PATH as _TICKET_PATH,
+    UNKNOWN_ACCESS_TOKEN as _UNKNOWN_ACCESS_TOKEN,
+    access_token_of as _access_token_of,
+    bearer as _bearer,
+    extract_token as _extract_token,
+    forge_jwt as _forge_jwt,
+    issue_ticket_over_http as _issue_ticket_over_http,
+    open_with_ticket as _open_with_ticket,
+    outstanding_ticket_count as _outstanding_ticket_count,
+)
+
+# The ASGI transport (WebSocketSession), the controllable clock (FakeClock), and the
+# fixtures wrapping them (ws, ws_factory, ticket_clock,
+# spectator_role_without_events_websocket_permission) live in websocket_helpers.py and
+# conftest.py respectively, shared with test_websocket_authentication_e2e.py.
 
 pytestmark = pytest.mark.anyio
-
-
-# ---------------------------------------------------------------------------
-# Minimal async ASGI WebSocket test transport
-# ---------------------------------------------------------------------------
-
-
-class _WebSocketSession:
-    """
-    Drives a FastAPI WebSocket endpoint via the ASGI interface directly, using
-    asyncio.Queue pairs for bidirectional message passing.  No network I/O or
-    threads are involved, so it cooperates cleanly with the anyio event loop
-    used by the rest of the test suite.
-    """
-
-    def __init__(self, app):
-        self._app = app
-        self._to_app: asyncio.Queue = asyncio.Queue()
-        self._from_app: asyncio.Queue = asyncio.Queue()
-        self._task: asyncio.Task | None = None
-        self.close_code: int | None = None
-
-    def _build_scope(
-        self,
-        headers: dict[str, str],
-        query_params: dict[str, str],
-    ) -> dict:
-        return {
-            "type": "websocket",
-            "asgi": {"version": "3.0"},
-            "http_version": "1.1",
-            "scheme": "ws",
-            "path": "/api/ws/events",
-            # Percent-encoded exactly as a real client would send it, so the handshake
-            # credential carried in the query string (a websocket ticket) reaches the
-            # endpoint through the same parsing a browser's handshake would go through.
-            # Defaults to no query string at all, which is a handshake presenting no
-            # credential and must therefore be rejected.
-            "query_string": urllib.parse.urlencode(query_params).encode(),
-            "root_path": "",
-            "headers": [(k.lower().encode(), v.encode()) for k, v in headers.items()],
-            "server": ("testclient", 80),
-            "client": ("testclient", 12345),
-        }
-
-    async def open(
-        self,
-        headers: dict[str, str] | None = None,
-        query_params: dict[str, str] | None = None,
-    ) -> bool:
-        """
-        Perform the WebSocket handshake.  Returns True when accepted, False
-        when rejected (close_code is set in that case).
-
-        Starlette's WebSocket.close() calls accept() internally before closing
-        when the connection is still in the CONNECTING state.  That means auth
-        failures produce an accept frame immediately followed by a close frame.
-        Both cases are handled here.
-        """
-        scope = self._build_scope(headers or {}, query_params or {})
-
-        async def receive():
-            return await self._to_app.get()
-
-        async def send(message):
-            await self._from_app.put(message)
-
-        self._task = asyncio.create_task(self._app(scope, receive, send))
-
-        await self._to_app.put({"type": "websocket.connect"})
-
-        # Wait for the first ASGI message from the app.  Awaiting get() here
-        # yields the event loop to the app task so it can process the connect
-        # message and enqueue its response(s) before we resume.
-        first = await asyncio.wait_for(self._from_app.get(), timeout=5.0)
-
-        if first["type"] == "websocket.close":
-            self.close_code = first.get("code", 1000)
-            await asyncio.wait_for(self._task, timeout=2.0)
-            return False
-
-        assert first["type"] == "websocket.accept", (
-            f"Unexpected first message from app: {first}"
-        )
-
-        # When Starlette auto-accepts before closing (rejection path), the
-        # close frame is already in the queue by the time we reach here.
-        if not self._from_app.empty():
-            second = self._from_app.get_nowait()
-            if second["type"] == "websocket.close":
-                self.close_code = second.get("code", 1000)
-                await asyncio.wait_for(self._task, timeout=2.0)
-                return False
-
-        return True
-
-    async def send_json(self, data: dict) -> None:
-        await self._to_app.put(
-            {
-                "type": "websocket.receive",
-                "text": json.dumps(data),
-                "bytes": None,
-            }
-        )
-
-    async def receive_json(self) -> dict:
-        msg = await asyncio.wait_for(self._from_app.get(), timeout=5.0)
-        if msg["type"] == "websocket.close":
-            raise ConnectionError(
-                f"WebSocket closed unexpectedly (code={msg.get('code', 1000)})"
-            )
-        text = msg.get("text") or (msg.get("bytes") or b"").decode()
-        return json.loads(text)
-
-    async def close(self) -> None:
-        await self._to_app.put({"type": "websocket.disconnect", "code": 1000})
-        if self._task:
-            await asyncio.wait_for(self._task, timeout=2.0)
-
-
-@pytest.fixture
-async def ws_factory(app):
-    """
-    Factory fixture for creating `_WebSocketSession` instances bound to `app`.
-
-    Every session produced by the returned factory is tracked and closed
-    automatically on teardown, so tests no longer need to call `await
-    ws.close()` themselves (closing early inside a test, e.g. to assert
-    post-disconnect behavior, still works fine - `close()` is a no-op on an
-    already-finished session).
-    """
-    sessions: list[_WebSocketSession] = []
-
-    def _make() -> _WebSocketSession:
-        ws = _WebSocketSession(app)
-        sessions.append(ws)
-        return ws
-
-    yield _make
-
-    for ws in sessions:
-        await ws.close()
-
-
-@pytest.fixture
-async def ws(ws_factory):
-    """A single, unopened `_WebSocketSession` for tests that need only one."""
-    return ws_factory()
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-_TICKET_PATH = "/api/ws/ticket"
-
-_UNKNOWN_ACCESS_TOKEN = "00000000-0000-0000-0000-000000000000"
-
-
-def _forge_jwt(access_token: str) -> str:
-    """Create a validly-signed JWT with the given access token as 'sub'."""
-    return jwt.encode(
-        {"sub": access_token},
-        JSON_WEB_TOKEN_SECRET_KEY,
-        algorithm=JSON_WEB_TOKEN_ALGORITHMS[0],
-    )
-
-
-def _bearer(token: str) -> dict[str, str]:
-    return {"authorization": f"Bearer {token}"}
-
-
-def _extract_token(client) -> str:
-    return client.headers["Authorization"].split(" ", 1)[1]
-
-
-def _access_token_of(client) -> str:
-    """The JWT `sub` claim of a logged-in client: the value tickets are bound to."""
-    return jwt.decode(
-        jwt=_extract_token(client),
-        key=JSON_WEB_TOKEN_SECRET_KEY,
-        algorithms=JSON_WEB_TOKEN_ALGORITHMS,
-    )["sub"]
-
-
-async def _issue_ticket_over_http(client) -> str:
-    # Mints a ticket the way every caller has to: an ordinary authenticated HTTP call,
-    # whose Authorization header is the one place the token can still travel.
-    response = await client.post(_TICKET_PATH)
-    assert response.status_code == 200, response.text
-    return response.json()["ticket"]
-
-
-async def _open_with_ticket(ws, client) -> bool:
-    """Open `ws` with a ticket freshly minted for `client`, the only way in.
-
-    A ticket authenticates exactly one handshake, so each session a test opens mints one
-    of its own: there is deliberately no shared ticket to hand around.
-    """
-    return await ws.open(query_params={"ticket": await _issue_ticket_over_http(client)})
 
 
 # ---------------------------------------------------------------------------
@@ -712,12 +517,6 @@ WEBSOCKET_TICKET_JSON_SCHEMA = {
 }
 
 
-def _outstanding_ticket_count() -> int:
-    # Reaches into the ticket store so a test can assert that a rejected request minted
-    # nothing at all, rather than only that it got an error response back.
-    return len(server_singletons.websocket_tickets_service._tickets)
-
-
 @pytest.fixture
 async def unauthenticated_client(app):
     """An httpx client bound to the app that sends no Authorization header."""
@@ -726,30 +525,6 @@ async def unauthenticated_client(app):
         base_url="http://test",
     ) as client:
         yield client
-
-
-@pytest.fixture
-async def spectator_role_without_events_websocket_permission(spectator_client):
-    """Strips USE_EVENTS_WEBSOCKET from the spectator's role for the test's duration.
-
-    All three default roles hold the permission, so a role that lacks it has to be
-    manufactured. Only the authorization service's in-memory mapping is touched:
-    `save_server_role_permissions` is never called, so data/server/role_permissions.json
-    is left exactly as it was on disk.
-    """
-    role = (await spectator_client.get("/api/users/me")).json()["role"]
-    permission = str(UserPermissions.USE_EVENTS_WEBSOCKET)
-    authorization_service = server_singletons.authorization_service
-
-    authorization_service.remove_permission_from_role(
-        role=role,
-        permission=permission,
-    )
-    assert not authorization_service.has_permission(role, permission)
-
-    yield role
-
-    authorization_service.add_permission_to_role(role=role, permission=permission)
 
 
 async def test_issue_ticket_without_authorization_header_returns_401(
@@ -881,34 +656,6 @@ async def test_ticket_route_is_published_with_a_clean_operation_id(app):
 # ---------------------------------------------------------------------------
 # Ticket authenticated handshakes  (GET /api/ws/events?ticket=...)
 # ---------------------------------------------------------------------------
-
-
-class _FakeClock:
-    # A controllable stand-in for the `time` module the tickets service reads, so ticket
-    # expiry can be driven explicitly and never by sleeping. Mirrors the fake clock in
-    # tests/services_tests/test_websocket_tickets_service.py.
-    def __init__(self):
-        self._now = time.monotonic()
-
-    def monotonic(self) -> float:
-        return self._now
-
-    def advance(self, seconds: float) -> None:
-        self._now += seconds
-
-
-@pytest.fixture
-def ticket_clock(monkeypatch):
-    """Replaces the clock the tickets service reads, for the test's duration."""
-    fake_clock = _FakeClock()
-    # The service's whole `time` name is swapped rather than `time.monotonic` being
-    # patched on the real `time` module (which is what the service unit tests do). These
-    # tests drive an asyncio event loop, and the loop reads `time.monotonic` for its own
-    # timers: moving the real clock forward by a ticket lifetime would fire every pending
-    # timeout in the loop as a side effect. Swapping the name confines the fake to the one
-    # module under test. The service uses `time` for nothing but `monotonic`.
-    monkeypatch.setattr(tickets_module, "time", fake_clock)
-    return fake_clock
 
 
 async def test_connect_with_ticket_and_no_authorization_header_succeeds(
