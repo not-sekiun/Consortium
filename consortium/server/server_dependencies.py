@@ -118,27 +118,23 @@ class AuthorizeUserRequest:
 
 # A websocket route cannot use `get_current_user`/`AuthorizeUserRequest` above: those read
 # the JSON Web Token off a `Request`, and no `Request` object exists for a websocket
-# endpoint. A handshake also carries its credential by one of two routes (an Authorization
-# header, or a ticket in the query string, since a browser can set no headers on a
-# handshake), and those two must not drift apart into parallel implementations. Hence this
-# helper: it resolves whichever credential was presented into an access token, then
-# resolves the user and checks the permission in exactly one place, so every websocket
-# route and every credential source is authorized identically.
+# endpoint. A handshake carries its credential in exactly one place, a ticket in the query
+# string, because that is the only place a browser can put one (it can set neither headers
+# nor a body on a handshake). Hence this helper: it redeems the presented ticket into an
+# access token, then resolves the user and checks the permission, so every websocket route
+# is authenticated and authorized identically.
 #
 # Raises `WebSocketException` with `WS_1008_POLICY_VIOLATION` on any failure. Every reason
-# closes with that same code and nothing distinguishes them to the client: an invalid
-# ticket, a missing or malformed header, an unknown user and an insufficient permission are
-# all reported alike. The per-reason detail is written to the debug log instead, so
-# operators can diagnose a failed handshake without the code becoming an oracle for callers.
+# closes with that same code and nothing distinguishes them to the client: a missing ticket,
+# an invalid ticket, an unknown user and an insufficient permission are all reported alike.
+# The per-reason detail is written to the debug log instead, so operators can diagnose a
+# failed handshake without the code becoming an oracle for callers.
 def authenticate_websocket_connection(
     websocket: WebSocket,
     user_permission: UserPermissions,
 ) -> User:
     access_token = _resolve_websocket_access_token(websocket=websocket)
 
-    # Everything from here down is shared by both credential sources on purpose. Resolving
-    # the user and checking the permission happens exactly once, so a ticket can never be a
-    # way around a check that the header path applies (or the reverse).
     try:
         user = _users_service.get_user_by_access_token(access_token=access_token)
     except UserAccessTokenNotFoundError:
@@ -160,14 +156,19 @@ def authenticate_websocket_connection(
 
 def _resolve_websocket_access_token(websocket: WebSocket) -> str:
     ticket = websocket.query_params.get(WEBSOCKET_TICKET_QUERY_PARAMETER)
-    # Presenting a ticket is a commitment to that ticket: when one is supplied it is the
-    # only credential considered, and a ticket that fails to redeem is rejected outright
-    # rather than falling back to the Authorization header. Falling through would mask a
-    # bad or replayed ticket whenever the caller happened to also carry a valid header, so
-    # a replayed ticket would look accepted and the single-use guarantee would be untestable.
-    if ticket is not None:
-        return _redeem_websocket_ticket(ticket=ticket)
-    return _read_access_token_from_authorization_header(websocket=websocket)
+    # A ticket is the only credential a handshake can present. Anything else a caller sends
+    # (an Authorization header in particular, which the REPL client used to authenticate
+    # with before it moved to tickets) is ignored entirely, so a handshake without a ticket
+    # is rejected here rather than falling back to a second credential source. One path
+    # means a bad or replayed ticket can never be masked by another credential the caller
+    # happened to also carry, and the single-use guarantee stays observable.
+    if ticket is None:
+        _websocket_logger.debug(
+            "Failed to authorize the WebSocket connection request. No ticket was "
+            "provided in the query string.",
+        )
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+    return _redeem_websocket_ticket(ticket=ticket)
 
 
 def _redeem_websocket_ticket(ticket: str) -> str:
@@ -185,44 +186,5 @@ def _redeem_websocket_ticket(ticket: str) -> str:
 
     _websocket_logger.debug(
         "Received WebSocket connection request with a redeemed ticket.",
-    )
-    return access_token
-
-
-# The header path is carried over unchanged from the events API endpoint: the REPL client
-# authenticates this way and keeps doing so.
-def _read_access_token_from_authorization_header(websocket: WebSocket) -> str:
-    try:
-        # If the Authorization header is not present, KeyError is thrown. The header is in
-        # lowercase within the headers dictionary of the websocket object.
-        authorization_header = websocket.headers["authorization"]
-        if not authorization_header.startswith("Bearer "):
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
-        # Format of the Authorization header is: Bearer <value>
-        encoded_json_web_token = authorization_header[7:]
-        decoded_json_web_token = jwt.decode(
-            jwt=encoded_json_web_token,
-            key=JSON_WEB_TOKEN_SECRET_KEY,
-            algorithms=JSON_WEB_TOKEN_ALGORITHMS,
-        )
-        access_token = decoded_json_web_token["sub"]
-    # `KeyError`: Authorization header is not present (or the token carries no `sub`)
-    # `IndexError`: Authorization header is empty
-    except KeyError, IndexError:
-        _websocket_logger.debug(
-            "Failed to authorize the WebSocket connection request. The Authorization "
-            "header was not provided.",
-        )
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION) from None
-    except jwt.exceptions.InvalidTokenError:
-        _websocket_logger.debug(
-            "Failed to authorize the WebSocket connection request. The value provided "
-            "for the Authorization header was not a validly formatted JSON Web Token.",
-        )
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION) from None
-
-    _websocket_logger.debug(
-        "Received WebSocket connection request with an access value in the "
-        "Authorization header.",
     )
     return access_token

@@ -56,10 +56,12 @@ class ClientSession:
                 remote_port=self.remote_port,
             )
 
+        # The REST API is handed over whole rather than a credential taken off it: the
+        # websockets API authenticates its handshake with a single use ticket that it mints
+        # for itself, through the REST API, on every connection attempt. See the comment on
+        # `WebsocketsEventsAPI.connect`.
         try:
-            await self.websockets_api.connect(
-                json_web_token=self.rest_api.json_web_token
-            )
+            await self.websockets_api.connect(rest_api=self.rest_api)
         except WebsocketsAPIError:
             if self.rest_api.logged_in:
                 await self.rest_api.disconnect()

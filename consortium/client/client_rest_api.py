@@ -181,6 +181,14 @@ class RestAPI:
             url=f"{self._api_base_url}/logout",
         )
 
+    # Wrapper methods for the /api/ws/ticket API endpoint.
+    @_requires_authentication
+    async def issue_websocket_ticket(self) -> dict[str, JsonValue]:
+        return await self._make_api_request(
+            method="POST",
+            url=f"{self._api_base_url}/ws/ticket",
+        )
+
     # Wrapper methods for the /api/server API endpoints.
     @_requires_authentication
     async def get_server_release(self) -> dict[str, JsonValue]:
@@ -828,7 +836,7 @@ class RestAPI:
         # rather than raised over the top of the real error.
         try:
             return await response.json()
-        except (aiohttp.ContentTypeError, ValueError):
+        except aiohttp.ContentTypeError, ValueError:
             return None
 
     @staticmethod

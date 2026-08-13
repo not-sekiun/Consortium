@@ -58,11 +58,11 @@ class _WebSocketSession:
             "http_version": "1.1",
             "scheme": "ws",
             "path": "/api/ws/events",
-            # Percent-encoded exactly as a real client would send it, so a handshake
+            # Percent-encoded exactly as a real client would send it, so the handshake
             # credential carried in the query string (a websocket ticket) reaches the
             # endpoint through the same parsing a browser's handshake would go through.
-            # Defaults to no query string at all, which is what every header
-            # authenticated test drives.
+            # Defaults to no query string at all, which is a handshake presenting no
+            # credential and must therefore be rejected.
             "query_string": urllib.parse.urlencode(query_params).encode(),
             "root_path": "",
             "headers": [(k.lower().encode(), v.encode()) for k, v in headers.items()],
@@ -180,6 +180,11 @@ async def ws(ws_factory):
 # ---------------------------------------------------------------------------
 
 
+_TICKET_PATH = "/api/ws/ticket"
+
+_UNKNOWN_ACCESS_TOKEN = "00000000-0000-0000-0000-000000000000"
+
+
 def _forge_jwt(access_token: str) -> str:
     """Create a validly-signed JWT with the given access token as 'sub'."""
     return jwt.encode(
@@ -206,50 +211,98 @@ def _access_token_of(client) -> str:
     )["sub"]
 
 
+async def _issue_ticket_over_http(client) -> str:
+    # Mints a ticket the way every caller has to: an ordinary authenticated HTTP call,
+    # whose Authorization header is the one place the token can still travel.
+    response = await client.post(_TICKET_PATH)
+    assert response.status_code == 200, response.text
+    return response.json()["ticket"]
+
+
+async def _open_with_ticket(ws, client) -> bool:
+    """Open `ws` with a ticket freshly minted for `client`, the only way in.
+
+    A ticket authenticates exactly one handshake, so each session a test opens mints one
+    of its own: there is deliberately no shared ticket to hand around.
+    """
+    return await ws.open(query_params={"ticket": await _issue_ticket_over_http(client)})
+
+
 # ---------------------------------------------------------------------------
 # Authentication / connection tests  (lines 391-447)
 # ---------------------------------------------------------------------------
 
 
-async def test_connect_without_authorization_header_is_rejected(ws):
-    accepted = await ws.open(headers={})
+async def test_connect_without_a_ticket_is_rejected(ws):
+    accepted = await ws.open()
     assert not accepted
     assert ws.close_code == 1008
 
 
-async def test_connect_with_non_bearer_scheme_is_rejected(ws):
-    accepted = await ws.open(headers={"authorization": "Basic dXNlcjpwYXNz"})
+async def test_valid_authorization_header_without_a_ticket_is_rejected(
+    ws, admin_client
+):
+    """The header path is gone: a handshake is authenticated by ticket or not at all.
+
+    The header presented here is a genuine, unexpired one that authenticates every REST
+    call the client makes (it is what mints the tickets the tests below connect with), so
+    the rejection can only be the handshake refusing to consider it.
+    """
+    accepted = await ws.open(headers=_bearer(_extract_token(admin_client)))
+
     assert not accepted
     assert ws.close_code == 1008
 
 
-async def test_connect_with_malformed_jwt_is_rejected(ws):
-    accepted = await ws.open(headers=_bearer("this.is.not.a.valid.jwt"))
+@pytest.mark.parametrize(
+    "authorization_header_value",
+    [
+        "Basic dXNlcjpwYXNz",
+        "Bearer this.is.not.a.valid.jwt",
+        f"Bearer {_forge_jwt(_UNKNOWN_ACCESS_TOKEN)}",
+    ],
+)
+async def test_handshake_ignores_any_authorization_header_it_is_given(
+    ws,
+    authorization_header_value,
+):
+    # The shapes of header that the handshake used to parse and reject one by one (a
+    # non-bearer scheme, an unparseable token, a validly signed token for nobody) are now
+    # refused for one reason only: no ticket was presented. None of them may be treated as
+    # a credential, and none of them may make the handshake fail in some other way, such as
+    # a JSON Web Token decode error escaping as a 500.
+    accepted = await ws.open(headers={"authorization": authorization_header_value})
+
     assert not accepted
     assert ws.close_code == 1008
 
 
-async def test_connect_with_unknown_access_token_is_rejected(ws):
-    # Validly signed JWT but the access token doesn't match any logged-in user.
-    fake_jwt = _forge_jwt("00000000-0000-0000-0000-000000000000")
-    accepted = await ws.open(headers=_bearer(fake_jwt))
+async def test_connect_with_a_ticket_for_an_unknown_access_token_is_rejected(ws):
+    # A ticket that redeems fine but whose access token matches no logged-in user: the
+    # user lookup after redemption is what has to reject this, not the redemption.
+    ticket = server_singletons.websocket_tickets_service.issue_ticket(
+        access_token=_UNKNOWN_ACCESS_TOKEN,
+    )
+
+    accepted = await ws.open(query_params={"ticket": ticket})
+
     assert not accepted
     assert ws.close_code == 1008
 
 
 async def test_authenticated_admin_can_connect_and_disconnect(ws, admin_client):
-    accepted = await ws.open(headers=_bearer(_extract_token(admin_client)))
+    accepted = await _open_with_ticket(ws, admin_client)
     assert accepted
     await ws.close()
 
 
 async def test_authenticated_operator_can_connect(ws, operator_client):
-    accepted = await ws.open(headers=_bearer(_extract_token(operator_client)))
+    accepted = await _open_with_ticket(ws, operator_client)
     assert accepted
 
 
 async def test_authenticated_spectator_can_connect(ws, spectator_client):
-    accepted = await ws.open(headers=_bearer(_extract_token(spectator_client)))
+    accepted = await _open_with_ticket(ws, spectator_client)
     assert accepted
 
 
@@ -259,7 +312,7 @@ async def test_authenticated_spectator_can_connect(ws, spectator_client):
 
 
 async def test_get_all_events_returns_every_event_type(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json({"action": "get_all_events"})
     response = await ws.receive_json()
@@ -277,7 +330,7 @@ async def test_get_all_events_returns_every_event_type(ws, admin_client):
 async def test_get_subscribed_events_returns_empty_before_any_subscription(
     ws, admin_client
 ):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json({"action": "get_subscribed_events"})
     response = await ws.receive_json()
@@ -288,7 +341,7 @@ async def test_get_subscribed_events_returns_empty_before_any_subscription(
 
 
 async def test_get_subscribed_events_reflects_subscription(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     event = str(EventType.START_SERVER)
     await ws.send_json({"action": "subscribe", "events": [event]})
@@ -309,7 +362,7 @@ async def test_get_subscribed_events_reflects_subscription(ws, admin_client):
 async def test_get_unsubscribed_events_returns_all_events_before_subscription(
     ws, admin_client
 ):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json({"action": "get_unsubscribed_events"})
     response = await ws.receive_json()
@@ -320,7 +373,7 @@ async def test_get_unsubscribed_events_returns_all_events_before_subscription(
 
 
 async def test_get_unsubscribed_events_excludes_subscribed_event(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     event = str(EventType.STOP_SERVER)
     await ws.send_json({"action": "subscribe", "events": [event]})
@@ -339,7 +392,7 @@ async def test_get_unsubscribed_events_excludes_subscribed_event(ws, admin_clien
 
 
 async def test_subscribe_to_valid_event_succeeds(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json(
         {"action": "subscribe", "events": [str(EventType.AGENT_REGISTERED)]}
@@ -351,7 +404,7 @@ async def test_subscribe_to_valid_event_succeeds(ws, admin_client):
 
 
 async def test_subscribe_to_multiple_events_at_once(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     events = [str(EventType.LISTENER_CREATED), str(EventType.LISTENER_REMOVED)]
     await ws.send_json({"action": "subscribe", "events": events})
@@ -366,7 +419,7 @@ async def test_subscribe_to_multiple_events_at_once(ws, admin_client):
 
 
 async def test_subscribe_to_invalid_event_type_returns_error(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json({"action": "subscribe", "events": ["NOT_A_REAL_EVENT"]})
     response = await ws.receive_json()
@@ -381,7 +434,7 @@ async def test_subscribe_to_invalid_event_type_returns_error(ws, admin_client):
 async def test_subscribe_to_multiple_invalid_events_returns_one_error_per_event(
     ws, admin_client
 ):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json({"action": "subscribe", "events": ["BAD_1", "BAD_2"]})
     response = await ws.receive_json()
@@ -395,7 +448,7 @@ async def test_subscribe_to_multiple_invalid_events_returns_one_error_per_event(
 async def test_subscribe_twice_to_same_event_returns_already_subscribed_error(
     ws, admin_client
 ):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     event = str(EventType.PAYLOAD_CREATED)
     await ws.send_json({"action": "subscribe", "events": [event]})
@@ -414,7 +467,7 @@ async def test_subscribe_twice_to_same_event_returns_already_subscribed_error(
 
 
 async def test_unsubscribe_from_subscribed_event_succeeds(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     event = str(EventType.AGENT_CHECKED_IN)
     await ws.send_json({"action": "subscribe", "events": [event]})
@@ -432,7 +485,7 @@ async def test_unsubscribe_from_subscribed_event_succeeds(ws, admin_client):
 
 
 async def test_unsubscribe_from_invalid_event_type_returns_error(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json({"action": "unsubscribe", "events": ["NOT_A_REAL_EVENT"]})
     response = await ws.receive_json()
@@ -442,7 +495,7 @@ async def test_unsubscribe_from_invalid_event_type_returns_error(ws, admin_clien
 
 
 async def test_unsubscribe_from_not_subscribed_event_returns_error(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json(
         {"action": "unsubscribe", "events": [str(EventType.USER_LOGGED_OUT)]}
@@ -456,7 +509,7 @@ async def test_unsubscribe_from_not_subscribed_event_returns_error(ws, admin_cli
 async def test_unsubscribe_from_multiple_not_subscribed_events_returns_multiple_errors(
     ws, admin_client
 ):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     events = [str(EventType.ASSET_CREATED), str(EventType.ASSET_DELETED)]
     await ws.send_json({"action": "unsubscribe", "events": events})
@@ -474,7 +527,7 @@ async def test_unsubscribe_from_multiple_not_subscribed_events_returns_multiple_
 async def test_action_message_with_unknown_action_value_returns_format_error(
     ws, admin_client
 ):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json({"action": "do_something_unknown"})
     response = await ws.receive_json()
@@ -485,7 +538,7 @@ async def test_action_message_with_unknown_action_value_returns_format_error(
 
 
 async def test_subscribe_without_events_field_returns_format_error(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     # The JSON schema requires "events" when action is "subscribe".
     await ws.send_json({"action": "subscribe"})
@@ -496,7 +549,7 @@ async def test_subscribe_without_events_field_returns_format_error(ws, admin_cli
 
 
 async def test_unsubscribe_without_events_field_returns_format_error(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json({"action": "unsubscribe"})
     response = await ws.receive_json()
@@ -506,7 +559,7 @@ async def test_unsubscribe_without_events_field_returns_format_error(ws, admin_c
 
 
 async def test_message_without_action_field_returns_format_error(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     await ws.send_json({"events": [str(EventType.START_SERVER)]})
     response = await ws.receive_json()
@@ -521,7 +574,7 @@ async def test_message_without_action_field_returns_format_error(ws, admin_clien
 
 
 async def test_subscribed_client_receives_triggered_event(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     event_type = EventType.ARTIFACT_CREATED
     await ws.send_json({"action": "subscribe", "events": [str(event_type)]})
@@ -542,7 +595,7 @@ async def test_subscribed_client_receives_triggered_event(ws, admin_client):
 
 
 async def test_client_does_not_receive_events_it_did_not_subscribe_to(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     # Subscribe to one event type
     await ws.send_json(
@@ -562,7 +615,7 @@ async def test_client_does_not_receive_events_it_did_not_subscribe_to(ws, admin_
 
 
 async def test_after_unsubscribe_client_no_longer_receives_event(ws, admin_client):
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     event_type = EventType.PAYLOAD_UPDATED
     await ws.send_json({"action": "subscribe", "events": [str(event_type)]})
@@ -589,8 +642,8 @@ async def test_multiple_clients_both_receive_same_event(
 ):
     ws1 = ws_factory()
     ws2 = ws_factory()
-    await ws1.open(headers=_bearer(_extract_token(admin_client)))
-    await ws2.open(headers=_bearer(_extract_token(operator_client)))
+    await _open_with_ticket(ws1, admin_client)
+    await _open_with_ticket(ws2, operator_client)
 
     event_type = EventType.ASSET_UPDATED
     for ws in (ws1, ws2):
@@ -620,7 +673,7 @@ async def test_disconnect_deregisters_event_handlers(ws, admin_client):
     not call its (now-closed) handler.  If cleanup failed, trigger_event would
     try to send on a closed WebSocket and raise an ExceptionGroup.
     """
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
 
     event_type = EventType.PAYLOAD_DELETED
     await ws.send_json({"action": "subscribe", "events": [str(event_type)]})
@@ -640,15 +693,13 @@ async def test_disconnect_deregisters_event_handlers(ws, admin_client):
 
 async def test_disconnect_without_subscription_does_not_error(ws, admin_client):
     """Disconnect with no subscriptions should complete without errors."""
-    await ws.open(headers=_bearer(_extract_token(admin_client)))
+    await _open_with_ticket(ws, admin_client)
     await ws.close()
 
 
 # ---------------------------------------------------------------------------
 # Websocket ticket issuance  (POST /api/ws/ticket)
 # ---------------------------------------------------------------------------
-
-_TICKET_PATH = "/api/ws/ticket"
 
 WEBSOCKET_TICKET_JSON_SCHEMA = {
     "type": "object",
@@ -720,7 +771,7 @@ async def test_issue_ticket_with_unknown_access_token_returns_401(
     unauthenticated_client,
 ):
     # Validly signed JWT whose subject matches no logged-in user.
-    fake_jwt = _forge_jwt("00000000-0000-0000-0000-000000000000")
+    fake_jwt = _forge_jwt(_UNKNOWN_ACCESS_TOKEN)
     response = await unauthenticated_client.post(
         _TICKET_PATH,
         headers=_bearer(fake_jwt),
@@ -860,18 +911,10 @@ def ticket_clock(monkeypatch):
     return fake_clock
 
 
-async def _issue_ticket_over_http(client) -> str:
-    # Mints a ticket the way a browser would: an ordinary authenticated HTTP call, whose
-    # Authorization header is the one place the token can still travel.
-    response = await client.post(_TICKET_PATH)
-    assert response.status_code == 200, response.text
-    return response.json()["ticket"]
-
-
 async def test_connect_with_ticket_and_no_authorization_header_succeeds(
     ws, admin_client
 ):
-    """The browser case end to end: no handshake headers at all, just a ticket.
+    """The only handshake there is, end to end: no headers at all, just a ticket.
 
     The socket then has to be usable, not merely accepted, so this drives a subscribe and
     receives a real event over it.
@@ -950,127 +993,46 @@ async def test_unknown_ticket_is_rejected(ws):
     assert ws.close_code == 1008
 
 
-async def test_empty_ticket_parameter_does_not_fall_back_to_the_header(
-    ws, admin_client
-):
+async def test_empty_ticket_parameter_is_rejected(ws):
     # An empty ticket is still a ticket that was presented, so it is redeemed (and fails)
-    # rather than being treated as absent and letting the header through.
-    accepted = await ws.open(
-        headers=_bearer(_extract_token(admin_client)),
-        query_params={"ticket": ""},
-    )
+    # rather than being treated as absent, and either way it never authenticates anything.
+    accepted = await ws.open(query_params={"ticket": ""})
 
     assert not accepted
     assert ws.close_code == 1008
 
 
-async def test_bad_ticket_alongside_a_valid_authorization_header_is_rejected(
-    ws, admin_client
-):
-    """A failed ticket must never fall back to the Authorization header.
-
-    The header presented here is a good one that authenticates on its own (proved by
-    `test_authenticated_admin_can_connect_and_disconnect`), so acceptance here could only
-    mean the bad ticket was silently ignored. Falling back would mask a bad or replayed
-    ticket for any caller that also happens to carry a valid header.
-    """
-    accepted = await ws.open(
-        headers=_bearer(_extract_token(admin_client)),
-        query_params={"ticket": "not-a-ticket-that-was-ever-issued"},
-    )
-
-    assert not accepted
-    assert ws.close_code == 1008
-
-
-async def test_replayed_ticket_alongside_a_valid_authorization_header_is_rejected(
-    ws_factory, admin_client
-):
-    # The same no-fallback property for the case the fallback would be most damaging in:
-    # a genuine ticket being replayed by a caller who also holds a valid header.
-    ticket = await _issue_ticket_over_http(admin_client)
-    header = _bearer(_extract_token(admin_client))
-
-    first_connection = ws_factory()
-    assert await first_connection.open(headers=header, query_params={"ticket": ticket})
-
-    replayed_connection = ws_factory()
-    accepted = await replayed_connection.open(
-        headers=header,
-        query_params={"ticket": ticket},
-    )
-
-    assert not accepted
-    assert replayed_connection.close_code == 1008
-
-
-async def test_authorization_header_path_still_authenticates_and_drives_the_socket(
-    ws, admin_client
-):
-    # The REPL client authenticates by header and is migrated to tickets separately, so
-    # the header path has to keep working in full, not just to the point of acceptance.
-    assert await ws.open(headers=_bearer(_extract_token(admin_client)))
-
-    await ws.send_json({"action": "get_all_events"})
-    response = await ws.receive_json()
-
-    assert response["success"] is True
-
-
-@pytest.mark.parametrize("credential", ["authorization_header", "ticket"])
-async def test_use_events_websocket_permission_is_enforced_on_both_credential_paths(
+async def test_use_events_websocket_permission_is_enforced_on_the_handshake(
     ws,
     spectator_client,
     spectator_role_without_events_websocket_permission,
-    credential,
 ):
-    """The permission check is shared, so it applies identically however you authenticate.
+    """Redeeming a ticket is authentication only: the permission is checked after it.
 
-    Both credential sources resolve to an access token and then run one user lookup and
-    one permission check, so a ticket can never be a way around a check that the header
-    path applies. Parametrizing one test body over both credentials is the point: the same
-    user, the same missing permission and the same expected rejection.
+    The ticket here is minted straight from the service rather than over
+    POST /api/ws/ticket, because that endpoint requires the very permission this test
+    strips. Handing the handshake a ticket that could not legitimately have been obtained
+    is the stronger test anyway: it proves the websocket endpoint enforces the permission
+    itself rather than leaning on issuance having enforced it.
     """
     outstanding_tickets_before = _outstanding_ticket_count()
 
-    if credential == "authorization_header":
-        headers = _bearer(_extract_token(spectator_client))
-        query_params = {}
-    else:
-        # Minted straight from the service rather than over POST /api/ws/ticket, because
-        # that endpoint requires the very permission this test strips. Handing the
-        # handshake a ticket that could not legitimately have been obtained is the
-        # stronger test anyway: it proves the websocket endpoint enforces the permission
-        # itself rather than leaning on issuance having enforced it.
-        headers = {}
-        query_params = {
-            "ticket": server_singletons.websocket_tickets_service.issue_ticket(
-                access_token=_access_token_of(spectator_client),
-            )
-        }
+    ticket = server_singletons.websocket_tickets_service.issue_ticket(
+        access_token=_access_token_of(spectator_client),
+    )
 
-    accepted = await ws.open(headers=headers, query_params=query_params)
+    accepted = await ws.open(query_params={"ticket": ticket})
 
     assert not accepted
     assert ws.close_code == 1008
-    # Redeeming is consuming: on the ticket path the ticket minted above redeemed fine and
-    # was then refused by the permission check, and it is deliberately not put back, so the
-    # store is left exactly as it was found.
+    # Redeeming is consuming: the ticket minted above redeemed fine and was then refused by
+    # the permission check, and it is deliberately not put back, so the store is left
+    # exactly as it was found.
     assert _outstanding_ticket_count() == outstanding_tickets_before
 
 
-@pytest.mark.parametrize("credential", ["authorization_header", "ticket"])
-async def test_both_credential_paths_connect_once_the_permission_is_restored(
-    ws, spectator_client, credential
-):
+async def test_handshake_connects_once_the_permission_is_restored(ws, spectator_client):
     # Guards the test above against passing for the wrong reason: the same user, over the
-    # same two credential paths, is accepted once the permission is back, so the
-    # rejections can only have come from the missing permission.
-    if credential == "authorization_header":
-        headers = _bearer(_extract_token(spectator_client))
-        query_params = {}
-    else:
-        headers = {}
-        query_params = {"ticket": await _issue_ticket_over_http(spectator_client)}
-
-    assert await ws.open(headers=headers, query_params=query_params)
+    # same credential path, is accepted once the permission is back, so the rejection can
+    # only have come from the missing permission.
+    assert await _open_with_ticket(ws, spectator_client)

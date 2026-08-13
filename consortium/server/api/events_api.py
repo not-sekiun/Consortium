@@ -41,12 +41,11 @@ async def websocket_endpoint(
     # `get_current_user` dependency uses to obtain the JWT value from the Authorization
     # header is not available in the websocket endpoint. Authentication and authorization
     # for the handshake therefore live in `authenticate_websocket_connection`, which is
-    # shared by every websocket route and resolves both credential sources (the
-    # Authorization header that the REPL client uses, and the query string ticket that a
-    # browser uses because it cannot set headers on a handshake) into one user lookup and
-    # one permission check.
-    # TODO: The two websocket credential paths are now unified behind that one helper, but
-    #  the helper itself is still separate from the REST API's dependencies and from the
+    # shared by every websocket route and redeems the handshake's single credential (a
+    # ticket in the query string, the only place a browser can put one) into one user
+    # lookup and one permission check.
+    # TODO: The websocket credential path is handled by that one helper, but the helper
+    #  itself is still separate from the REST API's dependencies and from the
     #  authentication middleware. Unify all three so that authorization and authentication
     #  are decided in a single place across the REST API, middleware and websocket
     #  endpoints.

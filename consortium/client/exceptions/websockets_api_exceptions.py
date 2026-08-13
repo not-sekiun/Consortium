@@ -35,6 +35,26 @@ class WebsocketsAPIFailedToConnectError(WebsocketsAPIConnectionError):
         )
 
 
+class WebsocketsAPIFailedToObtainTicketError(WebsocketsAPIConnectionError):
+    def __init__(self, error_message: str):
+        super().__init__(
+            "Failed to connect to the server over its websockets API. The ticket the "
+            "connection is authenticated with could not be obtained from the server's "
+            "REST API (Check that the client session is still logged in to the server): "
+            f"{error_message}",
+        )
+
+
+class WebsocketsAPITicketRejectedError(WebsocketsAPIConnectionError):
+    def __init__(self):
+        super().__init__(
+            "Failed to connect to the server over its websockets API. The server "
+            "rejected the ticket the connection was authenticated with (Tickets are "
+            "single use and expire quickly, so reconnect to the server to authenticate "
+            "with a newly issued one).",
+        )
+
+
 class InvalidServerWebsocketAPIResponseError(WebsocketsAPIError):
     def __init__(self):
         super().__init__(

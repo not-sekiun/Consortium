@@ -1,13 +1,17 @@
 import asyncio
 import json
+import urllib.parse
 from collections.abc import Awaitable, Callable
 from typing import Any
 
 import jsonschema
 import websockets
+from aiohttp import ClientError
 from loguru import logger
-from websockets import ConnectionClosed, InvalidHandshake
+from websockets import ConnectionClosed, InvalidHandshake, InvalidStatus
 
+from consortium.client.client_rest_api import RestAPI
+from consortium.client.exceptions.rest_api_exceptions import RestAPIError
 from consortium.client.exceptions.websockets_api_exceptions import (
     EventHandlerNotSubscribedError,
     EventTypeNotSubscribedError,
@@ -16,15 +20,30 @@ from consortium.client.exceptions.websockets_api_exceptions import (
     SeverWebsocketsAPIErrorResponseError,
     WebsocketsAPIAlreadyConnectedError,
     WebsocketsAPIFailedToConnectError,
+    WebsocketsAPIFailedToObtainTicketError,
     WebsocketsAPIHandlerAlreadyRunningError,
     WebsocketsAPIHandlerNotRunningError,
     WebsocketsAPINotConnectedError,
+    WebsocketsAPITicketRejectedError,
 )
 from consortium.client.models.logging_models import LoggerType
 
 # An event handler is any coroutine function taking the raw event message dictionary as
 # its only argument.
 EventHandler = Callable[[dict[str, Any]], Awaitable[None]]
+
+# The query parameter the server reads a handshake's ticket from.
+_TICKET_QUERY_PARAMETER = "ticket"
+# A handshake the server refuses to authenticate is rejected before it is accepted, which
+# the server's ASGI stack reports as an HTTP error status on the handshake response rather
+# than as a websocket close frame. 403 is what a rejected handshake actually arrives as,
+# 401 is included because it is the other status an authentication failure can be reported
+# with by an intermediary.
+_HANDSHAKE_REJECTION_STATUS_CODES = (401, 403)
+# The close code the server closes with when it refuses a handshake it has already
+# accepted, which is the shape a rejection takes if anything in front of the server accepts
+# the connection before the server gets to authenticate it.
+_POLICY_VIOLATION_CLOSE_CODE = 1008
 
 _websockets_api_generic_response_json_schema = {
     "type": "object",
@@ -56,12 +75,25 @@ _websockets_api_event_response_json_schema = {
 }
 
 
+def _handshake_was_rejected(exception: InvalidHandshake | ConnectionClosed) -> bool:
+    # Distinguishes "the server refused to authenticate this handshake" from "the server
+    # could not be reached or is not a Consortium server at all". The server deliberately
+    # gives no reason for a refusal, so nothing finer than that can be told apart here.
+    if isinstance(exception, InvalidStatus):
+        return exception.response.status_code in _HANDSHAKE_REJECTION_STATUS_CODES
+    if isinstance(exception, ConnectionClosed):
+        return (
+            exception.rcvd is not None
+            and exception.rcvd.code == _POLICY_VIOLATION_CLOSE_CODE
+        )
+    return False
+
+
 class WebsocketsEventsAPI:
     def __init__(self, remote_host: str, remote_port: int):
         self.remote_host = remote_host
         self.remote_port = remote_port
 
-        self.json_web_token = None
         self.connected = False
         self.running = False
 
@@ -77,20 +109,36 @@ class WebsocketsEventsAPI:
     def __str__(self):
         return f"Client Websockets Events API ({self.remote_host}:{self.remote_port})"
 
-    async def connect(self, json_web_token: str) -> None:
+    # The REST API object is taken rather than a credential because the handshake's
+    # credential is a ticket, and a ticket is single use: it authenticates exactly one
+    # handshake and is spent the moment the server redeems it. Minting it here, from the
+    # REST API, is what makes that safe by construction. Were the ticket passed in, the
+    # caller would hold a value that is only good for one connection, and any second
+    # `connect` call (a reconnect after a dropped connection, a session reconnecting after
+    # the server restarts) that reused it would be refused by the server, which presents as
+    # an intermittent server side fault rather than as the client error it is. The ticket
+    # below is therefore a local and never an attribute: there is nothing to reuse.
+    async def connect(self, rest_api: RestAPI) -> None:
         if self.connected:
             raise WebsocketsAPIAlreadyConnectedError
 
+        ticket = await self._issue_ticket(rest_api=rest_api)
+        query_string = urllib.parse.urlencode({_TICKET_QUERY_PARAMETER: ticket})
+
         try:
             self._websocket = await websockets.connect(
-                f"ws://{self.remote_host}:{self.remote_port}/api/ws/events",
-                additional_headers={"Authorization": f"Bearer {json_web_token}"},
+                f"ws://{self.remote_host}:{self.remote_port}/api/ws/events?{query_string}",
                 open_timeout=10,
             )
         except (InvalidHandshake, ConnectionClosed) as exc:
+            # A rejected handshake is called out separately from a connection that could
+            # not be made at all: the ticket was fine when it was issued a moment ago, so a
+            # rejection tells the operator something specific (it expired or was already
+            # spent) and is worth saying rather than reporting as a generic failure.
+            if _handshake_was_rejected(exc):
+                raise WebsocketsAPITicketRejectedError from exc
             raise WebsocketsAPIFailedToConnectError from exc
 
-        self.json_web_token = json_web_token
         self.connected = True
 
     async def disconnect(self) -> None:
@@ -103,7 +151,6 @@ class WebsocketsEventsAPI:
             pass
 
         self.connected = False
-        self.json_web_token = None
 
     async def start(self) -> None:
         if self.running:
@@ -216,6 +263,32 @@ class WebsocketsEventsAPI:
         if event_type not in self._event_handlers:
             raise InvalidEventTypeError(event_type=event_type)
         return self._event_handlers.get(event_type, [])
+
+    # Obtains one freshly issued ticket for one handshake. Private and called only from
+    # `connect` so that no caller can mint a ticket ahead of time and hold onto it.
+    # `ClientError` is caught alongside the client's own REST API errors because a REST
+    # call that fails at the transport level (the server having gone away, which is exactly
+    # the case a reconnect is trying to recover from) raises out of aiohttp rather than
+    # being wrapped by the REST API. Either way the caller sees a websockets API error, so
+    # a failed connection attempt is cleaned up as one.
+    @staticmethod
+    async def _issue_ticket(rest_api: RestAPI) -> str:
+        try:
+            ticket_response = await rest_api.issue_websocket_ticket()
+        except (RestAPIError, ClientError) as exc:
+            raise WebsocketsAPIFailedToObtainTicketError(
+                error_message=str(exc),
+            ) from exc
+
+        try:
+            return ticket_response["ticket"]
+        except KeyError, TypeError:
+            raise WebsocketsAPIFailedToObtainTicketError(
+                error_message=(
+                    "The server did not return a ticket. The server is likely not a "
+                    "valid Consortium server instance."
+                ),
+            ) from None
 
     async def _send_message(
         self,
