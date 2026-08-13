@@ -31,6 +31,9 @@ from consortium.server.services.task_runtime_service import TaskRuntimeService
 from consortium.server.services.tasks_service import TasksService
 from consortium.server.services.user_accounts_service import UserAccountsService
 from consortium.server.services.users_service import UsersService
+from consortium.server.services.websocket_tickets_service import (
+    WebsocketTicketsService,
+)
 
 if TYPE_CHECKING:
     from consortium.server.server import Server
@@ -76,6 +79,15 @@ events_service = EventsService()
 # plugins and components are handed, and this is server internal websocket transport
 # rather than a capability those should be reaching for.
 events_websocket_service = EventsWebsocketService(events_service=events_service)
+
+# Issues and redeems the short-lived, single-use tickets that authenticate websocket
+# handshakes: an already-authenticated caller trades its access token for a ticket, which
+# is then presented on the handshake (where request headers cannot be set) in place of the
+# token. It is deliberately NOT added to the `Services` dataclass in
+# `consortium.server.utils`: that dataclass is what plugins and components are handed, and
+# this is server-internal authentication transport rather than a capability those should be
+# reaching for.
+websocket_tickets_service = WebsocketTicketsService()
 
 event_hooks_service = EventHooksService(
     events_service=events_service,
