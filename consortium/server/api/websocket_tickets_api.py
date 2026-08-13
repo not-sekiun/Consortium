@@ -11,6 +11,7 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     InternalServerError,
     MethodNotAllowedError,
     ServiceUnavailableError,
+    TooManyRequestsError,
 )
 from consortium.server.exceptions.service_exceptions.websocket_tickets_service_exceptions import (
     TooManyOutstandingWebsocketTicketsError,
@@ -69,6 +70,7 @@ _ticket_store_full_error = ServiceUnavailableError(
     "",
     responses={
         200: {"model": WebsocketTicketModel},
+        429: {"model": TooManyRequestsError().to_pydantic_model()},
         503: {"model": _ticket_store_full_error.to_pydantic_model()},
     },
 )

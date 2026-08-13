@@ -11,6 +11,7 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
     InternalServerError,
     MethodNotAllowedError,
     NotFoundError,
+    TooManyRequestsError,
     UnprocessableEntityError,
 )
 from consortium.server.exceptions.api_exceptions.pydantic_validation_api_exceptions import (
@@ -31,16 +32,28 @@ def register_server_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: StarletteHTTPException,
     ) -> JSONResponse | Response:
+        # 429 is in here for slowapi's `RateLimitExceeded`, which subclasses Starlette's
+        # `HTTPException` and so lands in this handler like any status FastAPI raises
+        # itself. Mapping it is what turns a tripped rate limit into a 429 carrying the
+        # standard error body: without an entry it fell through to the `ValueError` below
+        # and reached the caller as a bare 500. The rate limit's own detail (the limit
+        # string, "20 per 1 minute") is deliberately dropped in favour of the generic
+        # message, in keeping with every other entry here, so a caller cannot map out the
+        # server's limits by tripping them.
         error_code_map = {
             403: ForbiddenError(),
             404: NotFoundError(),
             405: MethodNotAllowedError(),
+            429: TooManyRequestsError(),
             500: InternalServerError(),
         }
         # Handle the special case of errors that arise on the /api/login endpoint. Any
         # error that arises on the /api/login endpoint is disguised as a 401
         # Unauthorized error with an empty Response body for unauthorized requests. This
-        # is done to prevent C2 server fingerprinting.
+        # is done to prevent C2 server fingerprinting. That includes login's own rate
+        # limit: this check runs before the map below, so a caller who trips it is told
+        # only that it is unauthorized, and cannot tell a wrong password from a limit
+        # they have hit. Every other endpoint reports the limit as the 429 it is.
         if request.url.path == "/api/login" and not is_user_logged_in(request):
             return Response(status_code=401)
 

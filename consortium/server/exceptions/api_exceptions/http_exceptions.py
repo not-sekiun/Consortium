@@ -105,6 +105,21 @@ class UnprocessableEntityError(HTTPError):
         )
 
 
+class TooManyRequestsError(HTTPError):
+    status_code = 429
+    code = "TOO_MANY_REQUESTS_ERROR"
+
+    def __init__(
+        self,
+        message: str = "Too many requests have been made. Please try again later.",
+        detail: dict[str, JsonValue] | None = None,
+    ) -> None:
+        super().__init__(
+            message=message,
+            detail=detail,
+        )
+
+
 class InternalServerError(HTTPError):
     status_code = 500
     code = "INTERNAL_SERVER_ERROR"
