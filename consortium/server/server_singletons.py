@@ -15,6 +15,7 @@ from consortium.server.services.authorization_service import AuthorizationServic
 from consortium.server.services.c2_types_service import C2TypesService
 from consortium.server.services.event_hooks_service import EventHooksService
 from consortium.server.services.events_service import EventsService
+from consortium.server.services.events_websocket_service import EventsWebsocketService
 from consortium.server.services.listener_profiles_service import ListenerProfilesService
 from consortium.server.services.listener_templates_service import (
     ListenerTemplatesService,
@@ -68,6 +69,14 @@ release_service = ReleaseService(release_json_file=paths_service.release_json_fi
 # events service to be dependency injected into them so we instantiate the events
 # service first.
 events_service = EventsService()
+
+# Serves accepted events websocket connections (the receive loop, the client action
+# message contract and per connection event subscriptions). It is deliberately NOT
+# added to the `Services` dataclass in `consortium.server.utils`: that dataclass is what
+# plugins and components are handed, and this is server internal websocket transport
+# rather than a capability those should be reaching for.
+events_websocket_service = EventsWebsocketService(events_service=events_service)
+
 event_hooks_service = EventHooksService(
     events_service=events_service,
     release_service=release_service,
