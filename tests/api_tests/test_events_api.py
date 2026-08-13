@@ -1,17 +1,25 @@
-"""E2E tests for the WebSocket events API (/api/ws/events)."""
+"""E2E tests for the WebSocket events API (/api/ws/events) and the websocket ticket
+issuing endpoint that authenticates handshakes to it (/api/ws/ticket)."""
 
 import asyncio
 import json
 
+import httpx
 import jwt
 import pytest
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework.event_hooks.event_type import EventType
+from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.server_jwt_config import (
     JSON_WEB_TOKEN_ALGORITHMS,
     JSON_WEB_TOKEN_SECRET_KEY,
 )
+from consortium.server.services.websocket_tickets_service import (
+    TICKET_TIME_TO_LIVE_SECONDS,
+)
+from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
+from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
 
@@ -609,3 +617,186 @@ async def test_disconnect_without_subscription_does_not_error(ws, admin_client):
     """Disconnect with no subscriptions should complete without errors."""
     await ws.open(headers=_bearer(_extract_token(admin_client)))
     await ws.close()
+
+
+# ---------------------------------------------------------------------------
+# Websocket ticket issuance  (POST /api/ws/ticket)
+# ---------------------------------------------------------------------------
+
+_TICKET_PATH = "/api/ws/ticket"
+
+WEBSOCKET_TICKET_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "ticket": {"type": "string"},
+        "time_to_live_seconds": {"type": "integer"},
+    },
+    "required": ["ticket", "time_to_live_seconds"],
+    "additionalProperties": False,
+}
+
+
+def _outstanding_ticket_count() -> int:
+    # Reaches into the ticket store so a test can assert that a rejected request minted
+    # nothing at all, rather than only that it got an error response back.
+    return len(server_singletons.websocket_tickets_service._tickets)
+
+
+@pytest.fixture
+async def unauthenticated_client(app):
+    """An httpx client bound to the app that sends no Authorization header."""
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://test",
+    ) as client:
+        yield client
+
+
+@pytest.fixture
+async def spectator_role_without_events_websocket_permission(spectator_client):
+    """Strips USE_EVENTS_WEBSOCKET from the spectator's role for the test's duration.
+
+    All three default roles hold the permission, so a role that lacks it has to be
+    manufactured. Only the authorization service's in-memory mapping is touched:
+    `save_server_role_permissions` is never called, so data/server/role_permissions.json
+    is left exactly as it was on disk.
+    """
+    role = (await spectator_client.get("/api/users/me")).json()["role"]
+    permission = str(UserPermissions.USE_EVENTS_WEBSOCKET)
+    authorization_service = server_singletons.authorization_service
+
+    authorization_service.remove_permission_from_role(
+        role=role,
+        permission=permission,
+    )
+    assert not authorization_service.has_permission(role, permission)
+
+    yield role
+
+    authorization_service.add_permission_to_role(role=role, permission=permission)
+
+
+async def test_issue_ticket_without_authorization_header_returns_401(
+    unauthenticated_client,
+):
+    response = await unauthenticated_client.post(_TICKET_PATH)
+    assert response.status_code == 401
+
+
+async def test_issue_ticket_with_malformed_jwt_returns_401(unauthenticated_client):
+    response = await unauthenticated_client.post(
+        _TICKET_PATH,
+        headers=_bearer("this.is.not.a.valid.jwt"),
+    )
+    assert response.status_code == 401
+
+
+async def test_issue_ticket_with_unknown_access_token_returns_401(
+    unauthenticated_client,
+):
+    # Validly signed JWT whose subject matches no logged-in user.
+    fake_jwt = _forge_jwt("00000000-0000-0000-0000-000000000000")
+    response = await unauthenticated_client.post(
+        _TICKET_PATH,
+        headers=_bearer(fake_jwt),
+    )
+    assert response.status_code == 401
+
+
+async def test_issue_ticket_without_use_events_websocket_permission_returns_403(
+    spectator_client,
+    spectator_role_without_events_websocket_permission,
+):
+    """A caller who may not use the websocket must not be able to get a ticket for it.
+
+    This is the security crux of the endpoint: were issuance authorized by anything
+    weaker than the permission the websocket endpoint itself checks, a ticket would be a
+    way around that check.
+    """
+    outstanding_tickets_before = _outstanding_ticket_count()
+
+    validate_response(
+        test_response=await spectator_client.post(_TICKET_PATH),
+        expected_json_schema=FORBIDDEN_ERROR_JSON_SCHEMA,
+        expected_status_code=403,
+    )
+
+    # The request must be refused before a ticket is minted, not merely have its response
+    # thrown away: nothing may reach the store on the unauthorized path.
+    assert _outstanding_ticket_count() == outstanding_tickets_before
+
+
+async def test_issue_ticket_succeeds_again_once_the_permission_is_restored(
+    spectator_client,
+):
+    # Guards the test above against passing for the wrong reason: the same caller, with
+    # the permission back in place, is served a ticket, so the 403 can only have come
+    # from the missing permission.
+    response = validate_response(
+        test_response=await spectator_client.post(_TICKET_PATH),
+        expected_json_schema=WEBSOCKET_TICKET_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+    server_singletons.websocket_tickets_service.redeem_ticket(
+        ticket=response.json()["ticket"],
+    )
+
+
+async def test_issued_ticket_redeems_to_the_callers_own_session(client):
+    own_user = (await client.get("/api/users/me")).json()
+
+    response = validate_response(
+        test_response=await client.post(_TICKET_PATH),
+        expected_json_schema=WEBSOCKET_TICKET_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+    ticket = response.json()["ticket"]
+    assert ticket
+
+    redeemed_access_token = server_singletons.websocket_tickets_service.redeem_ticket(
+        ticket=ticket
+    )
+    # The redeemed value must be the access token the websocket handshake path resolves
+    # users with (the JWT's `sub` claim), and it must resolve back to the caller and to
+    # nobody else.
+    redeemed_user = server_singletons.users_service.get_user_by_access_token(
+        redeemed_access_token,
+    )
+    assert redeemed_access_token == str(redeemed_user.json_web_token.subject)
+    assert str(redeemed_user.user_id) == own_user["user_id"]
+    assert redeemed_user.username == own_user["username"]
+
+
+async def test_issued_ticket_reports_the_services_time_to_live(admin_client):
+    response = validate_response(
+        test_response=await admin_client.post(_TICKET_PATH),
+        expected_json_schema=WEBSOCKET_TICKET_JSON_SCHEMA,
+        expected_status_code=200,
+    )
+    assert response.json()["time_to_live_seconds"] == TICKET_TIME_TO_LIVE_SECONDS
+
+    server_singletons.websocket_tickets_service.redeem_ticket(
+        ticket=response.json()["ticket"],
+    )
+
+
+async def test_two_issued_tickets_are_distinct(admin_client):
+    first = (await admin_client.post(_TICKET_PATH)).json()["ticket"]
+    second = (await admin_client.post(_TICKET_PATH)).json()["ticket"]
+
+    assert first != second
+
+    for ticket in (first, second):
+        server_singletons.websocket_tickets_service.redeem_ticket(ticket=ticket)
+
+
+async def test_ticket_route_is_published_with_a_clean_operation_id(app):
+    openapi_schema = app.openapi()
+
+    assert _TICKET_PATH in openapi_schema["paths"]
+    post_operation = openapi_schema["paths"][_TICKET_PATH]["post"]
+    # `use_route_name_as_operation_id` turns the route name into the operationId, so
+    # generated clients get `issue_websocket_ticket` rather than a path-mangled name like
+    # `issue_websocket_ticket_api_ws_ticket_post`.
+    assert post_operation["operationId"] == "issue_websocket_ticket"
+    assert "WebsocketTicketModel" in json.dumps(post_operation["responses"]["200"])

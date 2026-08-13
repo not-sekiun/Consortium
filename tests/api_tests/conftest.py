@@ -8,7 +8,7 @@ import pytest
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework.agents.agent_message_models import RegistrationMessageModel
-from consortium.server.api import login_api
+from consortium.server.api import login_api, websocket_tickets_api
 from consortium.server.models.logging_models import LoggingConfigModel
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.server import Server
@@ -60,16 +60,20 @@ def validate_server_config_json_file_before_tests():
         assert server_config_json_data[key] == value
 
 
-# The login endpoint is rate limited to 5/minute keyed on the remote address, and every
-# request made through httpx.ASGITransport shares a single address. The session clients
-# below plus any fixture that re-logs them in would otherwise exhaust the bucket and
-# start getting 429s. The Limiter is a module-level singleton whose `enabled` flag is
-# read per request, so flipping it here disables the limit for the whole test session.
+# The rate limited endpoints (login at 5/minute, websocket ticket issuance at 20/minute)
+# are keyed on the remote address, and every request made through httpx.ASGITransport
+# shares a single address. The session clients below, any fixture that re-logs them in,
+# and any test that asks for several tickets would otherwise exhaust those buckets and
+# start getting 429s. Each Limiter is a module-level singleton whose `enabled` flag is
+# read per request, so flipping them here disables the limits for the whole test session.
 @pytest.fixture(scope="session", autouse=True)
-def disable_login_rate_limiter() -> Iterator[None]:
-    login_api.limiter.enabled = False
+def disable_rate_limiters() -> Iterator[None]:
+    rate_limited_api_modules = (login_api, websocket_tickets_api)
+    for api_module in rate_limited_api_modules:
+        api_module.limiter.enabled = False
     yield
-    login_api.limiter.enabled = True
+    for api_module in rate_limited_api_modules:
+        api_module.limiter.enabled = True
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -135,7 +139,7 @@ def throwaway_repositories(
 
 
 @pytest.fixture(scope="session")
-async def app(configure_logging, throwaway_repositories, disable_login_rate_limiter):
+async def app(configure_logging, throwaway_repositories, disable_rate_limiters):
     """Initialize the FastAPI app once for the entire test session."""
     server = Server(
         server_config=ServerConfigModel(
