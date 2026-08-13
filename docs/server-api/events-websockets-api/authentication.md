@@ -1,7 +1,19 @@
 Since the events API lives on the same server as the REST API it is subject to the same
-authorization requirements as the rest of the endpoints. This means that you will need
-to include an `Authorization` header with a valid JWT token in order to make a
-websocket connection to the events API.
+authorization requirements as the rest of the endpoints. A websocket handshake cannot
+carry those credentials the same way though: the browser `WebSocket` constructor has no
+option for request headers, so a JSON Web Token cannot travel in an `Authorization`
+header on the connection request the way it does on every REST call.
+
+Connecting to the events API therefore takes three steps:
+
+1. `POST /api/login` with your credentials to receive a JSON Web Token.
+2. `POST /api/ws/ticket` with that token in the `Authorization` header to receive a
+   short-lived, single-use **ticket**.
+3. Open the websocket with the ticket in the query string:
+   `ws://localhost:9999/api/ws/events?ticket=TICKET`.
+
+The ticket is the handshake's only credential. An `Authorization` header sent on a
+handshake is ignored entirely, and a handshake without a ticket is rejected.
 
 To authenticate with the server, send a `POST` request to the `/api/login` endpoint
 with a `username` and `password` parameter in the _request body_ to receive a JWT
@@ -70,37 +82,76 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MGNkMmE1YS1jMGYyLTQ5OGUtYjljZC1
     (and **every other** API endpoint that you have the relevant permissions for) if
     they had your JWT token. **Keep it secure**.
 
-## Connecting to the websocket endpoint
+## Obtaining a websocket ticket
 
-Now that you have a valid JSON Web Token you can connect to the websocket endpoint at
-`ws://localhost:9999/api/ws/events`. The initial request to that endpoint must be made
-with the JSON Web Token present in the Authorization header.
+A ticket is exchanged for over ordinary HTTP, where the JSON Web Token travels in the
+`Authorization` header as usual. Send a `POST` request to `/api/ws/ticket`. The endpoint
+takes **no request body and no user identifier**: a ticket is always minted for the
+calling token's own session, so there is no shape of request that asks for somebody
+else's.
+
+```json title="Response from /api/ws/ticket"
+{
+  "ticket": "TICKET",
+  "time_to_live_seconds": 30
+}
+```
+
+| Field                  | Description                                                     |
+|------------------------|-----------------------------------------------------------------|
+| `ticket`               | The opaque ticket string to present on the handshake.           |
+| `time_to_live_seconds` | How long the ticket stays redeemable for, in seconds.           |
+
+The ticket is opaque: it encodes nothing about your token or your account, and neither
+can be derived from it. Two properties govern how you use one:
+
+- **Single use.** A ticket authenticates exactly one handshake and is spent the moment
+  the server redeems it. Every connection needs its own ticket, including a reconnect
+  after a dropped connection and each of several connections opened at once.
+- **Short-lived.** The ticket expires shortly after issue. Read the window from
+  `time_to_live_seconds` rather than hardcoding it, and obtain the ticket immediately
+  before connecting rather than holding one for later.
 
 !!! note
-    The OAuth 2.0 format for including JSON Web Tokens in the Authorization header is
-    to _precede_ the JSON Web Token with the string `Bearer ` (including the space)
-    like so:
+    Issuing a ticket requires the `USE_EVENTS_WEBSOCKET` permission, the same permission
+    the websocket endpoint itself checks. Obtaining a ticket is therefore never a way
+    around that check. See
+    [Roles and Permissions](../../server-usage/roles-and-permissions.md).
 
-    ```plaintext title="Authorization header format"
-    Authorization: Bearer JWT
-    ```
+Two failures are worth handling on this endpoint:
 
-The following example demonstrates how to connect to
-the websocket endpoint using the `websockets` library. Remember to replace the `JWT`
-constant with the JSON Web Token that was printed by the script in the previous section.
+| Status | Meaning                                                                          |
+|--------|----------------------------------------------------------------------------------|
+| `429`  | The endpoint's rate limit has been tripped. Back off and retry.                  |
+| `503`  | The server is holding too many outstanding tickets and cannot issue more right now. Retry in a moment. |
+
+The endpoint is rate limited to 20 requests per minute per client address. A client
+needs exactly one ticket per handshake, so only page reloads and reconnect attempts
+spend from that budget and normal use never approaches it. A reconnect loop that retries
+without backing off will.
+
+!!! warning
+    A ticket is a credential, and unlike the JSON Web Token it travels in a **URL**.
+    URLs are logged in far more places than headers are (proxies, access logs, browser
+    history), so treat a ticket as sensitive: never log it, never persist it, and never
+    reuse one. Its short life is what bounds the damage of a leaked ticket, which is
+    why the window is deliberately tight.
+
+## Connecting to the websocket endpoint
+
+With a ticket in hand you can connect to the websocket endpoint at
+`ws://localhost:9999/api/ws/events`, passing the ticket as the `ticket` query parameter.
 
 ```py title="connect_to_ws.py"
 import asyncio
 import websockets
 
-JWT = "YOUR_JWT" # (1)
+TICKET = "YOUR_TICKET" # (1)
 EVENTS_API_URL = "ws://localhost:9999/api/ws/events"
 
 
 async def main():
-    async with websockets.connect(
-        EVENTS_API_URL, extra_headers={"Authorization": f"Bearer {JWT}"}
-    ) as websocket:
+    async with websockets.connect(f"{EVENTS_API_URL}?ticket={TICKET}") as websocket:
         pass
 
 
@@ -108,7 +159,10 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-1. Replace `YOUR_JWT` with the JSON Web Token you received from the REST API.
+1. Replace `YOUR_TICKET` with a ticket obtained from `/api/ws/ticket`. Tickets expire
+   within seconds, so in practice you obtain one in the same script that connects
+   rather than pasting one in. See [putting it all together](#putting-it-all-together)
+   below.
 
 You will receive no messages from the websocket endpoint until (at the very least) you
 subscribe to an endpoint. So your script should just exit without doing anything. A
@@ -116,13 +170,16 @@ failed attempt will be met with a websocket exception claiming that the websocke
 connection was rejected.
 
 ```plaintext title="Failed connection attempt"
-websockets.exceptions.InvalidStatusCode: server rejected WebSocket connection: HTTP 403
+websockets.exceptions.InvalidStatus: server rejected WebSocket connection: HTTP 403
 ```
 
-[introduction.md](introduction.md)
-If this happens, double-check your JSON Web Token and the URL you are connecting to. If
-you want more information about what _exactly_ failed you have to start the server in
-debug mode by running the server with the `-d` or `--debug` flag.
+The server deliberately gives no reason for a refusal. A ticket that was never issued,
+one that has expired, and one that has already been redeemed are all rejected
+identically, so that the handshake cannot be used to probe which of the three is the
+case. If this happens, the likely causes in order are: the ticket was already spent on
+an earlier connection, too long passed between obtaining it and connecting, or the URL
+is wrong. If you want more information about what _exactly_ failed you have to start
+the server in debug mode by running the server with the `-d` or `--debug` flag.
 
 ```shell title="Start the server in debug mode"
 uv run python consortium.py -d
@@ -130,8 +187,8 @@ uv run python consortium.py -d
 
 ## Putting it all together
 
-All together, the modified script to receive a JSON Web Token and then make a websocket
-connection to the events API looks like this:
+All together, the script to receive a JSON Web Token, exchange it for a ticket, and then
+make a websocket connection to the events API looks like this:
 
 ```py title="event_notifier.py"
 import asyncio
@@ -141,6 +198,7 @@ import websockets
 USERNAME = "admin"
 PASSWORD = "admin"
 AUTHORIZATION_URL = "http://localhost:9999/api/login"
+TICKET_URL = "http://localhost:9999/api/ws/ticket"
 EVENTS_API_URL = "ws://localhost:9999/api/ws/events"
 
 
@@ -152,20 +210,29 @@ def get_jwt(username: str, password: str, authorization_url: str) -> str:
     return response.json()["access_token"]
 
 
+def get_ticket(jwt: str, ticket_url: str) -> str: # (1)
+    response = requests.post(ticket_url, headers={"Authorization": f"Bearer {jwt}"})
+    response.raise_for_status()
+    return response.json()["ticket"]
+
+
 async def main():
     jwt = get_jwt(
         username=USERNAME,
         password=PASSWORD,
         authorization_url=AUTHORIZATION_URL,
     )
-    async with websockets.connect(
-        EVENTS_API_URL, extra_headers={"Authorization": f"Bearer {jwt}"}
-    ) as websocket:
+    ticket = get_ticket(jwt=jwt, ticket_url=TICKET_URL)
+
+    async with websockets.connect(f"{EVENTS_API_URL}?ticket={ticket}") as websocket:
         pass
 
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+1. Call this once per connection, immediately before connecting. Holding the returned
+   ticket, or reusing it for a second connection, gets that connection rejected.
 
 We will be building off of this script to make a basic event notification system.

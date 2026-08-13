@@ -27,7 +27,8 @@ Key behaviors:
 2. The first message after sending an action command is always the response to that
    command. A subscribed event will never arrive before its subscription response.
 3. Each websocket connection is independent. The same client can open multiple
-   connections, each with its own set of subscriptions.
+   connections, each with its own set of subscriptions. Tickets are single use, so each
+   of those connections needs its own freshly issued ticket.
 4. When a connection closes, all its subscriptions are automatically cleaned up.
 
 ## Action Command Format
@@ -131,6 +132,7 @@ import websockets
 USERNAME = "admin"
 PASSWORD = "admin"
 AUTHORIZATION_URL = "http://localhost:9999/api/login"
+TICKET_URL = "http://localhost:9999/api/ws/ticket"
 EVENTS_API_URL = "ws://localhost:9999/api/ws/events"
 
 
@@ -141,12 +143,17 @@ def get_jwt(username: str, password: str, authorization_url: str) -> str:
     return response.json()["access_token"]
 
 
+def get_ticket(jwt: str, ticket_url: str) -> str:
+    response = requests.post(ticket_url, headers={"Authorization": f"Bearer {jwt}"})
+    response.raise_for_status()
+    return response.json()["ticket"]
+
+
 async def main() -> None:
     jwt = get_jwt(USERNAME, PASSWORD, AUTHORIZATION_URL)
+    ticket = get_ticket(jwt, TICKET_URL)
 
-    async with websockets.connect(
-        EVENTS_API_URL, extra_headers={"Authorization": f"Bearer {jwt}"}
-    ) as ws:
+    async with websockets.connect(f"{EVENTS_API_URL}?ticket={ticket}") as ws:
         await ws.send(json.dumps({
             "action": "subscribe",
             "events": ["START_SERVER", "STOP_SERVER"],
@@ -213,7 +220,8 @@ are two common approaches.
 ### Approach 1: One websocket per event type
 
 Open a separate connection for each event. Every message on that connection is
-guaranteed to be the subscribed event — no routing logic needed.
+guaranteed to be the subscribed event, no routing logic needed. Each of those
+connections mints its own ticket: a ticket authenticates one handshake only.
 
 ```py title="one_ws_per_event.py"
 import asyncio
@@ -225,6 +233,7 @@ import websockets
 USERNAME = "admin"
 PASSWORD = "admin"
 AUTHORIZATION_URL = "http://localhost:9999/api/login"
+TICKET_URL = "http://localhost:9999/api/ws/ticket"
 EVENTS_API_URL = "ws://localhost:9999/api/ws/events"
 
 
@@ -234,10 +243,16 @@ def get_jwt(username: str, password: str, authorization_url: str) -> str:
     ).json()["access_token"]
 
 
+def get_ticket(jwt: str, ticket_url: str) -> str:
+    response = requests.post(ticket_url, headers={"Authorization": f"Bearer {jwt}"})
+    response.raise_for_status()
+    return response.json()["ticket"]
+
+
 async def listen_for_event(jwt: str, event_type: str) -> None:
-    async with websockets.connect(
-        EVENTS_API_URL, extra_headers={"Authorization": f"Bearer {jwt}"}
-    ) as ws:
+    ticket = get_ticket(jwt, TICKET_URL)  # (1)
+
+    async with websockets.connect(f"{EVENTS_API_URL}?ticket={ticket}") as ws:
         await ws.send(json.dumps({"action": "subscribe", "events": [event_type]}))
         await ws.recv()  # discard subscription response
         async for raw_message in ws:
@@ -258,6 +273,10 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+1. Obtained inside `listen_for_event` rather than passed in, so each connection gets its
+   own ticket. Sharing one ticket between the two connections would get the second one
+   rejected.
+
 ### Approach 2: Single websocket with a dispatcher
 
 Use one connection and route incoming events to handlers by event type. More efficient
@@ -274,6 +293,7 @@ import websockets
 USERNAME = "admin"
 PASSWORD = "admin"
 AUTHORIZATION_URL = "http://localhost:9999/api/login"
+TICKET_URL = "http://localhost:9999/api/ws/ticket"
 EVENTS_API_URL = "ws://localhost:9999/api/ws/events"
 
 EventHandler = Callable[[dict], None]
@@ -285,6 +305,12 @@ def get_jwt(username: str, password: str, authorization_url: str) -> str:
     ).json()["access_token"]
 
 
+def get_ticket(jwt: str, ticket_url: str) -> str:
+    response = requests.post(ticket_url, headers={"Authorization": f"Bearer {jwt}"})
+    response.raise_for_status()
+    return response.json()["ticket"]
+
+
 def on_start_server(event: dict) -> None:
     print("Server started:", event)
 
@@ -294,9 +320,9 @@ def on_stop_server(event: dict) -> None:
 
 
 async def listen(jwt: str, handlers: dict[str, EventHandler]) -> None:
-    async with websockets.connect(
-        EVENTS_API_URL, extra_headers={"Authorization": f"Bearer {jwt}"}
-    ) as ws:
+    ticket = get_ticket(jwt, TICKET_URL)
+
+    async with websockets.connect(f"{EVENTS_API_URL}?ticket={ticket}") as ws:
         await ws.send(json.dumps({
             "action": "subscribe",
             "events": list(handlers.keys()),

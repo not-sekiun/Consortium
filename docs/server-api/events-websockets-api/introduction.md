@@ -6,10 +6,16 @@ is the only reference for the events API.
 ## Overview
 
 1. `POST /api/login` with credentials to receive a [JSON Web Token](https://jwt.io/).
-2. Open a websocket to `/api/ws/events` with the token in the `Authorization` header.
-3. Send action commands as JSON strings to subscribe, unsubscribe, or query
+2. `POST /api/ws/ticket` with that token in the `Authorization` header to receive a
+   short-lived, single-use ticket. A websocket handshake cannot carry a header, so the
+   token is exchanged for a credential that can travel in the URL.
+3. Open a websocket to `/api/ws/events?ticket=TICKET`.
+4. Send action commands as JSON strings to subscribe, unsubscribe, or query
    subscriptions.
-4. Receive event payloads as JSON whenever a subscribed event fires.
+5. Receive event payloads as JSON whenever a subscribed event fires.
+
+Each connection needs its own freshly issued ticket. See
+[authentication](authentication.md) for the full exchange.
 
 ## Usage
 
