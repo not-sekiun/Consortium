@@ -1,3 +1,4 @@
+import json
 from collections.abc import Awaitable, Callable
 from enum import StrEnum
 from typing import Any
@@ -14,6 +15,7 @@ from consortium.server.exceptions.service_exceptions.events_service_exceptions i
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.services.events_service import EventsService
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 # The wire contract for every action message a client may send over the events
 # websocket. Only the receive loop below validates against it, so it lives here rather
@@ -293,10 +295,48 @@ class _EventsWebsocketConnection:
             ),
         )
 
+    # Removes every subscription this connection holds. Called from `run`'s `finally`
+    # rather than from its disconnect handler so that cleanup does not depend on how the
+    # receive loop ended: an exception out of the loop, or cancellation at shutdown, would
+    # otherwise leave this connection's sender registered with the events service against a
+    # socket that is already gone, where every later trigger of that event type would call
+    # it and fail.
+    def _deregister_all_subscriptions(self) -> None:
+        subscribed_event_types = (
+            self._events_service.get_event_types_from_registered_event_handler(
+                event_handler=self._websocket_event_sender,
+            )
+        )
+        for event_type in subscribed_event_types:
+            self._events_service.deregister_event_handler_from_event_type(
+                event_type=event_type,
+                event_handler=self._websocket_event_sender,
+            )
+
     async def run(self) -> None:
         try:
             while True:
-                action_message = await self._websocket.receive_json()
+                try:
+                    action_message = await self._websocket.receive_json()
+                # `receive_json` decodes the frame before this loop ever sees it, so a
+                # frame that is not decodable fails here rather than at the schema
+                # validation below: text that is not valid JSON raises `JSONDecodeError`,
+                # and a binary frame raises `KeyError` because starlette reads the `text`
+                # key off a message that carries `bytes` instead. Both are answered the
+                # same way as any other malformed action message, leaving the connection
+                # open. Letting either escape would tear the connection down without a
+                # response, over what is a client mistake and nothing more.
+                except json.JSONDecodeError, KeyError:
+                    await self._websocket.send_json(
+                        self._construct_single_error_response_json(
+                            code=_ErrorResponseErrorCodes.INVALID_MESSAGE_FORMAT_ERROR,
+                            message=(
+                                "Failed to process the client's action message. The "
+                                "message must be a text frame containing valid JSON."
+                            ),
+                        ),
+                    )
+                    continue
 
                 try:
                     jsonschema.validate(
@@ -335,16 +375,12 @@ class _EventsWebsocketConnection:
                         "Invalid events websocket API message was received from "
                         "client. The client's action message was not recognized."
                     )
+        # A client going away is how a connection normally ends, so it is swallowed here
+        # and never reported as an error. Every other way out of the loop propagates.
         except WebSocketDisconnect:
-            for (
-                event_type
-            ) in self._events_service.get_event_types_from_registered_event_handler(
-                event_handler=self._websocket_event_sender,
-            ):
-                self._events_service.deregister_event_handler_from_event_type(
-                    event_type=event_type,
-                    event_handler=self._websocket_event_sender,
-                )
+            pass
+        finally:
+            self._deregister_all_subscriptions()
 
 
 class EventsWebsocketService:
@@ -361,15 +397,18 @@ class EventsWebsocketService:
     def __repr__(self):
         return "EventsWebsocketService()"
 
+    @log_and_propagate_error_on_service_method
     async def run_connection(self, websocket: WebSocket) -> None:
         """Serves an already accepted events websocket connection until it disconnects.
 
         Runs the receive loop for the connection: validates each client action message
         against the events websocket message contract, dispatches it, and sends the
-        response back over the same socket. Subscribing registers a per-connection
-        event handler with the events service, which then pushes matching events to the
-        client for as long as the connection lives. On client disconnect the connection
-        is unsubscribed from every event type it subscribed to.
+        response back over the same socket. A message that is malformed, whether it is
+        undecodable or fails the contract, is answered with an error response and leaves
+        the connection open. Subscribing registers a per-connection event handler with
+        the events service, which then pushes matching events to the client for as long
+        as the connection lives. However the connection ends, it is unsubscribed from
+        every event type it subscribed to.
 
         The caller is responsible for authenticating, authorizing and accepting the
         websocket before calling this method.
