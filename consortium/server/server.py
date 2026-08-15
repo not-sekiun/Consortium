@@ -18,7 +18,6 @@ from consortium.server.api.agent_templates_api import (
     router as agent_templates_api_router,
 )
 from consortium.server.api.agents_api import router as agents_api_router
-from consortium.server.api.events_api import router as events_api_router
 from consortium.server.api.listener_templates_api import (
     router as listener_templates_api_router,
 )
@@ -36,9 +35,7 @@ from consortium.server.api.server_api import router as server_api_router
 from consortium.server.api.tasks_api import router as tasks_api_router
 from consortium.server.api.user_accounts_api import router as user_accounts_api_router
 from consortium.server.api.users_api import router as users_api_router
-from consortium.server.api.websocket_tickets_api import (
-    router as websocket_tickets_api_router,
-)
+from consortium.server.api.websockets_api import router as websockets_api_router
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.objects.server_objects import ServerStatus
@@ -86,8 +83,7 @@ class Server:
         self._app.include_router(agent_generators_api_router)
         self._app.include_router(agents_api_router)
         self._app.include_router(tasks_api_router)
-        self._app.include_router(events_api_router)
-        self._app.include_router(websocket_tickets_api_router)
+        self._app.include_router(websockets_api_router)
         self._app.include_router(assets_api_router)
         self._app.include_router(artifacts_api_router)
         self._app.include_router(payloads_api_router)

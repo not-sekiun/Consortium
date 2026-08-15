@@ -156,6 +156,7 @@ nav = [
             "framework-reference/services/plugins-service-reference.md",
             "framework-reference/services/release-service-reference.md",
             "framework-reference/services/repository-service-reference.md",
+            "framework-reference/services/tasks-service-reference.md",
             "framework-reference/services/user-accounts-service-reference.md",
             "framework-reference/services/users-service-reference.md"
         ] },

@@ -21,8 +21,8 @@ from consortium.server.services.websocket_tickets_service import (
 )
 from tests.api_tests.websocket_helpers import (
     TICKET_PATH,
-    access_token_of,
     outstanding_ticket_count,
+    user_id_of,
 )
 
 pytestmark = pytest.mark.anyio
@@ -237,7 +237,7 @@ async def test_authorization_follows_the_tickets_own_user_not_the_presenter(
     outstanding_tickets_before = outstanding_ticket_count()
 
     stripped_user_ticket = server_singletons.websocket_tickets_service.issue_ticket(
-        access_token=access_token_of(spectator_client),
+        user_id=user_id_of(spectator_client),
     )
     stripped_connection = ws_factory()
     accepted = await stripped_connection.open(
@@ -251,7 +251,7 @@ async def test_authorization_follows_the_tickets_own_user_not_the_presenter(
     # conditions, is accepted on the same handshake path.
     admin_client, _admin_token = await cold_login("admin", "admin")
     permitted_user_ticket = server_singletons.websocket_tickets_service.issue_ticket(
-        access_token=access_token_of(admin_client),
+        user_id=user_id_of(admin_client),
     )
     permitted_connection = ws_factory()
     assert await permitted_connection.open(
@@ -268,25 +268,25 @@ async def test_a_redeemed_ticket_resolves_to_exactly_its_own_user(cold_login):
     """A redeemed ticket resolves to the one user it was issued for and to nobody else.
 
     This is the direct-at-the-service counterpart to the socket test above: it pins the
-    identity binding to a specific user by resolving the redeemed access token through the
-    same lookup the handshake path uses (users_service.get_user_by_access_token) and
-    comparing the result against that same user's own /api/users/me.
+    identity binding to a specific user by resolving the redeemed user ID through the same
+    lookup the handshake path uses (users_service.get_user_by_user_id) and comparing the
+    result against that same user's own /api/users/me.
     """
     client, _token = await cold_login("operator", "operator")
     own_user = (await client.get("/api/users/me")).json()
 
     ticket = (await client.post(TICKET_PATH)).json()["ticket"]
-    redeemed_access_token = server_singletons.websocket_tickets_service.redeem_ticket(
+    redeemed_user_id = server_singletons.websocket_tickets_service.redeem_ticket(
         ticket=ticket,
     )
 
-    # The redeemed value must be the access token the websocket handshake path resolves
-    # users with (the JWT's `sub` claim), and it must resolve back to the caller and to
-    # nobody else.
-    redeemed_user = server_singletons.users_service.get_user_by_access_token(
-        redeemed_access_token,
+    # The redeemed value must be the user ID the websocket handshake path resolves
+    # sessions with, and it must resolve back to the caller and to nobody else.
+    assert redeemed_user_id == own_user["user_id"]
+
+    redeemed_user = server_singletons.users_service.get_user_by_user_id(
+        user_id=redeemed_user_id,
     )
-    assert redeemed_access_token == str(redeemed_user.json_web_token.subject)
     assert str(redeemed_user.user_id) == own_user["user_id"]
     assert redeemed_user.username == own_user["username"]
 
@@ -309,11 +309,13 @@ async def test_two_users_tickets_resolve_to_two_different_users(cold_login):
     operator_ticket = (await operator_client.post(TICKET_PATH)).json()["ticket"]
     assert admin_ticket != operator_ticket
 
-    admin_resolved = server_singletons.users_service.get_user_by_access_token(
-        server_singletons.websocket_tickets_service.redeem_ticket(ticket=admin_ticket),
+    admin_resolved = server_singletons.users_service.get_user_by_user_id(
+        user_id=server_singletons.websocket_tickets_service.redeem_ticket(
+            ticket=admin_ticket
+        ),
     )
-    operator_resolved = server_singletons.users_service.get_user_by_access_token(
-        server_singletons.websocket_tickets_service.redeem_ticket(
+    operator_resolved = server_singletons.users_service.get_user_by_user_id(
+        user_id=server_singletons.websocket_tickets_service.redeem_ticket(
             ticket=operator_ticket
         ),
     )

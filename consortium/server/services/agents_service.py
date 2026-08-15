@@ -1,10 +1,12 @@
 import uuid
-from collections.abc import AsyncGenerator, AsyncIterable
+from collections.abc import AsyncGenerator
 from typing import Any
 
 from loguru import logger
 
 from consortium.framework.agents.agent_message_models import (
+    Payload,
+    RegistrationMessageModel,
     TaskInputMessageModel,
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
@@ -52,6 +54,7 @@ class AgentsService:
     def register_agent(
         self,
         listener_id: str | uuid.UUID,
+        registration_message: RegistrationMessageModel | None = None,
         payload_id: str | uuid.UUID | None = None,
         agent_type: str | None = None,
         name: str | None = None,
@@ -71,42 +74,47 @@ class AgentsService:
     ) -> Agent:
         """Registers a new agent and emits an `AGENT_REGISTERED` event.
 
+        Give the agent's reported details either as a whole `registration_message` or as
+        individual fields.
+
         Args:
-            listener_id: The ID of the listener this agent is
-                connecting through.
-            payload_id: The ID of the payload that generated
-                this agent. When `None`, the agent is not attributed to any payload.
+            listener_id: The ID of the listener this agent is connecting through.
+            registration_message: The registration details reported by the agent. When
+                given, it supplies every reported field and the individual field
+                arguments below are ignored. Nothing an agent reports is verified by the
+                server, so treat the contents as claims rather than as facts.
+            payload_id: The ID of the payload that generated this agent. When `None`, the
+                agent is not attributed to any payload.
             agent_type: The agent type name. When `None`, the agent has no associated
                 type.
             name: A human-readable display name for the agent. When `None`,
                 a name is derived from the agent's identity later.
             description: A short human-readable description of the agent. Defaults
                 to an empty string when omitted.
-            endpoint: A human-readable string identifying the agent's network
-                endpoint. Defaults to an empty string when omitted.
-            user: The OS username the agent process is running as. When
-                `None`, the running user is unknown.
-            is_admin: Whether the agent is running with administrator or
-                root privileges. When `None`, the privilege level is unknown.
-            os: The name of the host operating system (for example
-                "Windows"). When `None`, the OS is unknown.
-            version: The version string of the host operating system. When
-                `None`, the version is unknown.
-            arch: The CPU architecture of the host system (for example
-                "x86_64"). When `None`, the architecture is unknown.
-            pid: The process ID of the agent on its host. When `None`, the
-                PID is unknown.
-            locale: The locale string of the host system (for example
-                "en_US"). When `None`, the locale is unknown.
-            remote_ip: The IP address the agent connected from,
-                as seen by the server. When `None`, the remote address is unknown.
-            local_ip: The local IP address of the agent's host as
-                seen by the agent itself. When `None`, the local address is unknown.
-            hostname: The hostname of the agent's host. When `None`, the
-                hostname is unknown.
-            agent_data: Arbitrary key-value pairs carrying
-                agent-specific metadata not covered by the other fields. When `None`, no
-                extra metadata is stored.
+            endpoint: A human-readable string identifying the agent's network endpoint.
+                Defaults to an empty string when omitted.
+            user: The OS username the agent process is running as. When `None`, the
+                running user is unknown.
+            is_admin: Whether the agent is running with administrator or root privileges.
+                When `None`, the privilege level is unknown.
+            os: The name of the host operating system (for example "Windows"). When
+                `None`, the OS is unknown.
+            version: The version string of the host operating system. When `None`, the
+                version is unknown.
+            arch: The CPU architecture of the host system (for example "x86_64"). When
+                `None`, the architecture is unknown.
+            pid: The process ID of the agent on its host. When `None`, the PID is
+                unknown.
+            locale: The locale string of the host system (for example "en_US"). When
+                `None`, the locale is unknown.
+            remote_ip: The IP address the agent is reachable at. When `None`, the remote
+                address is unknown.
+            local_ip: The local IP address of the agent's host as seen by the agent
+                itself. When `None`, the local address is unknown.
+            hostname: The hostname of the agent's host. When `None`, the hostname is
+                unknown.
+            agent_data: Arbitrary key-value pairs carrying agent-specific metadata not
+                covered by the other fields. When `None`, no extra metadata is stored.
 
         Returns:
             The newly registered agent instance.
@@ -121,6 +129,25 @@ class AgentsService:
                 `payload_id` does not correspond to a known payload, or because
                 `agent_type` does not name a known agent type.
         """
+        # A whole message wins over the individual fields rather than merging with them:
+        # the two describe the same agent, and a merge would silently mix a validated
+        # report with values the caller supplied separately.
+        if registration_message is not None:
+            payload_id = registration_message.payload_id
+            agent_type = registration_message.agent_type
+            endpoint = registration_message.endpoint
+            user = registration_message.user
+            is_admin = registration_message.is_admin
+            os = registration_message.os
+            version = registration_message.version
+            arch = registration_message.arch
+            pid = registration_message.pid
+            locale = registration_message.locale
+            remote_ip = registration_message.remote_ip
+            local_ip = registration_message.local_ip
+            hostname = registration_message.hostname
+            agent_data = registration_message.agent_data
+
         agent = Agent(
             tasks_service=self._tasks_service,
             task_runtime_service=self._task_runtime_service,
@@ -409,25 +436,36 @@ class AgentsService:
     async def dispatch_task_output_message(
         self,
         agent_id: str | uuid.UUID,
-        task_id: str | uuid.UUID,
-        success: bool,
+        task_output_message: TaskOutputMessageModel | None = None,
+        task_id: str | uuid.UUID | None = None,
+        success: bool | None = None,
         message: str = "",
         data: dict[str, Any] | None = None,
-        payload: AsyncIterable[bytes] | bytes | None = None,
+        payload: Payload | bytes | bytearray | None = None,
     ) -> None:
         """Dispatch a task output message for a running task on an agent.
+
+        Give the agent's reported result either as a whole `task_output_message` or as
+        individual fields.
 
         Args:
             agent_id: The agent ID of the agent to submit the result
                 for.
-            task_id: The task ID of the task to submit the result for.
-            success: Whether the task was successful.
+            task_output_message: The task output message reported by the agent,
+                identifying the task it belongs to and carrying any result data and
+                binary payload. When given, the individual field arguments below are
+                ignored.
+            task_id: The task ID of the task to submit the result for. Required when
+                `task_output_message` is not given.
+            success: Whether the task was successful. Required when
+                `task_output_message` is not given.
             message: A message describing the result.
             data: The result data.
-            payload: Optional binary payload
-                associated with the result.
+            payload: Optional binary payload associated with the result.
 
         Raises:
+            ValueError: Raised if neither `task_output_message` nor both of `task_id`
+                and `success` were given, so there is no result to dispatch.
             AgentNotFoundError: Raised if the agent with the specified agent ID is not
                 found.
             ValidationError: Raised if the arguments provided fail validation of the
@@ -441,21 +479,30 @@ class AgentsService:
             (the task completed, timed out or was deleted) is a benign lifecycle race,
             it is logged and dropped rather than raised.
         """
-        if data is None:
-            data = {}
+        # A whole message wins over the individual fields rather than merging with them:
+        # the two describe the same result, and a merge would silently mix a validated
+        # report with values the caller supplied separately.
+        if task_output_message is None:
+            if task_id is None or success is None:
+                raise ValueError(
+                    "dispatch_task_output_message requires either a "
+                    "'task_output_message', or both a 'task_id' and a 'success'."
+                )
+            task_output_message = TaskOutputMessageModel(
+                task_id=task_id,
+                success=success,
+                message=message,
+                data=data if data is not None else {},
+                payload=payload,
+            )
 
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
-        result_message = TaskOutputMessageModel(
-            task_id=task_id,
-            success=success,
-            message=message,
-            data=data,
-            payload=payload,
+        await agent.dispatch_task_output_message(
+            task_output_message=task_output_message,
         )
-        await agent.dispatch_task_output_message(task_output_message=result_message)
         self._logger.debug(
             "Submitted result for task ID {} to agent {!r}",
-            task_id,
+            task_output_message.task_id,
             agent,
         )
 

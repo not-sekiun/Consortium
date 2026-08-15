@@ -1,15 +1,16 @@
 import uuid
-from collections.abc import AsyncGenerator, AsyncIterable
+from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
 from consortium.framework.agents.agent_message_models import (
+    Payload,
+    RegistrationMessageModel,
     TaskInputMessageModel,
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
 )
-from consortium.framework.agents.base_agent_type import BaseAgentType
 from consortium.server.exceptions.service_exceptions.agents_service_exceptions import (
     AgentNotFoundError,
 )
@@ -63,8 +64,9 @@ class ConnectedAgentsService:
     @log_and_propagate_error_on_service_method
     def register_agent(
         self,
+        registration_message: RegistrationMessageModel | None = None,
         payload_id: str | uuid.UUID | None = None,
-        agent_type: BaseAgentType | None = None,
+        agent_type: str | None = None,
         name: str | None = None,
         description: str = "",
         endpoint: str = "",
@@ -82,10 +84,17 @@ class ConnectedAgentsService:
     ) -> Agent:
         """Register a new agent with this listener.
 
+        Give the agent's reported details either as a whole `registration_message` or as
+        individual fields. Nothing the agent reports is verified by the server, so treat
+        the details as claims about the host rather than as facts.
+
         Args:
-            payload_id: The payload ID of the payload that the agent is using to
-                connect to the listener.
-            agent_type: The agent type of the agent to be registered.
+            registration_message: The registration details reported by the agent. When
+                given, it supplies every reported field and the individual field
+                arguments below are ignored.
+            payload_id: The payload ID of the payload that the agent is using to connect
+                to the listener.
+            agent_type: The name of the agent type to register the agent as.
             name: The human-readable name of the agent.
             description: A description of the agent.
             endpoint: A human-readable representation of the network endpoint that
@@ -104,7 +113,7 @@ class ConnectedAgentsService:
 
         Raises:
             AgentTypeResolutionError: Raised if the agent type cannot be resolved from
-                the provided payload_id or agent_type.
+                the reported payload ID or agent type.
             AgentCreationParameterTypeError: Raised if a parameter has an invalid type.
             ListenerNotFoundError: Raised if the listener that owns this service no
                 longer exists. The agent construction path looks the listener up by ID
@@ -115,6 +124,7 @@ class ConnectedAgentsService:
         """
         return self._agents_service.register_agent(
             listener_id=self._listener_id,
+            registration_message=registration_message,
             payload_id=payload_id,
             agent_type=agent_type,
             name=name,
@@ -189,8 +199,13 @@ class ConnectedAgentsService:
                 to this listener.
             AgentTaskNotFoundError: Raised if the task with the specified task ID is not
                 found on the agent.
+
+        Note:
+            Reading a task message counts as the agent making contact, so this performs an
+            automatic check-in.
         """
         self._validate_agent_connected_to_listener(agent_id=agent_id)
+        self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
         return await self._agents_service.get_next_task_message_by_task_id(
             agent_id=agent_id,
             task_id=task_id,
@@ -222,8 +237,13 @@ class ConnectedAgentsService:
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected
                 to this listener.
+
+        Note:
+            Reading a task message counts as the agent making contact, so this performs an
+            automatic check-in.
         """
         self._validate_agent_connected_to_listener(agent_id=agent_id)
+        self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
         return await self._agents_service.get_next_task_message_sequential(
             agent_id=agent_id,
             timeout=timeout,
@@ -254,8 +274,13 @@ class ConnectedAgentsService:
         Raises:
             AgentNotFoundError: Raised if the agent does not exist or is not connected
                 to this listener.
+
+        Note:
+            Reading a task message counts as the agent making contact, so this performs an
+            automatic check-in.
         """
         self._validate_agent_connected_to_listener(agent_id=agent_id)
+        self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
         return await self._agents_service.get_next_task_message_any(
             agent_id=agent_id,
             timeout=timeout,
@@ -351,25 +376,37 @@ class ConnectedAgentsService:
     async def dispatch_task_output_message(
         self,
         agent_id: str | uuid.UUID,
-        task_id: str | uuid.UUID,
-        success: bool,
+        task_output_message: TaskOutputMessageModel | None = None,
+        task_id: str | uuid.UUID | None = None,
+        success: bool | None = None,
         message: str = "",
         data: dict[str, Any] | None = None,
-        payload: AsyncIterable[bytes] | bytes | None = None,
+        payload: Payload | bytes | bytearray | None = None,
     ) -> None:
         """Submit a result from an agent connected to this listener. This method validates
         that the task exists and is running, performs an automatic check-in, and
         submits the result.
 
+        Give the agent's reported result either as a whole `task_output_message` or as
+        individual fields.
+
         Args:
             agent_id: The agent ID of the agent submitting the result.
-            task_id: The task ID that this result corresponds to.
-            success: Whether the task was successful.
+            task_output_message: The task output message reported by the agent,
+                identifying the task it belongs to and carrying any result data and
+                binary payload. When given, the individual field arguments below are
+                ignored.
+            task_id: The task ID that this result corresponds to. Required when
+                `task_output_message` is not given.
+            success: Whether the task was successful. Required when
+                `task_output_message` is not given.
             message: A message describing the result.
             data: The result data.
             payload: An optional binary payload associated with the result.
 
         Raises:
+            ValueError: Raised if neither `task_output_message` nor both of `task_id`
+                and `success` were given, so there is no result to submit.
             AgentNotFoundError: Raised if the agent does not exist or is not connected
                 to this listener.
             AgentTaskNotFoundError: Raised if the task ID does not correspond to a
@@ -378,17 +415,29 @@ class ConnectedAgentsService:
                 model validation, for example when `data` holds values that are not
                 JSON-serializable or `payload` is not a supported binary type.
         """
+        # Assembled here rather than deeper down so that the running-task check below
+        # sees the same task ID that will be dispatched, whichever way it was supplied.
+        if task_output_message is None:
+            if task_id is None or success is None:
+                raise ValueError(
+                    "dispatch_task_output_message requires either a "
+                    "'task_output_message', or both a 'task_id' and a 'success'."
+                )
+            task_output_message = TaskOutputMessageModel(
+                task_id=task_id,
+                success=success,
+                message=message,
+                data=data if data is not None else {},
+                payload=payload,
+            )
+
         agent = self._validate_agent_connected_to_listener(agent_id=agent_id)
         # Validate the task ID corresponds to a running task before submitting
-        _ = agent.get_running_task_by_task_id(task_id=task_id)
+        _ = agent.get_running_task_by_task_id(task_id=task_output_message.task_id)
         self._agents_service.check_in_agent_by_agent_id(agent_id=agent_id)
         await self._agents_service.dispatch_task_output_message(
             agent_id=agent_id,
-            task_id=task_id,
-            success=success,
-            message=message,
-            data=data,
-            payload=payload,
+            task_output_message=task_output_message,
         )
 
     @log_and_propagate_error_on_service_method

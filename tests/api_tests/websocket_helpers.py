@@ -19,7 +19,13 @@ from consortium.server.server_jwt_config import (
 
 TICKET_PATH = "/api/ws/ticket"
 
+# A validly shaped access token (a JWT `sub` claim) belonging to no logged-in user, for
+# exercising the REST authentication path with a credential that resolves to nobody.
 UNKNOWN_ACCESS_TOKEN = "00000000-0000-0000-0000-000000000000"
+
+# The same idea one layer along: a validly shaped user ID matching no live session, for
+# exercising the handshake path, which resolves a redeemed ticket by user ID.
+UNKNOWN_USER_ID = "11111111-1111-1111-1111-111111111111"
 
 
 # ---------------------------------------------------------------------------
@@ -182,12 +188,22 @@ def extract_token(client) -> str:
 
 
 def access_token_of(client) -> str:
-    # The JWT `sub` claim of a logged-in client: the value tickets are bound to.
+    # The JWT `sub` claim of a logged-in client: what the REST API authenticates on.
     return jwt.decode(
         jwt=extract_token(client),
         key=JSON_WEB_TOKEN_SECRET_KEY,
         algorithms=JSON_WEB_TOKEN_ALGORITHMS,
     )["sub"]
+
+
+def user_id_of(client) -> str:
+    # The ID of a logged-in client's session: the value tickets are bound to. Resolved
+    # from the same access token the client authenticates its REST calls with, so a test
+    # can mint a ticket for a client without going through the ticket endpoint.
+    user = server_singletons.users_service.get_user_by_access_token(
+        access_token_of(client),
+    )
+    return str(user.user_id)
 
 
 async def issue_ticket_over_http(client) -> str:

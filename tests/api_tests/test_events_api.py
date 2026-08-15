@@ -16,13 +16,14 @@ from tests.api_tests.utils import validate_response
 from tests.api_tests.websocket_helpers import (
     TICKET_PATH as _TICKET_PATH,
     UNKNOWN_ACCESS_TOKEN as _UNKNOWN_ACCESS_TOKEN,
-    access_token_of as _access_token_of,
+    UNKNOWN_USER_ID as _UNKNOWN_USER_ID,
     bearer as _bearer,
     extract_token as _extract_token,
     forge_jwt as _forge_jwt,
     issue_ticket_over_http as _issue_ticket_over_http,
     open_with_ticket as _open_with_ticket,
     outstanding_ticket_count as _outstanding_ticket_count,
+    user_id_of as _user_id_of,
 )
 
 # The ASGI transport (WebSocketSession), the controllable clock (FakeClock), and the
@@ -82,11 +83,13 @@ async def test_handshake_ignores_any_authorization_header_it_is_given(
     assert ws.close_code == 1008
 
 
-async def test_connect_with_a_ticket_for_an_unknown_access_token_is_rejected(ws):
-    # A ticket that redeems fine but whose access token matches no logged-in user: the
-    # user lookup after redemption is what has to reject this, not the redemption.
+async def test_connect_with_a_ticket_for_an_unknown_user_id_is_rejected(ws):
+    # A ticket that redeems fine but whose user ID matches no logged-in session: the user
+    # lookup after redemption is what has to reject this, not the redemption. The tickets
+    # service never validates the ID it is handed, so this is the shape a ticket issued
+    # just before its session logged out would take.
     ticket = server_singletons.websocket_tickets_service.issue_ticket(
-        access_token=_UNKNOWN_ACCESS_TOKEN,
+        user_id=_UNKNOWN_USER_ID,
     )
 
     accepted = await ws.open(query_params={"ticket": ticket})
@@ -345,7 +348,7 @@ async def test_action_message_with_unknown_action_value_returns_format_error(
 async def test_subscribe_without_events_field_returns_format_error(ws, admin_client):
     await _open_with_ticket(ws, admin_client)
 
-    # The JSON schema requires "events" when action is "subscribe".
+    # The action message model requires "events" when action is "subscribe".
     await ws.send_json({"action": "subscribe"})
     response = await ws.receive_json()
 
@@ -604,16 +607,16 @@ async def test_issued_ticket_redeems_to_the_callers_own_session(client):
     ticket = response.json()["ticket"]
     assert ticket
 
-    redeemed_access_token = server_singletons.websocket_tickets_service.redeem_ticket(
+    redeemed_user_id = server_singletons.websocket_tickets_service.redeem_ticket(
         ticket=ticket
     )
-    # The redeemed value must be the access token the websocket handshake path resolves
-    # users with (the JWT's `sub` claim), and it must resolve back to the caller and to
-    # nobody else.
-    redeemed_user = server_singletons.users_service.get_user_by_access_token(
-        redeemed_access_token,
+    # The redeemed value must be the user ID the websocket handshake path resolves
+    # sessions with, and it must resolve back to the caller and to nobody else.
+    assert redeemed_user_id == own_user["user_id"]
+
+    redeemed_user = server_singletons.users_service.get_user_by_user_id(
+        user_id=redeemed_user_id,
     )
-    assert redeemed_access_token == str(redeemed_user.json_web_token.subject)
     assert str(redeemed_user.user_id) == own_user["user_id"]
     assert redeemed_user.username == own_user["username"]
 
@@ -765,7 +768,7 @@ async def test_use_events_websocket_permission_is_enforced_on_the_handshake(
     outstanding_tickets_before = _outstanding_ticket_count()
 
     ticket = server_singletons.websocket_tickets_service.issue_ticket(
-        access_token=_access_token_of(spectator_client),
+        user_id=_user_id_of(spectator_client),
     )
 
     accepted = await ws.open(query_params={"ticket": ticket})

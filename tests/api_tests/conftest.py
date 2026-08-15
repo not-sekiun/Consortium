@@ -8,7 +8,7 @@ import pytest
 
 import consortium.server.server_singletons as server_singletons
 from consortium.framework.agents.agent_message_models import RegistrationMessageModel
-from consortium.server.api import login_api, websocket_tickets_api
+from consortium.server.api import login_api, websockets_api
 from consortium.server.models.logging_models import LoggingConfigModel
 from consortium.server.models.server_models import ServerConfigModel
 from consortium.server.objects.user_account_objects import UserPermissions
@@ -71,7 +71,7 @@ def validate_server_config_json_file_before_tests():
 # read per request, so flipping them here disables the limits for the whole test session.
 @pytest.fixture(scope="session", autouse=True)
 def disable_rate_limiters() -> Iterator[None]:
-    rate_limited_api_modules = (login_api, websocket_tickets_api)
+    rate_limited_api_modules = (login_api, websockets_api)
     for api_module in rate_limited_api_modules:
         api_module.limiter.enabled = False
     yield

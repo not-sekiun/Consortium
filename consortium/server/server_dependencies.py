@@ -9,6 +9,7 @@ import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.api_exceptions.http_exceptions import ForbiddenError
 from consortium.server.exceptions.service_exceptions.users_service_exceptions import (
     UserAccessTokenNotFoundError,
+    UserIDNotFoundError,
 )
 from consortium.server.exceptions.service_exceptions.websocket_tickets_service_exceptions import (
     InvalidWebsocketTicketError,
@@ -32,7 +33,8 @@ _authorization_service = server_singletons.authorization_service
 _websocket_tickets_service = server_singletons.websocket_tickets_service
 
 # Bound with the websocket events logger type so that handshake rejection messages keep
-# the colorized terminal treatment they had while this logic lived inside events_api.py.
+# the colorized terminal treatment they had while this logic lived inside the events
+# websocket endpoint.
 # The logger name is deliberately route agnostic: the helper below serves any websocket
 # route, not only the events socket.
 _websocket_logger = logger.bind(
@@ -120,9 +122,9 @@ class AuthorizeUserRequest:
 # the JSON Web Token off a `Request`, and no `Request` object exists for a websocket
 # endpoint. A handshake carries its credential in exactly one place, a ticket in the query
 # string, because that is the only place a browser can put one (it can set neither headers
-# nor a body on a handshake). Hence this helper: it redeems the presented ticket into an
-# access token, then resolves the user and checks the permission, so every websocket route
-# is authenticated and authorized identically.
+# nor a body on a handshake). Hence this helper: it redeems the presented ticket into the
+# user ID of the session it was issued for, then resolves that session and checks the
+# permission, so every websocket route is authenticated and authorized identically.
 #
 # Raises `WebSocketException` with `WS_1008_POLICY_VIOLATION` on any failure. Every reason
 # closes with that same code and nothing distinguishes them to the client: a missing ticket,
@@ -133,14 +135,19 @@ def authenticate_websocket_connection(
     websocket: WebSocket,
     user_permission: UserPermissions,
 ) -> User:
-    access_token = _resolve_websocket_access_token(websocket=websocket)
+    user_id = _resolve_websocket_user_id(websocket=websocket)
 
+    # A redeemed ticket is not on its own proof of a live session: the tickets service
+    # stores the user ID as given and never revalidates it, so a ticket issued moments
+    # before its session logged out still redeems. The lookup here is what turns the
+    # redeemed ID back into an authenticated user, and its failure is what rejects a
+    # handshake presenting a ticket for a session that has since ended.
     try:
-        user = _users_service.get_user_by_access_token(access_token=access_token)
-    except UserAccessTokenNotFoundError:
+        user = _users_service.get_user_by_user_id(user_id=user_id)
+    except UserIDNotFoundError:
         _websocket_logger.debug(
-            "Failed to authorize the WebSocket connection request. The access "
-            "value provided was not found.",
+            "Failed to authorize the WebSocket connection request. The user ID the "
+            "ticket was issued for belongs to no logged-in session.",
         )
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION) from None
 
@@ -154,7 +161,7 @@ def authenticate_websocket_connection(
     return user
 
 
-def _resolve_websocket_access_token(websocket: WebSocket) -> str:
+def _resolve_websocket_user_id(websocket: WebSocket) -> str:
     ticket = websocket.query_params.get(WEBSOCKET_TICKET_QUERY_PARAMETER)
     # A ticket is the only credential a handshake can present. Anything else a caller sends
     # (an Authorization header in particular, which the REPL client used to authenticate
@@ -173,7 +180,7 @@ def _resolve_websocket_access_token(websocket: WebSocket) -> str:
 
 def _redeem_websocket_ticket(ticket: str) -> str:
     try:
-        access_token = _websocket_tickets_service.redeem_ticket(ticket=ticket)
+        user_id = _websocket_tickets_service.redeem_ticket(ticket=ticket)
     except InvalidWebsocketTicketError:
         # Unknown, expired and already-redeemed tickets are indistinguishable by design in
         # the tickets service, and they stay indistinguishable here: the reason reaches
@@ -187,4 +194,4 @@ def _redeem_websocket_ticket(ticket: str) -> str:
     _websocket_logger.debug(
         "Received WebSocket connection request with a redeemed ticket.",
     )
-    return access_token
+    return user_id

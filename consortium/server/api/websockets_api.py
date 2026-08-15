@@ -1,7 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
-from loguru import logger
+from fastapi import APIRouter, Depends, Request, WebSocket
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -16,37 +15,36 @@ from consortium.server.exceptions.api_exceptions.http_exceptions import (
 from consortium.server.exceptions.service_exceptions.websocket_tickets_service_exceptions import (
     TooManyOutstandingWebsocketTicketsError,
 )
-from consortium.server.models.logging_models import LoggerType
 from consortium.server.models.websocket_ticket_models import WebsocketTicketModel
 from consortium.server.objects.user_account_objects import UserPermissions
 from consortium.server.objects.user_objects import User
-from consortium.server.server_dependencies import AuthorizeUserRequest, get_current_user
+from consortium.server.server_dependencies import (
+    AuthorizeUserRequest,
+    authenticate_websocket_connection,
+    get_current_user,
+)
 from consortium.server.services.websocket_tickets_service import (
     TICKET_TIME_TO_LIVE_SECONDS,
 )
 
-# This router carries its own prefix rather than living under the events API router
-# (/api/ws/events): ticket issuance is a plain HTTP concern shared by every websocket
-# endpoint, not part of the events socket itself. Both sit under /api/ws/ because they are
-# websocket concerns.
 router = APIRouter(
-    prefix="/api/ws/ticket",
+    prefix="/api/ws",
     responses={
         401: {"description": "Unauthorized"},
         403: {"model": ForbiddenError().to_pydantic_model()},
         405: {"model": MethodNotAllowedError().to_pydantic_model()},
         500: {"model": InternalServerError().to_pydantic_model()},
     },
-    tags=["Websocket Tickets"],
 )
 limiter = Limiter(key_func=get_remote_address)
 
+_events_websocket_service = server_singletons.events_websocket_service
 _websocket_tickets_service = server_singletons.websocket_tickets_service
 
-_logger = logger.bind(
-    logger_name="Websocket Tickets API",
-    logger_type=LoggerType.REST_API_LOGGER,
-)
+# No logger is bound in this module by design. Routes here are a thin translation layer
+# between HTTP and the services, so everything worth recording (a ticket issued, a
+# redemption, a connection served, a service error) is logged by the service that performs
+# it. Logging here as well would double every line under two logger names.
 
 _TICKET_STORE_FULL_MESSAGE = (
     "A websocket ticket could not be issued because the server is holding too many "
@@ -67,12 +65,13 @@ _ticket_store_full_error = ServiceUnavailableError(
 # far above legitimate demand: a client needs exactly one ticket per handshake, so only page
 # reloads and reconnect attempts spend from the budget.
 @router.post(
-    "",
+    "/ticket",
     responses={
         200: {"model": WebsocketTicketModel},
         429: {"model": TooManyRequestsError().to_pydantic_model()},
         503: {"model": _ticket_store_full_error.to_pydantic_model()},
     },
+    tags=["Websocket Tickets"],
 )
 @limiter.limit("20/minute")
 async def issue_websocket_ticket(
@@ -100,31 +99,48 @@ async def issue_websocket_ticket(
     Returns:
         The issued ticket along with the number of seconds it remains redeemable for.
     """
-    # The ticket is bound to the caller's own access token, read off the `User` that the
-    # authentication dependency resolved. Note that "access token" here means the JSON Web
-    # Token's `sub` claim (`json_web_token.subject`), which is what
-    # `users_service.get_user_by_access_token` matches on, NOT the encoded token string
-    # that `json_web_token.access_token` holds. The websocket handshake path redeems the
-    # ticket and feeds the result straight into that lookup, so binding the encoded string
-    # instead would produce a ticket that redeems to a value resolving to no user at all.
+    # The ticket is bound to the ID of the caller's own session, read off the `User` that
+    # the authentication dependency resolved. The handshake path redeems the ticket back
+    # into this ID and resolves it through `users_service.get_user_by_user_id`, so the
+    # socket ends up serving the very session that asked for the ticket.
     try:
-        ticket = _websocket_tickets_service.issue_ticket(
-            access_token=str(user.json_web_token.subject),
-        )
+        ticket = _websocket_tickets_service.issue_ticket(user_id=user.user_id)
     except TooManyOutstandingWebsocketTicketsError:
         # The cap is a server wide resource limit that a caller can do nothing about
         # except retry, so it is reported as a 503 rather than as a client error. The
-        # response deliberately does not echo the cap or the current occupancy back.
-        _logger.warning(
-            "Failed to issue a websocket ticket to {}. The outstanding ticket cap has "
-            "been reached.",
-            user,
-        )
+        # response deliberately does not echo the cap or the current occupancy back. The
+        # failure itself is already logged by the tickets service.
         raise ServiceUnavailableError(message=_TICKET_STORE_FULL_MESSAGE) from None
-
-    _logger.debug("Issued a websocket ticket to {}.", user)
 
     return WebsocketTicketModel(
         ticket=ticket,
         time_to_live_seconds=TICKET_TIME_TO_LIVE_SECONDS,
     )
+
+
+@router.websocket("/events")
+async def websocket_endpoint(
+    websocket: WebSocket,
+):
+    # We cannot use the user dependency here because the Request object which the
+    # `get_current_user` dependency uses to obtain the JWT value from the Authorization
+    # header is not available in the websocket endpoint. Authentication and authorization
+    # for the handshake therefore live in `authenticate_websocket_connection`, which is
+    # shared by every websocket route and redeems the handshake's single credential (a
+    # ticket in the query string, the only place a browser can put one) into one user
+    # lookup and one permission check.
+    # TODO: The websocket credential path is handled by that one helper, but the helper
+    #  itself is still separate from the REST API's dependencies and from the
+    #  authentication middleware. Unify all three so that authorization and authentication
+    #  are decided in a single place across the REST API, middleware and websocket
+    #  endpoints.
+    user = authenticate_websocket_connection(
+        websocket=websocket,
+        user_permission=UserPermissions.USE_EVENTS_WEBSOCKET,
+    )
+
+    await websocket.accept()
+
+    # `user` is handed on so the service can report the connection: this endpoint does no
+    # logging of its own.
+    await _events_websocket_service.handle_connection(websocket=websocket, user=user)

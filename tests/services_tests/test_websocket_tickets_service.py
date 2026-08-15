@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 
 import pytest
 
@@ -44,17 +45,29 @@ def service():
     return WebsocketTicketsService()
 
 
-def test_issued_ticket_redeems_once_returning_exact_token(service, clock):
-    access_token = "access-token-abc"
-    ticket = service.issue_ticket(access_token=access_token)
+def test_issued_ticket_redeems_once_returning_exact_user_id(service, clock):
+    user_id = str(uuid.uuid4())
+    ticket = service.issue_ticket(user_id=user_id)
 
     redeemed = service.redeem_ticket(ticket=ticket)
 
-    assert redeemed == access_token
+    assert redeemed == user_id
+
+
+def test_uuid_user_id_is_normalized_to_a_string_on_redemption(service, clock):
+    # The users service keys its registry on the string form of a user ID, so a ticket
+    # issued with a UUID object must still redeem to something that lookup can match.
+    user_id = uuid.uuid4()
+    ticket = service.issue_ticket(user_id=user_id)
+
+    redeemed = service.redeem_ticket(ticket=ticket)
+
+    assert redeemed == str(user_id)
+    assert isinstance(redeemed, str)
 
 
 def test_second_redemption_fails(service, clock):
-    ticket = service.issue_ticket(access_token="token")
+    ticket = service.issue_ticket(user_id=str(uuid.uuid4()))
 
     service.redeem_ticket(ticket=ticket)
 
@@ -65,13 +78,13 @@ def test_second_redemption_fails(service, clock):
 def test_expired_ticket_fails_and_is_reaped_from_store(service, clock):
     # Issue a ticket, let it expire, then issue a second ticket. The second issue triggers
     # the lazy reap, which must remove the expired first ticket from the internal store.
-    expired_ticket = service.issue_ticket(access_token="token")
+    expired_ticket = service.issue_ticket(user_id=str(uuid.uuid4()))
     assert expired_ticket in service._tickets
 
     clock.advance(service_module.TICKET_TIME_TO_LIVE_SECONDS + 1)
 
     # Issuing sweeps expired entries before inserting, so the expired ticket must be gone.
-    service.issue_ticket(access_token="token-2")
+    service.issue_ticket(user_id=str(uuid.uuid4()))
 
     assert expired_ticket not in service._tickets
     # And redeeming the expired ticket fails.
@@ -89,13 +102,13 @@ def test_unknown_expired_and_redeemed_are_indistinguishable(service, clock):
         service.redeem_ticket(ticket="never-issued-ticket-value")
 
     # Already redeemed.
-    redeemed_ticket = service.issue_ticket(access_token="token")
+    redeemed_ticket = service.issue_ticket(user_id=str(uuid.uuid4()))
     service.redeem_ticket(ticket=redeemed_ticket)
     with pytest.raises(InvalidWebsocketTicketError) as redeemed_exc_info:
         service.redeem_ticket(ticket=redeemed_ticket)
 
     # Expired.
-    expired_ticket = service.issue_ticket(access_token="token")
+    expired_ticket = service.issue_ticket(user_id=str(uuid.uuid4()))
     clock.advance(service_module.TICKET_TIME_TO_LIVE_SECONDS + 1)
     with pytest.raises(InvalidWebsocketTicketError) as expired_exc_info:
         service.redeem_ticket(ticket=expired_ticket)
@@ -128,7 +141,8 @@ async def test_concurrent_redemption_succeeds_exactly_once(service, clock):
     # one must succeed and the rest must raise InvalidWebsocketTicketError. This holds
     # because redeem_ticket is synchronous: the single dict pop cannot be suspended
     # mid-way, so only one coroutine can observe the ticket present.
-    ticket = service.issue_ticket(access_token="the-token")
+    user_id = str(uuid.uuid4())
+    ticket = service.issue_ticket(user_id=user_id)
 
     async def attempt():
         return service.redeem_ticket(ticket=ticket)
@@ -137,7 +151,7 @@ async def test_concurrent_redemption_succeeds_exactly_once(service, clock):
         *[attempt() for _ in range(64)], return_exceptions=True
     )
 
-    successes = [result for result in results if result == "the-token"]
+    successes = [result for result in results if result == user_id]
     failures = [
         result for result in results if isinstance(result, InvalidWebsocketTicketError)
     ]
@@ -152,20 +166,20 @@ def test_issuing_beyond_cap_raises(service, clock, monkeypatch):
     monkeypatch.setattr(service_module, "MAX_OUTSTANDING_TICKETS", 3)
 
     for _ in range(3):
-        service.issue_ticket(access_token="token")
+        service.issue_ticket(user_id=str(uuid.uuid4()))
 
     with pytest.raises(TooManyOutstandingWebsocketTicketsError):
-        service.issue_ticket(access_token="token")
+        service.issue_ticket(user_id=str(uuid.uuid4()))
 
 
-def test_two_tickets_for_same_token_are_different_values(service, clock):
-    # Tickets must be random, not derived from the access token: issuing twice for the
-    # same token yields two distinct opaque values.
-    access_token = "same-token"
-    first_ticket = service.issue_ticket(access_token=access_token)
-    second_ticket = service.issue_ticket(access_token=access_token)
+def test_two_tickets_for_same_user_are_different_values(service, clock):
+    # Tickets must be random, not derived from the user ID: issuing twice for the same
+    # session yields two distinct opaque values.
+    user_id = str(uuid.uuid4())
+    first_ticket = service.issue_ticket(user_id=user_id)
+    second_ticket = service.issue_ticket(user_id=user_id)
 
     assert first_ticket != second_ticket
-    # And neither ticket embeds the access token it was issued for.
-    assert access_token not in first_ticket
-    assert access_token not in second_ticket
+    # And neither ticket embeds the user ID it was issued for.
+    assert user_id not in first_ticket
+    assert user_id not in second_ticket

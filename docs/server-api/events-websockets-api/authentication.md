@@ -103,7 +103,7 @@ else's.
 | `time_to_live_seconds` | How long the ticket stays redeemable for, in seconds.           |
 
 The ticket is opaque: it encodes nothing about your token or your account, and neither
-can be derived from it. Two properties govern how you use one:
+can be derived from it. Three properties govern how you use one:
 
 - **Single use.** A ticket authenticates exactly one handshake and is spent the moment
   the server redeems it. Every connection needs its own ticket, including a reconnect
@@ -111,6 +111,9 @@ can be derived from it. Two properties govern how you use one:
 - **Short-lived.** The ticket expires shortly after issue. Read the window from
   `time_to_live_seconds` rather than hardcoding it, and obtain the ticket immediately
   before connecting rather than holding one for later.
+- **Bound to your session.** The ticket names the session that asked for it, so the
+  connection it opens is that session's. Logging out invalidates any ticket issued to
+  that session, whether or not it has expired.
 
 !!! note
     Issuing a ticket requires the `USE_EVENTS_WEBSOCKET` permission, the same permission
@@ -177,9 +180,10 @@ The server deliberately gives no reason for a refusal. A ticket that was never i
 one that has expired, and one that has already been redeemed are all rejected
 identically, so that the handshake cannot be used to probe which of the three is the
 case. If this happens, the likely causes in order are: the ticket was already spent on
-an earlier connection, too long passed between obtaining it and connecting, or the URL
-is wrong. If you want more information about what _exactly_ failed you have to start
-the server in debug mode by running the server with the `-d` or `--debug` flag.
+an earlier connection, too long passed between obtaining it and connecting, the session
+the ticket was issued for has since logged out, or the URL is wrong. If you want more
+information about what _exactly_ failed you have to start the server in debug mode by
+running the server with the `-d` or `--debug` flag.
 
 ```shell title="Start the server in debug mode"
 uv run python consortium.py -d
