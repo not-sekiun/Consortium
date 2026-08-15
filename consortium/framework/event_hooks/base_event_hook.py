@@ -219,7 +219,7 @@ class BaseEventHook(ComponentMetadata):
         # The events service stays strict (it raises rather than silently ignoring a
         # double registration) because that strictness is the only backstop against a
         # genuine double-registration bug elsewhere, such as the websocket path in
-        # `consortium.server.api.events_api`. The no-op contract documented above is
+        # `consortium.server.api.websockets_api`. The no-op contract documented above is
         # honoured here instead, locally, by catching and swallowing it.
         try:
             self.services.events_service.register_event_handler_to_event_type(
