@@ -1,6 +1,5 @@
 import asyncio
 import typing
-from collections.abc import AsyncIterable
 from typing import Any
 
 from pydantic import JsonValue
@@ -11,6 +10,7 @@ from consortium.framework._core.framework_exceptions.agent_capabilities_framewor
 from consortium.framework.agents._resource_limits import QUEUE_MEMORY_LIMIT
 from consortium.framework.agents._task_messages_queue import END_OF_STREAM
 from consortium.framework.agents.agent_message_models import (
+    Payload,
     TaskInputMessageModel,
     TaskLaunchMessageModel,
     TaskOutputMessageModel,
@@ -50,7 +50,7 @@ class _AgentCommunicator:
         self,
         task_message: TaskInputMessageModel | None = None,
         data: dict[str, Any] | None = None,
-        payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
+        payload: bytes | bytearray | Payload | None = None,
         timeout: int | float | None = None,
     ) -> None:
         """Send a message to the agent.
@@ -132,7 +132,7 @@ class _AgentCommunicator:
         self,
         task_message: TaskInputMessageModel | None = None,
         data: dict[str, Any] | None = None,
-        payload: bytes | bytearray | AsyncIterable[bytes] | None = None,
+        payload: bytes | bytearray | Payload | None = None,
         timeout: int | float | None = None,
     ) -> TaskOutputMessageModel:
         """Send a message to the agent and wait for its response.

@@ -72,11 +72,9 @@ def _task_message_entry_size(json_blob: bytes, payload: Payload | None) -> int:
     # an accounting fact rather than an estimate: every term is exact and O(1).
     size = len(json_blob) + _MESSAGE_ENTRY_OVERHEAD
     if payload is not None:
-        # A streaming payload has no known length until it is consumed, so it cannot be
-        # measured up front and only its object overhead is counted.
-        size += sys.getsizeof(payload)
-        if not payload.is_stream:
-            size += len(payload.data)
+        # Only the bytes a payload holds in memory count. Payloads spooled to disk
+        # hold no bytes in memory.
+        size += sys.getsizeof(payload) + payload._resident_size
     return size
 
 

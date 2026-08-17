@@ -14,6 +14,9 @@ report results as a [`Success`][consortium.framework.agents.Success] or
 [`Failure`][consortium.framework.agents.Failure] outcome.
 """
 
+from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
+    PayloadTooLargeError,
+)
 from consortium.framework.agents.agent_message_models import (
     Payload,
     TaskInputMessageModel,
@@ -45,6 +48,7 @@ __all__ = [
     "Success",
     "Failure",
     "Payload",
+    "PayloadTooLargeError",
     "TaskLaunchMessageModel",
     "TaskInputMessageModel",
     "TaskOutputMessageModel",

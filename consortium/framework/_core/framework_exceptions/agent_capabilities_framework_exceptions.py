@@ -238,6 +238,26 @@ class AgentCapabilityTaskHandlerError(AgentCapabilitiesFrameworkError):
         )
 
 
+class PayloadTooLargeError(AgentCapabilitiesFrameworkError):
+    """Raised when a payload being received exceeds the configured maximum size.
+
+    `Payload.from_async_iterable` enforces a hard byte cap as it consumes its source so
+    that an unbounded upload is rejected mid-stream rather than after being fully
+    buffered. This is the single place transports learn a payload was refused for size,
+    replacing the per-transport sentinels and cap loops each one used to carry.
+    """
+
+    code = "PAYLOAD_TOO_LARGE_ERROR"
+
+    def __init__(self, max_size: int):
+        super().__init__(
+            message=(
+                f"The payload exceeded the maximum allowed size of {max_size} bytes."
+            ),
+            detail={"max_size": max_size},
+        )
+
+
 class AgentCommunicationEndOfStreamError(AgentCapabilitiesFrameworkError):
     """Raised when a communicator reaches the end of a task's message stream.
 
