@@ -82,23 +82,6 @@ async def issue_websocket_ticket(
         Depends(AuthorizeUserRequest(UserPermissions.USE_EVENTS_WEBSOCKET)),
     ],
 ) -> WebsocketTicketModel:
-    """Issues a short-lived, single-use ticket for authenticating a websocket handshake.
-
-    A browser cannot set request headers on a websocket handshake, so it cannot present
-    its JSON Web Token there the way it does on every other request. Instead it calls this
-    endpoint over ordinary HTTP (where the token travels in the Authorization header as
-    usual) and receives an opaque ticket to present on the handshake in place of the token.
-
-    The ticket is always minted for the calling user's own session. The endpoint takes no
-    request body and no user identifier, so there is no way to request a ticket bound to
-    another user's session.
-
-    Requires the `USE_EVENTS_WEBSOCKET` permission: the same permission the websocket
-    endpoint itself checks, so obtaining a ticket can never be a way around that check.
-
-    Returns:
-        The issued ticket along with the number of seconds it remains redeemable for.
-    """
     # The ticket is bound to the ID of the caller's own session, read off the `User` that
     # the authentication dependency resolved. The handshake path redeems the ticket back
     # into this ID and resolves it through `users_service.get_user_by_user_id`, so the
