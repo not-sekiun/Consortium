@@ -1,8 +1,12 @@
 import json
 
-import jsonschema
 from aiohttp import MultipartWriter, web
 
+from consortium.framework.agents import Payload, PayloadTooLargeError
+from consortium.framework.agents.agent_message_models import (
+    RegistrationMessageModel,
+    TaskOutputMessageModel,
+)
 from consortium.framework.listeners import BaseListener
 from consortium.framework.signal_exceptions import ListenerStartError
 from consortium.server.exceptions.object_exceptions.agent_object_exceptions import (
@@ -13,8 +17,15 @@ from consortium.server.exceptions.service_exceptions.agents_service_exceptions i
     AgentNotFoundError,
 )
 
+_MAX_PAYLOAD_SIZE = 100 * 1024 * 1024
+
 
 class Listener(BaseListener):
+    # Every rejection from every route answers a bare 401, whether the cause is a bad
+    # agent ID, malformed JSON, a schema violation or an oversized body. This is
+    # deliberate: differential status codes let a scanner probing the URL paths tell a
+    # real ingress endpoint from an unrelated 404, so do not "correct" these into
+    # 400/413/422.
     async def on_started(self) -> None:
         self.event_logger.info("Starting listener...")
 
@@ -24,61 +35,59 @@ class Listener(BaseListener):
         results_url_paths = self.parameters["results_url_paths"]
         registration_url_paths = self.parameters["registration_url_paths"]
 
-        app = web.Application()
+        # Bound request POST sizes to 16 MiB (much greater than the upload/download
+        # chunk defaults of 8Mib). This bounds both JSON and payload binary data
+        app = web.Application(client_max_size=16 * 1024 * 1024)
+
+        def reject(request, reason, *args):
+            self.logger.warning(
+                "Rejected client {}: " + reason + " Responded with 401 Unauthorized.",
+                request.remote,
+                *args,
+            )
+            return web.Response(status=401)
 
         async def handle_agent_registration(request):
-            # Validate the agent registration message schema
-            agent_registration_json_schema = {
-                "type": "object",
-                "properties": {
-                    "payload_id": {"type": "string"},
-                    "agent_type": {"type": "string"},
-                    "user": {"type": "string"},
-                    "is_admin": {"type": "boolean"},
-                    "os": {"type": "string"},
-                    "version": {"type": "string"},
-                    "arch": {"type": "string"},
-                    "pid": {"type": "integer"},
-                    "locale": {"type": "string"},
-                    "local_ip": {"type": "string"},
-                    "hostname": {"type": "string"},
-                },
-                "oneOf": [{"required": ["payload_id"]}, {"required": ["agent_type"]}],
-                "additionalProperties": False,
-            }
+            # `RegistrationMessageModel` is the shared wire contract for registration,
+            # so validation is just parsing into it. `ValueError` covers both the JSON
+            # decode failure and pydantic's `ValidationError`, which subclasses it,
+            # while an oversized body arrives as `HTTPRequestEntityTooLarge` from
+            # `client_max_size`.
             try:
-                json_request_body = await request.json()
-                jsonschema.validate(json_request_body, agent_registration_json_schema)
-            except json.JSONDecodeError, jsonschema.ValidationError:
-                return web.Response(status=401)
+                registration = RegistrationMessageModel.model_validate(
+                    await request.json()
+                )
+            except ValueError, web.HTTPRequestEntityTooLarge:
+                return reject(request, "sent a malformed or oversized registration.")
+
+            # An agent behind a relay or proxy is the only party that knows its own
+            # address, so its own report wins. Fill in what we observed only where it
+            # reported nothing.
+            observed = {}
+            if not registration.endpoint:
+                observed["endpoint"] = request.remote
+            if registration.remote_ip is None:
+                observed["remote_ip"] = request.remote
+            if observed:
+                registration = registration.model_copy(update=observed)
 
             # Register the agent and create an agent record
-            payload_id = json_request_body.pop("payload_id", None)
-            agent_type = json_request_body.pop("agent_type", None)
             try:
                 agent = self.connected_agents_service.register_agent(
-                    payload_id=payload_id,
-                    agent_type=agent_type,
-                    endpoint=request.remote,
-                    remote_ip=request.remote,
-                    **json_request_body,
+                    registration_message=registration,
                 )
             except AgentTypeResolutionError:
-                if agent_type:
-                    self.logger.warning(
-                        "Agent from {} attempted to register with an invalid agent "
-                        "type: {}. Responded with 401 Unauthorized.",
-                        request.remote,
-                        agent_type,
+                if registration.agent_type:
+                    return reject(
+                        request,
+                        "registered with an invalid agent type: {}.",
+                        registration.agent_type,
                     )
-                else:
-                    self.logger.warning(
-                        "Agent from {} attempted to register with an invalid payload "
-                        "ID: {}. Responded with 401 Unauthorized.",
-                        request.remote,
-                        payload_id,
-                    )
-                return web.Response(status=401)
+                return reject(
+                    request,
+                    "registered with an invalid payload ID: {}.",
+                    registration.payload_id,
+                )
             self.logger.info(
                 "Agent {} checked in from: {}",
                 str(agent),
@@ -87,34 +96,24 @@ class Listener(BaseListener):
             return web.json_response({"agent_id": str(agent.agent_id)}, status=200)
 
         async def handle_agent_getting_task_message(request):
-            # Validate the agent task message schema
+            # Agents identify themselves with their agent ID in the Cookie header
             try:
                 agent_id = request.headers["Cookie"]
             except KeyError:
-                self.logger.warning(
-                    "Unidentified client {} attempted to retrieve tasks without "
-                    "providing an agent ID in the Cookie header. Responded with 401 "
-                    "Unauthorized.",
-                    request.remote,
-                )
-                return web.Response(status=401)
+                return reject(request, "retrieved tasks without an agent ID.")
 
+            # Retrieval performs the agent check-in for us.
             try:
-                self.connected_agents_service.check_in_agent_by_agent_id(
-                    agent_id=agent_id
-                )
                 task_message = await self.connected_agents_service.get_next_task_message_sequential(
                     agent_id=agent_id,
                     timeout=0,  # Don't block, return immediately
                 )
             except AgentNotFoundError:
-                self.logger.warning(
-                    "Agent from {} attempted to retrieve tasks with an invalid agent "
-                    "ID '{}'. Responded with 401 Unauthorized.",
-                    request.remote,
+                return reject(
+                    request,
+                    "retrieved tasks with an invalid agent ID: {}.",
                     agent_id,
                 )
-                return web.Response(status=401)
 
             if task_message is None:  # No task messages to report
                 return web.Response(status=204)
@@ -130,7 +129,7 @@ class Listener(BaseListener):
                     json_part.set_content_disposition("form-data", name="json")
 
                     # Payload part
-                    binary_data = task_message.payload
+                    binary_data = await task_message.payload.read()
                     bin_part = writer.append(binary_data)
                     bin_part.set_content_disposition("form-data", name="payload")
                     bin_part.headers["Content-Type"] = "application/octet-stream"
@@ -143,129 +142,88 @@ class Listener(BaseListener):
                 )
 
         async def handle_agent_posting_task_message(request):
-            # Validate the agent result message schema
-            task_output_message_json_schema = {
-                "type": "object",
-                "properties": {
-                    "task_id": {"type": "string"},
-                    "success": {"type": "boolean"},
-                    "message": {"type": "string"},
-                    "data": {"type": "object"},
-                },
-                "required": ["task_id", "success", "message", "data"],
-                "additionalProperties": False,
-            }
-
             try:
                 agent_id = request.headers["Cookie"]
             except KeyError:
-                self.logger.warning(
-                    "Unidentified client {} attempted to post data to endpoint without "
-                    "providing an agent ID in the Cookie header. Responded with 401 "
-                    "Unauthorized.",
-                    request.remote,
-                )
-                return web.Response(status=401)
+                return reject(request, "posted a result without an agent ID.")
 
-            # Handle results that do not include multipart payloads and only have JSON
-            if request.content_type == "application/json":
-                try:
+            # Decoding the body and validating it against the shared wire contract are one
+            # step: `from_json` keeps the binary payload out of band so an agent cannot
+            # inject one through the JSON. A single `ValueError` covers the JSON decode
+            # failure, a bad UTF-8 part, and pydantic's `ValidationError`, all of which
+            # subclass it.
+            try:
+                # Handle results that do not include multipart payloads and only have JSON
+                if request.content_type == "application/json":
                     task_output_message_json = await request.json()
-                    jsonschema.validate(
-                        task_output_message_json, task_output_message_json_schema
-                    )
-                except json.JSONDecodeError, jsonschema.ValidationError:
-                    self.logger.warning(
-                        "Unidentified client {} posted malformed JSON data. Responded "
-                        "with 401 Unauthorized.",
-                        request.remote,
-                    )
-                    return web.Response(status=401)
+                    payload = None
+                # Handle results that include multipart payloads
+                elif request.content_type == "multipart/form-data":
+                    reader = await request.multipart()
+                    task_output_message_json = None
+                    payload = None
 
-                task_id = task_output_message_json["task_id"]
-                success = task_output_message_json["success"]
-                message = task_output_message_json["message"]
-                data = task_output_message_json["data"]
-                payload = None
-            # Handle results that include multipart payloads
-            elif request.content_type == "multipart/form-data":
-                reader = await request.multipart()
-                task_output_message_json = None
-                payload = None
-
-                # Extract parts from the multipart data, expecting "json" and "payload"
-                async for part in reader:
-                    if part.name == "json":
-                        try:
+                    # Extract parts from the multipart data, expecting "json" and
+                    # "payload"
+                    async for part in reader:
+                        if part.name == "json":
                             json_bytes = await part.read()
                             task_output_message_json = json.loads(
                                 json_bytes.decode("utf-8")
                             )
-                            jsonschema.validate(
-                                task_output_message_json,
-                                task_output_message_json_schema,
-                            )
-                        except (
-                            json.JSONDecodeError,
-                            jsonschema.ValidationError,
-                        ):
-                            self.logger.warning(
-                                "Unidentified client {} posted malformed JSON data. "
-                                "Responded with 401 Unauthorized.",
-                                request.remote,
-                            )
-                            return web.Response(status=401)
-                    elif part.name == "payload":
-                        payload = await part.read()
+                        elif part.name == "payload":
+                            try:
+                                payload = await Payload.from_async_iterable(
+                                    part,
+                                    max_size=_MAX_PAYLOAD_SIZE,
+                                    filename=part.filename,
+                                    content_type=part.headers.get("Content-Type"),
+                                )
+                            except PayloadTooLargeError:
+                                return reject(
+                                    request,
+                                    "posted a payload over the {} byte maximum.",
+                                    _MAX_PAYLOAD_SIZE,
+                                )
 
-                if task_output_message_json is None or payload is None:
-                    self.logger.warning(
-                        "Unidentified client {} posted malformed multipart request. "
-                        "Multipart request did not contain both a 'json' and "
-                        "'payload' field. Responded with 401 Unauthorized.",
-                        request.remote,
+                    if task_output_message_json is None or payload is None:
+                        return reject(
+                            request,
+                            "posted a multipart result missing its 'json' or 'payload' "
+                            "part.",
+                        )
+                else:
+                    return reject(
+                        request,
+                        "posted a result with an unsupported Content-Type: {}.",
+                        request.content_type,
                     )
-                    return web.Response(status=401)
 
-                task_id = task_output_message_json["task_id"]
-                success = task_output_message_json["success"]
-                message = task_output_message_json["message"]
-                data = task_output_message_json["data"]
-            else:
-                self.logger.warning(
-                    "Unidentified client {} posted malformed multipart request with "
-                    "unsupported Content-Type '{}'. Responded with 401 Unauthorized.",
-                    request.remote,
-                    request.content_type,
+                output = TaskOutputMessageModel.from_json(
+                    task_output_message_json,
+                    payload=payload,
                 )
-                return web.Response(status=401)
+            except ValueError, web.HTTPRequestEntityTooLarge:
+                return reject(request, "posted a malformed or oversized result.")
 
             # Submit the agent result after validation
             try:
                 await self.connected_agents_service.dispatch_task_output_message(
                     agent_id=agent_id,
-                    task_id=task_id,
-                    success=success,
-                    message=message,
-                    data=data,
-                    payload=payload,
+                    task_output_message=output,
                 )
             except AgentNotFoundError:
-                self.logger.warning(
-                    "Agent from {} checked in with an invalid agent ID: {}. Responded "
-                    "with 401 Unauthorized.",
-                    request.remote,
+                return reject(
+                    request,
+                    "posted a result with an invalid agent ID: {}.",
                     agent_id,
                 )
-                return web.Response(status=401)
             except AgentTaskNotFoundError:
-                self.logger.warning(
-                    "Agent from {} posted a result with an invalid task ID: {}. "
-                    "Responded with 401 Unauthorized.",
-                    request.remote,
-                    task_id,
+                return reject(
+                    request,
+                    "posted a result with an invalid task ID: {}.",
+                    output.task_id,
                 )
-                return web.Response(status=401)
 
             return web.Response(status=200)
 
