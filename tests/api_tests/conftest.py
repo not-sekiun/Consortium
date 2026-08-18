@@ -20,15 +20,6 @@ from tests.api_tests.websocket_helpers import FakeClock, WebSocketSession
 _MOCK_LISTENER_LABELS = {"consortium.listeners.mock_1", "consortium.listeners.mock_2"}
 _MOCK_AGENT_LABELS = {"consortium.agents.mock_1", "consortium.agents.mock_2"}
 
-_JSON_WEB_TOKEN_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "access_token": {"type": "string"},
-        "token_type": {"type": "string"},
-    },
-    "required": ["access_token", "token_type"],
-}
-
 
 @pytest.fixture(scope="session")
 def anyio_backend():

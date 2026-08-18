@@ -5,46 +5,13 @@ from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
+from tests.api_tests.framework_components_json_response_schemas import (
+    USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
+    USER_NOT_FOUND_ERROR_JSON_SCHEMA,
+)
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
-
-USER_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["USER_NOT_FOUND_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["USER_ACCOUNT_NOT_FOUND_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 async def test_logout_from_server(app, admin_client, operator_client, spectator_client):

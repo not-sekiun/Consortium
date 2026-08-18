@@ -1,41 +1,12 @@
 import pytest
 
+from tests.api_tests.framework_components_json_response_schemas import (
+    SERVER_CONFIG_JSON_SCHEMA,
+    SERVER_VERSION_JSON_SCHEMA,
+)
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
-
-SERVER_VERSION_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "version": {"type": "string"},
-        "codename": {"type": "string"},
-        "datetime_released": {"type": ["string", "null"]},
-    },
-    "required": ["version", "codename", "datetime_released"],
-    "additionalProperties": False,
-}
-SERVER_CONFIG_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "local_host": {"type": "string"},
-        "local_port": {"type": "integer"},
-        "remote_host_whitelist": {"type": "array", "items": {"type": "string"}},
-        "remote_host_blacklist": {"type": "array", "items": {"type": "string"}},
-        "server_header": {"type": ["string", "null"]},
-        "ssl_certfile": {"type": ["string", "null"]},
-        "ssl_keyfile": {"type": ["string", "null"]},
-    },
-    "required": [
-        "local_host",
-        "local_port",
-        "remote_host_whitelist",
-        "remote_host_blacklist",
-        "server_header",
-        "ssl_certfile",
-        "ssl_keyfile",
-    ],
-    "additionalProperties": False,
-}
 
 
 async def test_get_server_release(client):

@@ -7,6 +7,13 @@ from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
+from tests.api_tests.framework_components_json_response_schemas import (
+    ALL_ASSETS_JSON_SCHEMA,
+    ASSET_JSON_SCHEMA,
+    DIRECTORY_ARCHIVE_FORMAT_NOT_SPECIFIED_ERROR_JSON_SCHEMA,
+    DIRECTORY_FILE_NOT_ARCHIVE_ERROR_JSON_SCHEMA,
+    RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA,
+)
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
@@ -22,115 +29,6 @@ def _build_zip_archive_bytes() -> bytes:
 # Archive content for the directory uploads that have to actually unpack, as opposed to
 # the ones below that are rejected on their filename before their content is read.
 _ZIP_ARCHIVE_BYTES = _build_zip_archive_bytes()
-
-ASSET_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "resource_id": {"type": "string"},
-        "name": {"type": "string"},
-        "description": {"type": "string"},
-        "size": {"type": ["integer", "null"]},
-        "exists_on_disk": {"type": "boolean"},
-        "datetime_created": {"type": "string"},
-        "datetime_modified": {"type": "string"},
-        "md5_checksum": {"type": ["string", "null"]},
-        "is_directory": {"type": "boolean"},
-        "data": {
-            "type": "object",
-            "properties": {
-                "user_account": {
-                    "type": "object",
-                    "properties": {
-                        "username": {"type": "string"},
-                        "role": {"type": "string"},
-                    },
-                    "required": ["username", "role"],
-                },
-                "resolved_user_account": {
-                    "type": ["object", "null"],
-                    "properties": {
-                        "user_account_id": {"type": "string"},
-                        "username": {"type": "string"},
-                        "role": {"type": "string"},
-                    },
-                },
-            },
-            "required": ["user_account", "resolved_user_account"],
-        },
-    },
-    "required": [
-        "resource_id",
-        "name",
-        "description",
-        "size",
-        "exists_on_disk",
-        "datetime_created",
-        "datetime_modified",
-        "md5_checksum",
-        "is_directory",
-        "data",
-    ],
-}
-ALL_ASSETS_JSON_SCHEMA = {
-    "type": "array",
-    "items": ASSET_JSON_SCHEMA,
-}
-RESOURCE_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["RESOURCE_NOT_FOUND_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-DIRECTORY_ARCHIVE_FORMAT_NOT_SPECIFIED_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": [
-                        "REPOSITORY_DIRECTORY_ARCHIVE_FILE_FORMAT_NOT_SPECIFIED_ERROR"
-                    ],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-DIRECTORY_FILE_NOT_ARCHIVE_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["REPOSITORY_DIRECTORY_FILE_NOT_ARCHIVE_FILE_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 async def test_get_all_assets(client):

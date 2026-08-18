@@ -6,112 +6,18 @@ from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
+from tests.api_tests.framework_components_json_response_schemas import (
+    ALL_USER_ACCOUNTS_JSON_SCHEMA,
+    EMPTY_USER_ACCOUNT_PASSWORD_ERROR_JSON_SCHEMA,
+    EMPTY_USER_ACCOUNT_USERNAME_ERROR_JSON_SCHEMA,
+    USER_ACCOUNT_AUTHENTICATION_ERROR_JSON_SCHEMA,
+    USER_ACCOUNT_JSON_SCHEMA,
+    USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA,
+    USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR_JSON_SCHEMA,
+)
 from tests.api_tests.utils import get_all_user_account_ids, validate_response
 
 pytestmark = pytest.mark.anyio
-
-USER_ACCOUNT_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "user_account_id": {"type": "string"},
-        "username": {"type": "string"},
-        "password": {"type": "string"},
-        "role": {"type": "string", "enum": ["ADMIN", "OPERATOR", "SPECTATOR"]},
-    },
-    "required": ["user_account_id", "username", "password", "role"],
-    "additionalProperties": False,
-}
-ALL_USER_ACCOUNTS_JSON_SCHEMA = {
-    "type": "array",
-    "items": USER_ACCOUNT_JSON_SCHEMA,
-}
-USER_ACCOUNT_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {"type": "string", "enum": ["USER_ACCOUNT_NOT_FOUND_ERROR"]},
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["USER_ACCOUNT_USERNAME_ALREADY_EXISTS_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-USER_ACCOUNT_AUTHENTICATION_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["USER_ACCOUNT_AUTHENTICATION_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-EMPTY_USER_ACCOUNT_USERNAME_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["EMPTY_USER_ACCOUNT_USERNAME_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-EMPTY_USER_ACCOUNT_PASSWORD_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["EMPTY_USER_ACCOUNT_PASSWORD_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 @pytest.mark.usefixtures("restore_default_user_accounts_after_test")

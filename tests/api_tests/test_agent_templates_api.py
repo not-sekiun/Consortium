@@ -8,6 +8,8 @@ from tests.api_tests.framework_components_json_response_schemas import (
     AGENT_GENERATOR_JSON_SCHEMA,
     AGENT_TEMPLATE_JSON_SCHEMA,
     AGENT_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,
+    AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR_JSON_SCHEMA,
+    AGENT_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR_JSON_SCHEMA,
     ALL_AGENT_TEMPLATES_JSON_SCHEMA,
 )
 from tests.api_tests.utils import (
@@ -18,43 +20,6 @@ from tests.api_tests.utils import (
 )
 
 pytestmark = pytest.mark.anyio
-
-AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["AGENT_TEMPLATE_OPTION_NOT_FOUND_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-AGENT_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["AGENT_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 async def test_get_all_agent_templates(client):

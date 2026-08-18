@@ -12,6 +12,9 @@ from consortium.server.services.websocket_tickets_service import (
     TICKET_TIME_TO_LIVE_SECONDS,
 )
 from tests.api_tests.common_json_response_schemas import FORBIDDEN_ERROR_JSON_SCHEMA
+from tests.api_tests.framework_components_json_response_schemas import (
+    WEBSOCKET_TICKET_JSON_SCHEMA,
+)
 from tests.api_tests.utils import validate_response
 from tests.api_tests.websocket_helpers import (
     TICKET_PATH as _TICKET_PATH,
@@ -508,16 +511,6 @@ async def test_disconnect_without_subscription_does_not_error(ws, admin_client):
 # ---------------------------------------------------------------------------
 # Websocket ticket issuance  (POST /api/ws/ticket)
 # ---------------------------------------------------------------------------
-
-WEBSOCKET_TICKET_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "ticket": {"type": "string"},
-        "time_to_live_seconds": {"type": "integer"},
-    },
-    "required": ["ticket", "time_to_live_seconds"],
-    "additionalProperties": False,
-}
 
 
 @pytest.fixture

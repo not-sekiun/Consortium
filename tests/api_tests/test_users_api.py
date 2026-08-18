@@ -4,59 +4,14 @@ from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
+from tests.api_tests.framework_components_json_response_schemas import (
+    ALL_USERS_JSON_SCHEMA,
+    USER_JSON_SCHEMA,
+    USER_NOT_FOUND_ERROR_JSON_SCHEMA,
+)
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
-
-USER_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "user_id": {"type": "string"},
-        "display_name": {"type": "string"},
-        "username": {"type": "string"},
-        "user_account": {
-            "type": "object",
-            "properties": {
-                "user_account_id": {"type": "string"},
-                "username": {"type": "string"},
-            },
-            "required": ["user_account_id", "username"],
-            "additionalProperties": False,
-        },
-        "role": {"type": "string"},
-        "datetime_connected": {"type": "string"},
-        "datetime_last_active": {"type": "string"},
-    },
-    "required": [
-        "user_id",
-        "display_name",
-        "username",
-        "role",
-        "user_account",
-        "datetime_connected",
-        "datetime_last_active",
-    ],
-    "additionalProperties": False,
-}
-ALL_USERS_JSON_SCHEMA = {
-    "type": "array",
-    "items": USER_JSON_SCHEMA,
-}
-USER_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {"type": "string", "enum": ["USER_NOT_FOUND_ERROR"]},
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 async def test_get_own_user(client):

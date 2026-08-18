@@ -7,8 +7,13 @@ from tests.api_tests.common_json_response_schemas import (
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
 from tests.api_tests.framework_components_json_response_schemas import (
-    AGENT_TYPE_JSON_SCHEMA,
-    EVENT_LOG_JSON_SCHEMA,
+    ALL_LISTENERS_JSON_SCHEMA,
+    INVALID_LISTENER_PARAMETER_NAME_ERROR_JSON_SCHEMA,
+    INVALID_LISTENER_PARAMETER_VALUE_ERROR_JSON_SCHEMA,
+    LISTENER_ALREADY_RUNNING_ERROR_JSON_SCHEMA,
+    LISTENER_JSON_SCHEMA,
+    LISTENER_NOT_FOUND_ERROR_JSON_SCHEMA,
+    LISTENER_NOT_RUNNING_ERROR_JSON_SCHEMA,
 )
 from tests.api_tests.utils import (
     create_listener_from_template,
@@ -17,169 +22,6 @@ from tests.api_tests.utils import (
 )
 
 pytestmark = pytest.mark.anyio
-
-LISTENER_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "name": {"type": "string"},
-        "description": {"type": "string"},
-        "endpoint": {"type": "string"},
-        "listener_type": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "registered_compatible_agent_types": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                },
-            },
-            "required": ["name", "registered_compatible_agent_types"],
-        },
-        "listener_id": {"type": "string"},
-        "parameters": {"type": "object"},
-        "status": {
-            "type": "object",
-            "properties": {
-                "state": {"type": "string"},
-                "error": {
-                    "anyOf": [
-                        {"type": "null"},
-                        {
-                            "type": "object",
-                            "properties": {
-                                "code": {"type": "string"},
-                                "message": {"type": "string"},
-                                "detail": {"type": ["object", "null"]},
-                            },
-                            "required": ["code", "message", "detail"],
-                        },
-                    ],
-                },
-            },
-            "required": ["state", "error"],
-        },
-        "event_log": EVENT_LOG_JSON_SCHEMA,
-        "datetime_created": {"type": "string"},
-        # Live references to the agents currently connected to the listener. Unlike the
-        # persistent reference artifacts record, these embed the full agent type.
-        "connected_agents": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "agent_id": {"type": "string"},
-                    "name": {"type": "string"},
-                    "agent_type": AGENT_TYPE_JSON_SCHEMA,
-                },
-                "required": ["agent_id", "name", "agent_type"],
-            },
-        },
-        "creating_listener_template": {"type": "object"},
-    },
-    "required": [
-        "name",
-        "endpoint",
-        "listener_type",
-        "listener_id",
-        "parameters",
-        "status",
-        "event_log",
-    ],
-}
-ALL_LISTENERS_JSON_SCHEMA = {
-    "type": "array",
-    "items": LISTENER_JSON_SCHEMA,
-}
-LISTENER_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["LISTENER_NOT_FOUND_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-LISTENER_ALREADY_RUNNING_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["LISTENER_ALREADY_RUNNING_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-LISTENER_NOT_RUNNING_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["LISTENER_NOT_RUNNING_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-INVALID_LISTENER_PARAMETER_NAME_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["INVALID_LISTENER_PARAMETER_NAME_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-INVALID_LISTENER_PARAMETER_VALUE_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["INVALID_LISTENER_PARAMETER_VALUE_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 @pytest.mark.usefixtures("create_listeners_before_test")

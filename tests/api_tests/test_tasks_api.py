@@ -7,75 +7,14 @@ from tests.api_tests.common_json_response_schemas import (
     INVALID_UUID_ERROR_JSON_SCHEMA,
     UNPROCESSABLE_ENTITY_ERROR_JSON_SCHEMA,
 )
+from tests.api_tests.framework_components_json_response_schemas import (
+    ALL_TASKS_JSON_SCHEMA,
+    TASK_JSON_SCHEMA,
+    TASK_NOT_FOUND_ERROR_JSON_SCHEMA,
+)
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
-
-TASK_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "task_id": {"type": "string"},
-        "agent_id": {"type": "string"},
-        "command": {"type": "string"},
-        "arguments": {"type": "object"},
-        "status": {
-            "type": "object",
-            "properties": {
-                "state": {"type": "string"},
-                "error": {"type": ["object", "null"]},
-            },
-            "required": ["state", "error"],
-        },
-        "event_log": {
-            "type": "object",
-            "properties": {
-                "current_progress": {"type": ["object", "null"]},
-                "total_count": {"type": "integer"},
-                "entries": {"type": "array"},
-            },
-            "required": ["current_progress", "total_count", "entries"],
-        },
-        "datetime_created": {"type": "string"},
-        "datetime_started": {"type": ["string", "null"]},
-        "datetime_completed": {"type": ["string", "null"]},
-    },
-    "required": [
-        "task_id",
-        "agent_id",
-        "command",
-        "arguments",
-        "status",
-        "event_log",
-        "datetime_created",
-        "datetime_started",
-        "datetime_completed",
-    ],
-}
-ALL_TASKS_JSON_SCHEMA = {
-    "type": "array",
-    "items": TASK_JSON_SCHEMA,
-}
-
-
-def _error_json_schema(code: str) -> dict:
-    return {
-        "type": "object",
-        "properties": {
-            "error": {
-                "type": "object",
-                "properties": {
-                    "code": {"type": "string", "enum": [code]},
-                    "message": {"type": "string"},
-                    "detail": {"type": ["object", "null"]},
-                },
-                "required": ["code", "message", "detail"],
-            },
-        },
-        "required": ["error"],
-    }
-
-
-TASK_NOT_FOUND_ERROR_JSON_SCHEMA = _error_json_schema("TASK_NOT_FOUND")
 
 
 async def _submit_task(admin_client, agent_id: str, command: str) -> dict:

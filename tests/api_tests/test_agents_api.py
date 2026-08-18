@@ -4,100 +4,16 @@ from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
+from tests.api_tests.framework_components_json_response_schemas import (
+    AGENT_CAPABILITY_NOT_FOUND_ERROR_JSON_SCHEMA,
+    AGENT_JSON_SCHEMA,
+    AGENT_NOT_FOUND_ERROR_JSON_SCHEMA,
+    ALL_AGENTS_JSON_SCHEMA,
+    TASK_JSON_SCHEMA,
+)
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
-
-AGENT_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "agent_id": {"type": "string"},
-        "name": {"type": "string"},
-        "description": {"type": "string"},
-        "endpoint": {"type": "string"},
-        "agent_type": {"type": "object"},
-        "status": {"type": "string"},
-    },
-    "required": ["agent_id", "name", "description", "endpoint", "agent_type", "status"],
-}
-ALL_AGENTS_JSON_SCHEMA = {
-    "type": "array",
-    "items": AGENT_JSON_SCHEMA,
-}
-AGENT_TASK_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "task_id": {"type": "string"},
-        "command": {"type": "string"},
-        "arguments": {"type": "object"},
-        "status": {
-            "type": "object",
-            "properties": {
-                "state": {"type": "string"},
-            },
-            "required": ["state"],
-        },
-        "event_log": {
-            "type": "object",
-            "properties": {
-                "current_progress": {
-                    "type": ["object", "null"],
-                    "properties": {
-                        "percent_complete": {"type": "number"},
-                        "message": {"type": ["string", "null"]},
-                        "data": {"type": "object"},
-                        "datetime_reported": {"type": "string"},
-                    },
-                },
-                "total_count": {"type": "integer"},
-                "entries": {"type": "array"},
-            },
-            "required": ["current_progress", "total_count", "entries"],
-        },
-        "datetime_created": {"type": "string"},
-    },
-    "required": [
-        "task_id",
-        "command",
-        "arguments",
-        "status",
-        "event_log",
-        "datetime_created",
-    ],
-}
-AGENT_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {"type": "string", "enum": ["AGENT_NOT_FOUND_ERROR"]},
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-AGENT_CAPABILITY_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["AGENT_CAPABILITY_NOT_FOUND_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 # ---------------------------------------------------------------------------
@@ -243,7 +159,7 @@ async def test_task_agent_returns_task_model(admin_client, mock_agent):
             f"/api/agents/{agent_id}/tasks",
             json={"command": "mock_cmd", "arguments": {}},
         ),
-        expected_json_schema=AGENT_TASK_JSON_SCHEMA,
+        expected_json_schema=TASK_JSON_SCHEMA,
         expected_status_code=200,
         validator_function=lambda r: r.json()["command"] == "mock_cmd",
     )

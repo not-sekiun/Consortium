@@ -4,6 +4,14 @@ from tests.api_tests.common_json_response_schemas import (
     FORBIDDEN_ERROR_JSON_SCHEMA,
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
+from tests.api_tests.framework_components_json_response_schemas import (
+    ALL_LISTENER_TEMPLATES_JSON_SCHEMA,
+    LISTENER_TEMPLATE_JSON_SCHEMA,
+    LISTENER_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA,
+    LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR_JSON_SCHEMA,
+    MISSING_REQUIRED_OPTION_ERROR_JSON_SCHEMA,
+    OPTION_VALUE_ERROR_JSON_SCHEMA,
+)
 from tests.api_tests.utils import (
     build_create_request_body,
     create_listener_from_template,
@@ -12,137 +20,6 @@ from tests.api_tests.utils import (
 )
 
 pytestmark = pytest.mark.anyio
-
-LISTENER_TEMPLATE_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "label": {"type": "string"},
-        "name": {"type": "string"},
-        "description": {"type": "string"},
-        "version": {"type": "string"},
-        "compatible_framework_version": {"type": "string"},
-        "authors": {"type": "array", "items": {"type": "string"}},
-        "listener_template_id": {"type": "string"},
-        "listener_type": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "registered_compatible_agent_types": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                },
-            },
-            "required": ["name", "registered_compatible_agent_types"],
-            "additionalProperties": False,
-        },
-        "options": {"type": "object"},
-        "validating_function": {"type": ["string", "null"]},
-    },
-    "required": [
-        "label",
-        "name",
-        "description",
-        "version",
-        "compatible_framework_version",
-        "authors",
-        "listener_template_id",
-        "listener_type",
-        "options",
-        "validating_function",
-    ],
-    "additionalProperties": False,
-}
-ALL_LISTENER_TEMPLATES_JSON_SCHEMA = {
-    "type": "array",
-    "items": LISTENER_TEMPLATE_JSON_SCHEMA,
-}
-LISTENER_TEMPLATE_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["LISTENER_TEMPLATE_NOT_FOUND_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-MISSING_REQUIRED_OPTION_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["MISSING_REQUIRED_LISTENER_TEMPLATE_OPTION_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {
-                    "type": "object",
-                    "properties": {
-                        "listener_template_str": {"type": "string"},
-                        "option_str": {"type": "string"},
-                    },
-                    "required": ["listener_template_str", "option_str"],
-                },
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-OPTION_VALUE_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["LISTENER_TEMPLATE_OPTION_VALUE_VALIDATION_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {
-                    "type": "object",
-                    "properties": {
-                        "option_str": {"type": "string"},
-                        "option_value": {},
-                        "error_message": {"type": "string"},
-                    },
-                    "required": ["option_str", "option_value", "error_message"],
-                },
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["LISTENER_TEMPLATE_OPTION_NOT_FOUND_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 async def test_get_all_listener_templates(client):

@@ -7,7 +7,13 @@ from tests.api_tests.common_json_response_schemas import (
     INVALID_UUID_ERROR_JSON_SCHEMA,
 )
 from tests.api_tests.framework_components_json_response_schemas import (
+    AGENT_GENERATOR_ALREADY_RUNNING_ERROR_JSON_SCHEMA,
     AGENT_GENERATOR_JSON_SCHEMA,
+    AGENT_GENERATOR_NOT_FOUND_ERROR_JSON_SCHEMA,
+    AGENT_GENERATOR_NOT_RUNNING_ERROR_JSON_SCHEMA,
+    ALL_AGENT_GENERATORS_JSON_SCHEMA,
+    INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR_JSON_SCHEMA,
+    INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR_JSON_SCHEMA,
 )
 from tests.api_tests.utils import (
     build_create_request_body,
@@ -16,101 +22,6 @@ from tests.api_tests.utils import (
 )
 
 pytestmark = pytest.mark.anyio
-
-ALL_AGENT_GENERATORS_JSON_SCHEMA = {
-    "type": "array",
-    "items": AGENT_GENERATOR_JSON_SCHEMA,
-}
-AGENT_GENERATOR_NOT_FOUND_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["AGENT_GENERATOR_NOT_FOUND_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-AGENT_GENERATOR_ALREADY_RUNNING_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["AGENT_GENERATOR_ALREADY_RUNNING_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-AGENT_GENERATOR_NOT_RUNNING_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["AGENT_GENERATOR_NOT_RUNNING_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["INVALID_AGENT_GENERATOR_PARAMETER_NAME_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
-INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "enum": ["INVALID_AGENT_GENERATOR_PARAMETER_VALUE_ERROR"],
-                },
-                "message": {"type": "string"},
-                "detail": {"type": ["object", "null"]},
-            },
-            "required": ["code", "message", "detail"],
-        },
-    },
-    "required": ["error"],
-}
 
 
 async def _create_one_agent_generator_per_template(

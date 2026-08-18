@@ -1,18 +1,12 @@
 import httpx
 import pytest
 
+from tests.api_tests.framework_components_json_response_schemas import (
+    JSON_WEB_TOKEN_JSON_SCHEMA,
+)
 from tests.api_tests.utils import validate_response
 
 pytestmark = pytest.mark.anyio
-
-JWT_JSON_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "access_token": {"type": "string"},
-        "token_type": {"type": "string"},
-    },
-    "required": ["access_token", "token_type"],
-}
 
 
 async def test_login_with_valid_credentials(app):
@@ -25,7 +19,7 @@ async def test_login_with_valid_credentials(app):
                 "/api/login",
                 data={"username": "admin", "password": "admin"},
             ),
-            expected_json_schema=JWT_JSON_SCHEMA,
+            expected_json_schema=JSON_WEB_TOKEN_JSON_SCHEMA,
             expected_status_code=200,
         )
         await client.post("/api/logout")
@@ -66,7 +60,7 @@ async def test_login_while_already_logged_in_returns_new_jwt(admin_client):
     )
     validate_response(
         test_response=response,
-        expected_json_schema=JWT_JSON_SCHEMA,
+        expected_json_schema=JSON_WEB_TOKEN_JSON_SCHEMA,
         expected_status_code=200,
     )
     new_token = f"Bearer {response.json()['access_token']}"
@@ -91,7 +85,7 @@ async def test_all_user_roles_can_login(app):
                     "/api/login",
                     data={"username": username, "password": password},
                 ),
-                expected_json_schema=JWT_JSON_SCHEMA,
+                expected_json_schema=JSON_WEB_TOKEN_JSON_SCHEMA,
                 expected_status_code=200,
             )
             await client.post("/api/logout")
