@@ -239,12 +239,13 @@ class AgentCapabilityTaskHandlerError(AgentCapabilitiesFrameworkError):
 
 
 class PayloadTooLargeError(AgentCapabilitiesFrameworkError):
-    """Raised when a payload being received exceeds the configured maximum size.
+    """Raised when a payload being received exceeds a maximum size its transport set.
 
-    `Payload.from_async_iterable` enforces a hard byte cap as it consumes its source so
-    that an unbounded upload is rejected mid-stream rather than after being fully
-    buffered. This is the single place transports learn a payload was refused for size,
-    replacing the per-transport sentinels and cap loops each one used to carry.
+    The cap is opt in: `Payload.from_async_iterable` is uncapped by default and enforces
+    a bound only when a caller passes `max_size`, in which case it is enforced as the
+    source is consumed so an unbounded upload is rejected mid-stream rather than after
+    being fully buffered. This is the single place transports learn a payload was refused
+    for size, replacing the per-transport sentinels and cap loops each one used to carry.
     """
 
     code = "PAYLOAD_TOO_LARGE_ERROR"

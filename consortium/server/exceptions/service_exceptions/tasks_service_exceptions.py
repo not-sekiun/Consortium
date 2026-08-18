@@ -13,7 +13,7 @@ class TasksServiceError(BaseServiceError):
 class TaskAgentMismatchError(TasksServiceError):
     """Raised when a task is registered against an agent that does not own it."""
 
-    code = "TASK_AGENT_MISMATCH"
+    code = "TASK_AGENT_MISMATCH_ERROR"
 
     def __init__(self, task_agent_id: str, agent_id: str) -> None:
         super().__init__(
@@ -27,7 +27,7 @@ class TaskAgentMismatchError(TasksServiceError):
 class TaskNotFoundError(TasksServiceError):
     """Raised when a task is not found."""
 
-    code = "TASK_NOT_FOUND"
+    code = "TASK_NOT_FOUND_ERROR"
 
     def __init__(self, task_id: str) -> None:
         super().__init__(
@@ -41,7 +41,7 @@ class TaskNotFoundError(TasksServiceError):
 class TaskNotDeletableError(TasksServiceError):
     """Raised when task deletion targets a task that is still running."""
 
-    code = "TASK_NOT_DELETABLE"
+    code = "TASK_NOT_DELETABLE_ERROR"
 
     def __init__(self, task_str: str, state: TaskState) -> None:
         super().__init__(

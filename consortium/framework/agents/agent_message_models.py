@@ -1,8 +1,10 @@
 import asyncio
+import os
 import tempfile
 import weakref
 from collections.abc import AsyncIterable, AsyncIterator, Mapping
-from typing import Annotated, Self
+from pathlib import Path
+from typing import IO, Annotated, Self
 
 from pydantic import (
     UUID4,
@@ -33,14 +35,18 @@ class Payload:
         data = await payload.read()
         async for chunk in payload: ...
 
-    Construct one from bytes already in hand, or from an async byte source such as an
-    upload:
+    Construct one from bytes already in hand, from a file, from an open file object,
+    or from an async byte source such as an upload:
 
         Payload.from_bytes(data)
+        await Payload.from_file(path)
+        await Payload.from_file_like(fileobj)
         await Payload.from_async_iterable(source)
 
-    A large received payload is held on disk rather than in memory, and is cleaned up
-    once nothing refers to the payload, so callers never manage its storage.
+    Every constructor takes a copy of its source, so a payload never refers back to it
+    and is unaffected by what happens to it afterwards. A large payload is held on disk
+    rather than in memory, and is cleaned up once nothing refers to the payload, so
+    callers never manage its storage.
 
     Attributes:
         size: The size of the payload in bytes, known before it is read.
@@ -58,7 +64,7 @@ class Payload:
         filename: str | None = None,
         content_type: str | None = None,
     ):
-        # Not part of the public surface: callers construct via `from_bytes` or `from_async_iterable`.
+        # Not part of the public surface: callers construct via one of the `from_*` classmethods.
         # Exactly one of `data` (bytes in memory) or `spool` (a SpooledTemporaryFile that
         # may or may not have rolled to disk) backs the payload; readers never distinguish.
         if (data is None) == (spool is None):
@@ -127,13 +133,15 @@ class Payload:
     ) -> Payload:
         """Consume an async byte source into a payload.
 
-        The size cap is enforced as bytes arrive, so an oversized source is rejected
-        without being read to the end.
+        When a size cap is given it is enforced as bytes arrive, so an oversized source
+        is rejected without being read to the end.
 
         Args:
             source: An async iterable of byte chunks, such as an upload being received.
-            max_size: Hard maximum total size in bytes. Exceeding it raises
-                `PayloadTooLargeError`. None means no cap.
+            max_size: Optional hard maximum total size in bytes, raising
+                `PayloadTooLargeError` when exceeded. Defaults to None, meaning no cap:
+                the framework imposes no payload size of its own, so a transport that
+                wants one passes its own here.
             spool_to_disk_above: Size in bytes above which the payload is held on disk
                 instead of in memory. Defaults to the framework's configured threshold.
             filename: Optional originating filename.
@@ -160,14 +168,118 @@ class Payload:
             cls._close_quietly(spool)
             raise
 
-        # A SpooledTemporaryFile rolls to disk once its size exceeds max_size, so anything
-        # over the threshold no longer sits in memory. Guard the degenerate threshold of 0,
-        # which disables rollover and keeps the payload in memory.
-        rolled = spool_to_disk_above > 0 and total > spool_to_disk_above
-        return cls(
-            spool=spool,
-            size=total,
-            resident_size=0 if rolled else total,
+        return cls._from_filled_spool(
+            spool,
+            total=total,
+            spool_to_disk_above=spool_to_disk_above,
+            filename=filename,
+            content_type=content_type,
+        )
+
+    @classmethod
+    async def from_file(
+        cls,
+        path: str | os.PathLike[str],
+        *,
+        max_size: int | None = None,
+        spool_to_disk_above: int = SPOOL_TO_DISK_ABOVE,
+        filename: str | None = None,
+        content_type: str | None = None,
+    ) -> Payload:
+        """Build a payload from a file on disk, copying its contents.
+
+        The file is read once, now, into the payload's own storage. The payload is a
+        snapshot of the file as it was at this moment and never refers to it again, so
+        the original may be modified, moved or deleted immediately afterwards, and is
+        not held open in the meantime.
+
+        A file at or below `spool_to_disk_above` is held in memory, so a small file
+        costs a read rather than a copy on disk.
+
+        Args:
+            path: The file to read.
+            max_size: Optional hard maximum total size in bytes, raising
+                `PayloadTooLargeError` when exceeded. Defaults to None, meaning no cap.
+            spool_to_disk_above: Size in bytes above which the payload is held on disk
+                instead of in memory. Defaults to the framework's configured threshold.
+            filename: Originating filename recorded on the payload. Defaults to the name
+                of `path`.
+            content_type: Optional MIME content type.
+
+        Raises:
+            OSError: If the file cannot be opened or read.
+            PayloadTooLargeError: If the file holds more than `max_size` bytes.
+
+        Returns:
+            The payload.
+        """
+        # Copied rather than referenced. A message can sit queued for days, so a path
+        # read lazily is a file that may be deleted or rewritten before it is consumed,
+        # and holding its descriptor open instead blocks deletion outright on Windows.
+        path = Path(path)
+        spool = tempfile.SpooledTemporaryFile(max_size=spool_to_disk_above)
+        try:
+            total = await asyncio.to_thread(
+                cls._copy_path_into_spool, path, spool, max_size
+            )
+        except BaseException:
+            cls._close_quietly(spool)
+            raise
+
+        return cls._from_filled_spool(
+            spool,
+            total=total,
+            spool_to_disk_above=spool_to_disk_above,
+            filename=path.name if filename is None else filename,
+            content_type=content_type,
+        )
+
+    @classmethod
+    async def from_file_like(
+        cls,
+        fileobj: IO[bytes],
+        *,
+        max_size: int | None = None,
+        spool_to_disk_above: int = SPOOL_TO_DISK_ABOVE,
+        filename: str | None = None,
+        content_type: str | None = None,
+    ) -> Payload:
+        """Build a payload from an open binary file object, copying its contents.
+
+        Reads from the object's current position until it is exhausted and copies what
+        it yields into the payload's own storage. The object is not rewound first, not
+        closed afterwards, and not referred to again once this returns.
+
+        Args:
+            fileobj: A file object opened in binary mode, such as an open file or a
+                `BytesIO`.
+            max_size: Optional hard maximum total size in bytes, raising
+                `PayloadTooLargeError` when exceeded. Defaults to None, meaning no cap.
+            spool_to_disk_above: Size in bytes above which the payload is held on disk
+                instead of in memory. Defaults to the framework's configured threshold.
+            filename: Optional originating filename.
+            content_type: Optional MIME content type.
+
+        Raises:
+            OSError: If the object cannot be read.
+            PayloadTooLargeError: If the object yields more than `max_size` bytes.
+
+        Returns:
+            The payload.
+        """
+        spool = tempfile.SpooledTemporaryFile(max_size=spool_to_disk_above)
+        try:
+            total = await asyncio.to_thread(
+                cls._copy_into_spool, fileobj, spool, max_size
+            )
+        except BaseException:
+            cls._close_quietly(spool)
+            raise
+
+        return cls._from_filled_spool(
+            spool,
+            total=total,
+            spool_to_disk_above=spool_to_disk_above,
             filename=filename,
             content_type=content_type,
         )
@@ -175,8 +287,12 @@ class Payload:
     async def read(self) -> bytes:
         """Read the whole payload and return it as a single byte sequence.
 
-        Prefer `async for chunk in payload` when the payload is large enough that you
-        would rather stream it than hold it all at once.
+        This is the point at which a payload is fully materialized in memory, including a
+        payload that spilled to disk and has been costing a queue nothing since. The bytes
+        returned sit outside every queue's memory accounting, and a payload arrives as
+        large as its transport allowed, so what is affordable here is the caller's own
+        bound rather than one the framework imposes. Prefer `async for chunk in payload`
+        unless the whole payload is genuinely needed at once.
 
         Returns:
             The complete payload as a contiguous byte sequence.
@@ -205,6 +321,54 @@ class Payload:
             if not chunk:
                 break
             yield chunk
+
+    @classmethod
+    def _from_filled_spool(
+        cls,
+        spool: tempfile.SpooledTemporaryFile,
+        *,
+        total: int,
+        spool_to_disk_above: int,
+        filename: str | None,
+        content_type: str | None,
+    ) -> Payload:
+        # A SpooledTemporaryFile rolls to disk once its size exceeds max_size, so anything
+        # over the threshold no longer sits in memory. Guard the degenerate threshold of 0,
+        # which disables rollover and keeps the payload in memory.
+        rolled = spool_to_disk_above > 0 and total > spool_to_disk_above
+        return cls(
+            spool=spool,
+            size=total,
+            resident_size=0 if rolled else total,
+            filename=filename,
+            content_type=content_type,
+        )
+
+    @staticmethod
+    def _copy_path_into_spool(
+        path: Path,
+        spool: tempfile.SpooledTemporaryFile,
+        max_size: int | None,
+    ) -> int:
+        with open(path, "rb") as fileobj:
+            return Payload._copy_into_spool(fileobj, spool, max_size)
+
+    @staticmethod
+    def _copy_into_spool(
+        fileobj: IO[bytes],
+        spool: tempfile.SpooledTemporaryFile,
+        max_size: int | None,
+    ) -> int:
+        # Blocking on purpose: the whole copy goes to one worker thread, where a file
+        # read costs no more than the write beside it, rather than paying the event loop
+        # a thread hop per chunk the way a streamed source has to.
+        total = 0
+        while chunk := fileobj.read(_DEFAULT_CHUNK_SIZE):
+            total += len(chunk)
+            if max_size is not None and total > max_size:
+                raise PayloadTooLargeError(max_size=max_size)
+            spool.write(chunk)
+        return total
 
     def _read_spool_fully(self) -> bytes:
         self._spool.seek(0)
