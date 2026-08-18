@@ -385,6 +385,7 @@ def restore_user_accounts_file_after_tests():
     ]
     with open("data/server/user_accounts.json", "w") as file:
         json.dump(default_user_accounts, file, indent=4)
+        file.write("\n")  # Newline added to satisfy precommit checks and minimize diffs
 
 
 # ---------------------------------------------------------------------------
