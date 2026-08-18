@@ -3,8 +3,8 @@ import sys
 
 import pytest
 
-from consortium.framework.agents._bounded_buffer import END_OF_STREAM
 from consortium.framework.agents._channel_buffer import ChannelBuffer
+from consortium.framework.agents._memory_bounded_buffer import END_OF_STREAM
 
 
 @pytest.mark.anyio

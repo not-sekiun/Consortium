@@ -2,8 +2,8 @@ import asyncio
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from consortium.framework.agents._bounded_buffer import BoundedBuffer
     from consortium.framework.agents._channel_buffer import ChannelBuffer
+    from consortium.framework.agents._memory_bounded_buffer import MemoryBoundedBuffer
     from consortium.framework.agents._task_messages_queue import TaskMessagesQueue
 
 
@@ -62,7 +62,7 @@ class TaskRuntime:
     def release_outbox(self) -> None:
         self._outbox = None
 
-    def detach(self) -> list[BoundedBuffer]:
+    def detach(self) -> list[MemoryBoundedBuffer]:
         if self._handler is not None:
             self._handler.cancel()
 

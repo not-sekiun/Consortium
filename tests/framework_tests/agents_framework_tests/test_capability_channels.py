@@ -4,8 +4,8 @@ import uuid
 import pytest
 from loguru import logger
 
-from consortium.framework.agents._bounded_buffer import END_OF_STREAM
 from consortium.framework.agents._channel_buffer import ChannelBuffer
+from consortium.framework.agents._memory_bounded_buffer import END_OF_STREAM
 from consortium.framework.agents.agent_message_models import TaskLaunchMessageModel
 from consortium.framework.agents.agent_outcomes import Success
 from consortium.framework.agents.base_agent_capability import BaseAgentCapability

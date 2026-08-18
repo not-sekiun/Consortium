@@ -1,6 +1,6 @@
 import sys
 
-from consortium.framework.agents._bounded_buffer import BoundedBuffer
+from consortium.framework.agents._memory_bounded_buffer import MemoryBoundedBuffer
 
 
 def _chunk_size(chunk: bytes) -> int:
@@ -14,7 +14,7 @@ def _chunk_size(chunk: bytes) -> int:
 # attached client, with no framing and no interpretation of what the bytes mean. Blocks a
 # producer once full (RELIABLE delivery); the drop-oldest and windowed policies land with
 # the `delivery` declaration.
-class ChannelBuffer(BoundedBuffer[bytes]):
+class ChannelBuffer(MemoryBoundedBuffer[bytes]):
     def __init__(self, maximum_memory_size: int | None = None):
         super().__init__(
             entry_size=_chunk_size,

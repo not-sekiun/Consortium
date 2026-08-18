@@ -3,7 +3,10 @@ import sys
 
 import orjson
 
-from consortium.framework.agents._bounded_buffer import END_OF_STREAM, BoundedBuffer
+from consortium.framework.agents._memory_bounded_buffer import (
+    END_OF_STREAM,
+    MemoryBoundedBuffer,
+)
 from consortium.framework.agents.agent_message_models import (
     Payload,
     TaskInputMessageModel,
@@ -74,7 +77,7 @@ def _queue_entry_size(entry: _QueueEntry) -> int:
     return _task_message_entry_size(json_blob, payload)
 
 
-class TaskMessagesQueue[T: TaskMessage](BoundedBuffer[_QueueEntry]):
+class TaskMessagesQueue[T: TaskMessage](MemoryBoundedBuffer[_QueueEntry]):
     def __init__(
         self,
         maximum_memory_size: int | None = None,

@@ -17,7 +17,7 @@ END_OF_STREAM = object()
 # producer and a terminal end of stream signal for the consumer. It knows nothing about
 # what an entry is: sizing is supplied by the caller, so a subclass decides what it
 # stores and what that costs. Subclasses may narrow `put`/`get` to their own entry type.
-class BoundedBuffer[T]:
+class MemoryBoundedBuffer[T]:
     def __init__(
         self,
         entry_size: Callable[[T], int],

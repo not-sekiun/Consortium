@@ -2,15 +2,18 @@ import asyncio
 
 import pytest
 
-from consortium.framework.agents._bounded_buffer import END_OF_STREAM, BoundedBuffer
+from consortium.framework.agents._memory_bounded_buffer import (
+    END_OF_STREAM,
+    MemoryBoundedBuffer,
+)
 
 # The primitive stores whatever it is handed and charges whatever the sizing callable
 # returns, so these tests use `bytes` entries sized by `len`: the accounting is then a
 # plain byte count and a cap can be expressed as the exact number of entries it admits.
 
 
-def _buffer(maximum_memory_size: int | None = None) -> BoundedBuffer[bytes]:
-    return BoundedBuffer(entry_size=len, maximum_memory_size=maximum_memory_size)
+def _buffer(maximum_memory_size: int | None = None) -> MemoryBoundedBuffer[bytes]:
+    return MemoryBoundedBuffer(entry_size=len, maximum_memory_size=maximum_memory_size)
 
 
 def test_a_non_positive_maximum_memory_size_is_rejected():
@@ -38,7 +41,7 @@ async def test_entries_come_back_in_the_order_they_were_put():
 async def test_entries_are_stored_by_reference():
     # Unlike the message queue, which serializes on the way in, the primitive hands back
     # the object it was given. Anything a subclass needs copied it copies itself.
-    buffer = BoundedBuffer(entry_size=lambda entry: 1)
+    buffer = MemoryBoundedBuffer(entry_size=lambda entry: 1)
     entry = object()
 
     await buffer.put(entry)
@@ -208,7 +211,7 @@ async def test_memory_accounting_returns_to_zero_when_drained():
 async def test_the_cap_is_charged_against_the_sizing_callable_not_the_entry():
     # Sizing is the caller's to define: the primitive has no view on what an entry costs,
     # which is what lets the message queue charge a payload it holds by reference.
-    buffer = BoundedBuffer(entry_size=lambda entry: 10, maximum_memory_size=10)
+    buffer = MemoryBoundedBuffer(entry_size=lambda entry: 10, maximum_memory_size=10)
 
     await buffer.put(b"")
 

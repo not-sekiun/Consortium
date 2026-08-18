@@ -24,7 +24,7 @@ from consortium.server.utils import (
 )
 
 if TYPE_CHECKING:
-    from consortium.framework.agents._bounded_buffer import BoundedBuffer
+    from consortium.framework.agents._memory_bounded_buffer import MemoryBoundedBuffer
     from consortium.server.objects.agent_objects import Agent
 
 
@@ -146,7 +146,7 @@ class TasksService:
         self._logger.debug("Retrieved task {}", task)
         return task
 
-    def _destroy_task_record(self, task: Task) -> list[BoundedBuffer]:
+    def _destroy_task_record(self, task: Task) -> list[MemoryBoundedBuffer]:
         # The only place a record is ever removed, which is what keeps a runtime from
         # outliving its record: popping both here in one synchronous block makes that
         # impossible by construction. Any new removal path has to do the same.
@@ -171,7 +171,7 @@ class TasksService:
         return buffers
 
     @staticmethod
-    async def _shutdown_buffers(buffers: list[BoundedBuffer]) -> None:
+    async def _shutdown_buffers(buffers: list[MemoryBoundedBuffer]) -> None:
         # Immediate shutdown drops what is buffered and wakes readers already blocked
         # in get() so they observe end of stream instead of deleted task output.
         for buffer in buffers:
