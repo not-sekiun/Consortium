@@ -3,7 +3,7 @@ from functools import cache
 import sqlalchemy
 from sqlalchemy import Engine
 
-from consortium.server.models.database_models import Base
+from consortium.server.database.models import Base
 
 _engine = None
 
