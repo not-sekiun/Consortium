@@ -2,8 +2,7 @@ name: Deploy Docs
 
 on:
   push:
-    branches: [dev, main]
-  workflow_dispatch:
+    branches: [main, framework-restructure]
 
 permissions:
   contents: read
