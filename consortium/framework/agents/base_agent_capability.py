@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 import consortium.server.server_singletons as server_singletons
 from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
     AgentCapabilityFatalError,
+    DuplicateAgentCapabilityChannelNameError,
     DuplicateAgentCapabilityOptionNameError,
     EmptyAgentCapabilityNameError,
     InvalidAgentCapabilityConfigurationParameterTypeError,
@@ -21,10 +22,13 @@ from consortium.framework._core.utils import (
     resolve_validation_error_parameter,
 )
 from consortium.framework.agents._agent_communicator import _AgentCommunicator
+from consortium.framework.agents._channel_buffer import ChannelBuffer
+from consortium.framework.agents._resource_limits import CHANNEL_BUFFER_MEMORY_LIMIT
 from consortium.framework.agents.agent_message_models import (
     TaskLaunchMessageModel,
 )
 from consortium.framework.agents.agent_outcomes import Failure, Success
+from consortium.framework.agents.channels import Channel
 from consortium.framework.options import (
     ChoiceValueOption,
     DictionaryValueOption,
@@ -113,6 +117,7 @@ class _BaseAgentCapabilityModel(BaseModel):
     ]
     mitre_attack_techniques: set[str]
     validating_function: Callable[[dict[str, JsonValue]], None] | None
+    channels: set[Channel]
 
 
 class BaseAgentCapability(_AgentCommunicator):
@@ -138,6 +143,10 @@ class BaseAgentCapability(_AgentCommunicator):
             capability. Resolved to MitreAttackTechnique objects at definition time.
         validating_function: Optional single-argument callable that validates the full
             resolved option set before execution.
+        channels: Byte channels this capability offers an attached client. Declared as a
+            set at the class level; converted to a name-keyed dict at definition time.
+            On an instance the same name resolves to the running buffers rather than the
+            declarations, see __init__.
         task_launch_message: The message sent to the agent on the most recent execute()
             call; set by execute() after on_launch completes.
     """
@@ -156,10 +165,17 @@ class BaseAgentCapability(_AgentCommunicator):
     ] = None
     mitre_attack_techniques: set[str] | None = None
     validating_function: Callable[[dict[str, JsonValue]], None] | None = None
+    channels: set[Channel] = None
     task_launch_message: TaskLaunchMessageModel | None = None
 
     def __init__(self, agent: Agent, task: Task):
         """Initialize the capability with the agent and task context for this execution.
+
+        A buffer is created for every declared channel, so `self.channels` maps a channel
+        name to the live buffer behind it rather than to the declaration the class
+        attribute of the same name holds. The buffers exist from construction, before the
+        capability has produced a byte, so a client can attach to a channel that is still
+        empty.
 
         Args:
             agent: The agent instance this capability is executing against.
@@ -167,6 +183,10 @@ class BaseAgentCapability(_AgentCommunicator):
         """
         self.agent_file_manager_service = AgentFileManagerService(agent=agent)
         self.environment = SimpleNamespace()
+        self.channels: dict[str, ChannelBuffer] = {
+            channel_name: ChannelBuffer(maximum_memory_size=CHANNEL_BUFFER_MEMORY_LIMIT)
+            for channel_name in type(self).channels
+        }
         super().__init__(agent=agent, task=task)
 
     def __init_subclass__(cls, **kwargs):
@@ -182,6 +202,12 @@ class BaseAgentCapability(_AgentCommunicator):
         cls.supported_oses = cls.supported_oses or {SupportedOS.ANY}
         cls.authors = cls.authors or set()
         cls.mitre_attack_techniques = cls.mitre_attack_techniques or set()
+        # A capability subclassing another capability inherits the name-keyed dict this
+        # hook already built for the parent, so the declarations are taken back off it
+        # before the set is validated and rebuilt below.
+        if isinstance(cls.channels, dict):
+            cls.channels = set(cls.channels.values())
+        cls.channels = cls.channels or set()
         cls.services = construct_services_dataclass(server_singletons=server_singletons)
         try:
             _BaseAgentCapabilityModel(
@@ -193,6 +219,7 @@ class BaseAgentCapability(_AgentCommunicator):
                 supported_oses=cls.supported_oses,
                 mitre_attack_techniques=cls.mitre_attack_techniques,
                 validating_function=cls.validating_function,
+                channels=cls.channels,
             )
         except ValidationError as exc:
             parameter_name, parameter_type = resolve_validation_error_parameter(
@@ -250,6 +277,19 @@ class BaseAgentCapability(_AgentCommunicator):
         for option in cls.options:
             options[option.name] = option
         cls.options = options
+
+        # Channels get the same set -> name-keyed dict treatment as options, and for the
+        # same reason: declared as a set so duplicates are awkward to write, used as a
+        # mapping because every reader of a channel has its name and not its declaration.
+        channels = {}
+        for channel in cls.channels:
+            if channel.name in channels:
+                raise DuplicateAgentCapabilityChannelNameError(
+                    channel_name=channel.name,
+                    agent_capability_name=cls.name,
+                )
+            channels[channel.name] = channel
+        cls.channels = channels
 
         # Convert mitre attack technique IDs to a list of resolved
         # `MitreAttackTechnique` objects
@@ -437,14 +477,20 @@ class BaseAgentCapability(_AgentCommunicator):
         # let buffered outbound messages flush before readers see the end of stream
         # `END_OF_STREAM`.
         #
-        # Both queues are shut down even if the first fails, so one failing does not leave
-        # the other's readers hanging. A failure is logged rather than raised: raising would
-        # either displace the error already unwinding out of a hook or report a task that
-        # ran fine as ERRORED, and readers of a queue that was not shut down hang either
-        # way, so it would only trade a truthful outcome for a misleading one.
+        # The channel buffers are shut down for the same reason and on the same terms: a
+        # pump parked in `channel.get()` is released with `END_OF_STREAM`, and whatever is
+        # still buffered stays readable so a client draining a channel sees the last bytes
+        # the capability wrote rather than losing them to teardown.
+        #
+        # Every buffer is shut down even if an earlier one fails, so one failing does not
+        # leave another's readers hanging. A failure is logged rather than raised: raising
+        # would either displace the error already unwinding out of a hook or report a task
+        # that ran fine as ERRORED, and readers of a buffer that was not shut down hang
+        # either way, so it would only trade a truthful outcome for a misleading one.
         for shutdown in (
             self._task_messages_inbox.shutdown,
             self._task_messages_outbox.shutdown,
+            *(channel.shutdown for channel in self.channels.values()),
         ):
             try:
                 await shutdown(immediate=False)
@@ -452,9 +498,9 @@ class BaseAgentCapability(_AgentCommunicator):
                 raise
             except Exception as cleanup_exc:
                 self.logger.critical(
-                    "Agent capability '{}' failed to shut down a task queue. Any reader "
-                    "waiting on that queue will not observe the end of the message "
-                    "stream. {}: {}",
+                    "Agent capability '{}' failed to shut down a task buffer. Any reader "
+                    "waiting on that buffer will not observe the end of the stream. "
+                    "{}: {}",
                     self.name,
                     type(cleanup_exc).__name__,
                     cleanup_exc,
@@ -466,8 +512,9 @@ class BaseAgentCapability(_AgentCommunicator):
 
         Returns:
             A dictionary containing the capability name, description, authors, options
-            (with their validation schemas), MITRE ATT&CK techniques, supported OSes,
-            admin requirement flag, and any validating function documentation.
+            (with their validation schemas), declared channels, MITRE ATT&CK techniques,
+            supported OSes, admin requirement flag, and any validating function
+            documentation.
         """
         return {
             "name": cls.name,
@@ -482,6 +529,10 @@ class BaseAgentCapability(_AgentCommunicator):
             "options": {
                 option_name: option.to_json()
                 for option_name, option in cls.options.items()
+            },
+            "channels": {
+                channel_name: channel.to_json()
+                for channel_name, channel in cls.channels.items()
             },
             "validating_function": format_docstring_to_single_line(
                 cls.validating_function.__doc__,

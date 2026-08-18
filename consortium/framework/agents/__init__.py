@@ -11,7 +11,9 @@ Capabilities communicate with a live agent using the task message models
 [`TaskInputMessageModel`][consortium.framework.agents.TaskInputMessageModel],
 [`TaskOutputMessageModel`][consortium.framework.agents.TaskOutputMessageModel]) and
 report results as a [`Success`][consortium.framework.agents.Success] or
-[`Failure`][consortium.framework.agents.Failure] outcome.
+[`Failure`][consortium.framework.agents.Failure] outcome. A capability may additionally
+declare [`Channel`][consortium.framework.agents.Channel] byte channels, which carry bytes
+between the capability and an attached client without passing through the agent.
 """
 
 from consortium.framework._core.framework_exceptions.agent_capabilities_framework_exceptions import (
@@ -34,6 +36,7 @@ from consortium.framework.agents.base_agent_generator import (
 )
 from consortium.framework.agents.base_agent_template import BaseAgentTemplate
 from consortium.framework.agents.base_agent_type import BaseAgentType
+from consortium.framework.agents.channels import Channel, ChannelDirection
 from consortium.framework.signal_exceptions.agent_capabilties_signal_exception import (
     AgentCapabilityLaunchError,
 )
@@ -53,4 +56,6 @@ __all__ = [
     "TaskInputMessageModel",
     "TaskOutputMessageModel",
     "BaseAgentCapability",
+    "Channel",
+    "ChannelDirection",
 ]

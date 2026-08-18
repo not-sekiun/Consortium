@@ -37,10 +37,10 @@ class _RecordingEventsService:
 
 class _StubCapability:
     # Duck typed to the surface _agent_capability_task_handler actually uses: a name, an
-    # inbox, an outbox and execute(). Subclassing BaseAgentCapability would drag in
-    # component registration and the agent file manager, none of which the handler
-    # touches, and would put the framework's own execute() wrapper between the test and
-    # the behaviour under test.
+    # inbox, an outbox, channels and execute(). Subclassing BaseAgentCapability would
+    # drag in component registration and the agent file manager, none of which the
+    # handler touches, and would put the framework's own execute() wrapper between the
+    # test and the behaviour under test.
     name = "stub_cmd"
 
     def __init__(self, agent: Agent, task: Task):
@@ -50,6 +50,7 @@ class _StubCapability:
         self._task_messages_outbox = TaskMessagesQueue(
             queue_activity_notifier=agent._outbox_activity
         )
+        self.channels = {}
         self.started = asyncio.Event()
 
     async def execute(self, task_launch_message: TaskLaunchMessageModel):

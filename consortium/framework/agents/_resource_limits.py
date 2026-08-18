@@ -24,6 +24,12 @@ QUEUE_MEMORY_LIMIT = 4 * 1024 * 1024
 # below this a received payload stays resident; above it, it rolls over to disk.
 SPOOL_TO_DISK_ABOVE = 512 * 1024
 
+# Per-channel budget for buffered bytes before the producer is back-pressured. Kept
+# separate from QUEUE_MEMORY_LIMIT rather than shared with it so a stream backlog cannot
+# starve the headroom the task's control messages need. Sized for a working set of
+# roughly 32 chunks of 64 KiB.
+CHANNEL_BUFFER_MEMORY_LIMIT = 2 * 1024 * 1024
+
 
 def validate_size_limits(
     *,

@@ -1131,6 +1131,7 @@ class Agent:
             handler=agent_capability_task,
             inbox=running_agent_capability._task_messages_inbox,
             outbox=running_agent_capability._task_messages_outbox,
+            channels=running_agent_capability.channels,
         )
         self._task_runtime_service.attach_task_runtime(
             task_id=task.task_id,

@@ -98,6 +98,57 @@ class DuplicateAgentCapabilityOptionNameError(AgentCapabilityConfigurationError)
         )
 
 
+class InvalidAgentCapabilityChannelConfigurationParameterTypeError(
+    AgentCapabilityConfigurationError,
+):
+    """Raised when a channel's configuration parameter is not of the expected type
+    during agent capability configuration.
+    """
+
+    code = "INVALID_AGENT_CAPABILITY_CHANNEL_CONFIGURATION_PARAMETER_TYPE_ERROR"
+
+    def __init__(self, channel_str: str, parameter_name: str, parameter_type: str):
+        super().__init__(
+            message=(
+                f"Failed to configure the channel '{channel_str}'. The parameter "
+                f"'{parameter_name}' must be of type '{parameter_type}'."
+            ),
+        )
+
+
+class EmptyAgentCapabilityChannelNameError(AgentCapabilityConfigurationError):
+    """Raised when an empty channel name is provided during agent capability
+    configuration.
+    """
+
+    code = "EMPTY_AGENT_CAPABILITY_CHANNEL_NAME_ERROR"
+
+    def __init__(self):
+        super().__init__(
+            message=(
+                "Failed to configure a channel. The name provided in the channel's "
+                "declaration cannot be empty."
+            ),
+        )
+
+
+class DuplicateAgentCapabilityChannelNameError(AgentCapabilityConfigurationError):
+    """Raised when duplicate channel names are declared in an agent capability's
+    definition during agent capability configuration.
+    """
+
+    code = "DUPLICATE_AGENT_CAPABILITY_CHANNEL_NAME_ERROR"
+
+    def __init__(self, agent_capability_name: str, channel_name: str):
+        super().__init__(
+            message=(
+                f"Failed to configure the agent capability '{agent_capability_name}'. "
+                f"The channels declared by the agent capability must not have duplicate "
+                f"names but the name '{channel_name}' was duplicated."
+            ),
+        )
+
+
 class CustomOSStringAlreadyRegisteredError(AgentCapabilityConfigurationError):
     """Raised when the provided custom OS string has already been registered in the agent
     capabilities framework during agent capability configuration.

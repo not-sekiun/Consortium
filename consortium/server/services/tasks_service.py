@@ -24,7 +24,7 @@ from consortium.server.utils import (
 )
 
 if TYPE_CHECKING:
-    from consortium.framework.agents._task_messages_queue import TaskMessagesQueue
+    from consortium.framework.agents._bounded_buffer import BoundedBuffer
     from consortium.server.objects.agent_objects import Agent
 
 
@@ -146,7 +146,7 @@ class TasksService:
         self._logger.debug("Retrieved task {}", task)
         return task
 
-    def _destroy_task_record(self, task: Task) -> list[TaskMessagesQueue]:
+    def _destroy_task_record(self, task: Task) -> list[BoundedBuffer]:
         # The only place a record is ever removed, which is what keeps a runtime from
         # outliving its record: popping both here in one synchronous block makes that
         # impossible by construction. Any new removal path has to do the same.
@@ -159,7 +159,7 @@ class TasksService:
             return []
 
         runtime = self._task_runtime_service.pop(task_id=task_id)
-        queues = runtime.detach() if runtime is not None else []
+        buffers = runtime.detach() if runtime is not None else []
         run_async_background_task(
             coroutine=self._events_service.trigger_event(
                 event_type=EventType.TASK_DELETED,
@@ -168,14 +168,14 @@ class TasksService:
             )
         )
         self._logger.debug("Deleted task {}", deleted_task)
-        return queues
+        return buffers
 
     @staticmethod
-    async def _shutdown_queues(queues: list[TaskMessagesQueue]) -> None:
-        # Immediate shutdown drops buffered messages and wakes readers already blocked
+    async def _shutdown_buffers(buffers: list[BoundedBuffer]) -> None:
+        # Immediate shutdown drops what is buffered and wakes readers already blocked
         # in get() so they observe end of stream instead of deleted task output.
-        for queue in queues:
-            await queue.shutdown(immediate=True)
+        for buffer in buffers:
+            await buffer.shutdown(immediate=True)
 
     @log_and_propagate_error_on_service_method
     async def delete_task_by_task_id(self, task_id: str | uuid.UUID) -> None:
@@ -200,8 +200,8 @@ class TasksService:
         # this synchronous block closes the QUEUED-to-RUNNING deletion race. Terminal
         # states are absorbing, so a task that passes this check while terminal cannot
         # start running underneath the delete.
-        queues = self._destroy_task_record(task=task)
-        await self._shutdown_queues(queues=queues)
+        buffers = self._destroy_task_record(task=task)
+        await self._shutdown_buffers(buffers=buffers)
 
     def _prune_terminal_tasks(self) -> None:
         terminal_tasks = [
@@ -216,18 +216,18 @@ class TasksService:
         terminal_tasks.sort(
             key=lambda task: task.datetime_completed or task.datetime_created
         )
-        queues_to_shut_down = []
+        buffers_to_shut_down = []
         for task in terminal_tasks[:excess_count]:
             self._logger.debug(
                 "Evicting retained terminal task {} after exceeding the limit of {}",
                 task,
                 self._max_retained_terminal_tasks,
             )
-            queues_to_shut_down.extend(self._destroy_task_record(task=task))
+            buffers_to_shut_down.extend(self._destroy_task_record(task=task))
 
-        if queues_to_shut_down:
+        if buffers_to_shut_down:
             run_async_background_task(
-                coroutine=self._shutdown_queues(queues=queues_to_shut_down)
+                coroutine=self._shutdown_buffers(buffers=buffers_to_shut_down)
             )
 
     def find_task(
@@ -300,8 +300,8 @@ class TasksService:
         # AgentsService.get_agent_by_agent_id first. Leaving any runtime attached would
         # keep the removed agent alive through outbox -> _agent.
         runtimes = self._task_runtime_service.pop_all_for_agent(agent_id=agent.agent_id)
-        queues_to_shut_down = [
-            queue for runtime in runtimes for queue in runtime.detach()
+        buffers_to_shut_down = [
+            buffer for runtime in runtimes for buffer in runtime.detach()
         ]
 
         # The transition is a compare and swap, so a handler cancelled just above that
@@ -325,9 +325,9 @@ class TasksService:
             )
             errored_tasks.append(task)
 
-        if queues_to_shut_down:
+        if buffers_to_shut_down:
             run_async_background_task(
-                coroutine=self._shutdown_queues(queues=queues_to_shut_down)
+                coroutine=self._shutdown_buffers(buffers=buffers_to_shut_down)
             )
 
         self._logger.debug(
