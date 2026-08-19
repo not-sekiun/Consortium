@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main, framework-restructure ]
+    branches: [dev, main]
   pull_request:
-    branches: [ main ]
+    branches: [dev, main]
 
 jobs:
   test:
