@@ -9,7 +9,7 @@ class Base(DeclarativeBase):
     pass
 
 
-class RepositoryResourceORM(Base):
+class RepositoryResourceDBModel(Base):
     resource_id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
     name: Mapped[str]
     description: Mapped[str]
@@ -17,20 +17,22 @@ class RepositoryResourceORM(Base):
     is_directory: Mapped[bool]
 
 
-class AssetORM(RepositoryResourceORM):
+class AssetDBModel(RepositoryResourceDBModel):
     __tablename__ = "assets"
+
     user_account_username: Mapped[str]
     user_account_role: Mapped[str]
 
 
-class ArtifactORM(RepositoryResourceORM):
+class ArtifactDBModel(RepositoryResourceDBModel):
     __tablename__ = "artifacts"
+
     agent_id: Mapped[uuid.UUID]
     agent_name: Mapped[str]
     agent_type: Mapped[str]
 
 
-class PayloadORM(RepositoryResourceORM):
+class PayloadDBModel(RepositoryResourceDBModel):
     __tablename__ = "payloads"
 
     agent_template_label: Mapped[str]
