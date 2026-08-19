@@ -1,4 +1,6 @@
-# The project is currently undergoing a major rewrite for version 3, the current version, version 2 will be made obsolete. See ![here](https://github.com/not-sekiun/PyIris/issues/45#issuecomment-2452972071) for more info.
+# What is this?
+This is the legacy branch of Consortium, an older version of the project that originally went by the name "PyIris" it is no longer supported and kept
+here only for archival purposes.
 
 # The PyIris Project (Updates coming soon refer to ROADMAP.md)
 The PyIris project is a modular remote access trojan toolkit written completely in python.
