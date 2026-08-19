@@ -1,0 +1,5 @@
+{
+    "output_file": "events.jsonl",
+    "event_types": null,
+    "queue_max_size": null
+}

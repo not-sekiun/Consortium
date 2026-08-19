@@ -1,0 +1,4 @@
+{
+    "entry_point": "event_logger_hook:EventLoggerHook",
+    "enabled": false
+}
