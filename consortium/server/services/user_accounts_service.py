@@ -212,15 +212,8 @@ class UserAccountsService:
             user_account_id=user_account_id,
         )
 
-        # TODO: Add event firing
-        # A field submitted with the value it already holds is a no op, never an error:
-        # clients read an account, edit one field and submit the rest back unchanged,
-        # and a `PATCH` has to stay idempotent so a client retrying after a timeout is
-        # not failed for work its first attempt already did. Skipping the assignment
-        # keeps the logging below (and the event firing above) describing only changes
-        # that actually happened. Validation still runs first either way, so a value
-        # that is invalid on its own terms is rejected rather than waved through on the
-        # grounds that nothing would change.
+        # Validate every supplied field before changing the account so a failed update
+        # cannot leave an earlier field mutated.
         if username is not None:
             if not username:
                 raise EmptyUserAccountUsernameError._during_user_account_modification(
@@ -243,27 +236,10 @@ class UserAccountsService:
                             username=username,
                             user_account_str=str(user_account),
                         )
-                old_username = user_account.username
-                user_account.username = username
-                self._logger.info(
-                    "Updated username for user account {} from '{}' to '{}'",
-                    user_account,
-                    old_username,
-                    username,
-                )
         if password is not None:
             if not password:
                 raise EmptyUserAccountPasswordError._during_user_account_modification(
                     user_account_str=str(user_account),
-                )
-            if password != user_account.password:
-                old_password = user_account.password
-                user_account.password = password
-                self._logger.info(
-                    "Updated password for user account {} from '{}' to '{}'",
-                    user_account,
-                    old_password,
-                    password,
                 )
         if role is not None:
             if role not in self._authorization_service.get_all_roles():
@@ -271,6 +247,27 @@ class UserAccountsService:
                     role=role,
                     user_account_str=str(user_account),
                 )
+
+        # TODO: Add event firing
+        if username is not None and username != user_account.username:
+            old_username = user_account.username
+            user_account.username = username
+            self._logger.info(
+                "Updated username for user account {} from '{}' to '{}'",
+                user_account,
+                old_username,
+                username,
+            )
+        if password is not None and password != user_account.password:
+            old_password = user_account.password
+            user_account.password = password
+            self._logger.info(
+                "Updated password for user account {} from '{}' to '{}'",
+                user_account,
+                old_password,
+                password,
+            )
+        if role is not None:
             if role != user_account.role:
                 old_role = user_account.role
                 user_account.role = role

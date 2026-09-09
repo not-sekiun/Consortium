@@ -12,8 +12,9 @@ from pydantic import (
     JsonValue,
     TypeAdapter,
     ValidationError,
+    field_validator,
 )
-from pydantic_core import ErrorDetails
+from pydantic_core import ErrorDetails, PydanticCustomError
 
 from consortium.framework._core.utils import _format_validation_error_location
 from consortium.framework.event_hooks._event import Event
@@ -40,14 +41,26 @@ class _BaseClientActionMessage(BaseModel):
 # Event strings stay unvalidated here: an unknown event type is answered per event with
 # its own error code by the subscribe and unsubscribe handlers, rather than failing the
 # whole message as a format error.
-class _SubscribeActionMessage(_BaseClientActionMessage):
+class _EventsActionMessage(_BaseClientActionMessage):
+    events: list[str]
+
+    @field_validator("events")
+    @classmethod
+    def validate_unique_events(cls, events: list[str]) -> list[str]:
+        if len(events) != len(set(events)):
+            raise PydanticCustomError(
+                "duplicate_event_types",
+                "Event types must not contain duplicates",
+            )
+        return events
+
+
+class _SubscribeActionMessage(_EventsActionMessage):
     action: Literal["subscribe"]
-    events: list[str]
 
 
-class _UnsubscribeActionMessage(_BaseClientActionMessage):
+class _UnsubscribeActionMessage(_EventsActionMessage):
     action: Literal["unsubscribe"]
-    events: list[str]
 
 
 class _GetSubscribedEventsActionMessage(_BaseClientActionMessage):

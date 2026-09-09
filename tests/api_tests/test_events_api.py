@@ -272,6 +272,24 @@ async def test_subscribe_twice_to_same_event_returns_already_subscribed_error(
     assert response["errors"][0]["code"] == "ALREADY_SUBSCRIBED_TO_EVENT_ERROR"
 
 
+async def test_subscribe_action_rejects_duplicate_events_without_closing_connection(
+    ws, admin_client
+):
+    await _open_with_ticket(ws, admin_client)
+
+    event = str(EventType.PAYLOAD_CREATED)
+    await ws.send_json({"action": "subscribe", "events": [event, event]})
+    response = await ws.receive_json()
+
+    assert response["success"] is False
+    assert response["errors"][0]["code"] == "INVALID_MESSAGE_FORMAT_ERROR"
+
+    await ws.send_json({"action": "get_subscribed_events"})
+    subscribed_response = await ws.receive_json()
+    assert subscribed_response["success"] is True
+    assert event not in subscribed_response["data"]
+
+
 # ---------------------------------------------------------------------------
 # unsubscribe action  (lines 278-324)
 # ---------------------------------------------------------------------------
@@ -328,6 +346,27 @@ async def test_unsubscribe_from_multiple_not_subscribed_events_returns_multiple_
 
     assert response["success"] is False
     assert len(response["errors"]) == 2
+
+
+async def test_unsubscribe_action_rejects_duplicate_events_without_closing_connection(
+    ws, admin_client
+):
+    await _open_with_ticket(ws, admin_client)
+
+    event = str(EventType.AGENT_CHECKED_IN)
+    await ws.send_json({"action": "subscribe", "events": [event]})
+    await ws.receive_json()
+
+    await ws.send_json({"action": "unsubscribe", "events": [event, event]})
+    response = await ws.receive_json()
+
+    assert response["success"] is False
+    assert response["errors"][0]["code"] == "INVALID_MESSAGE_FORMAT_ERROR"
+
+    await ws.send_json({"action": "get_subscribed_events"})
+    subscribed_response = await ws.receive_json()
+    assert subscribed_response["success"] is True
+    assert event in subscribed_response["data"]
 
 
 # ---------------------------------------------------------------------------

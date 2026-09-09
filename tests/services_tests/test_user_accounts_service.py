@@ -406,6 +406,36 @@ def test_update_user_account_with_unknown_role_raises_alongside_unchanged_userna
         )
 
 
+@pytest.mark.parametrize(
+    ("invalid_fields", "expected_exception"),
+    [
+        ({"password": ""}, EmptyUserAccountPasswordError),
+        ({"role": "NOT_A_ROLE"}, InvalidUserAccountRoleError),
+    ],
+)
+def test_update_user_account_validates_all_fields_before_mutating(
+    service: UserAccountsService,
+    invalid_fields,
+    expected_exception,
+):
+    created = service.create_user_account(
+        username="operator",
+        password="password",
+        role="OPERATOR",
+    )
+
+    with pytest.raises(expected_exception):
+        service.update_user_account_by_user_account_id(
+            user_account_id=created.user_account_id,
+            username="renamed",
+            **invalid_fields,
+        )
+
+    assert created.username == "operator"
+    assert created.password == "password"
+    assert created.role == "OPERATOR"
+
+
 # ---------------------------------------------------------------------------
 # delete_user_account_by_user_account_id
 # ---------------------------------------------------------------------------
