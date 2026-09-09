@@ -37,7 +37,6 @@ class PluginsService:
         paths_service: PathsService,
     ):
         self._plugins_directory = paths_service.plugins_directory
-        self._plugins = {}
         self._plugin_loader_service = PluginLoaderService(
             paths_service=paths_service, release_service=release_service
         )
@@ -653,11 +652,11 @@ class PluginsService:
         unload_plugin_tasks = []
         load_plugin_tasks = []
 
-        for plugin_id in self._plugins:
+        for plugin in self.get_all_plugins():
             unload_plugin_tasks.append(
                 asyncio.create_task(
                     self.unload_plugin_by_plugin_id(
-                        plugin_id=plugin_id,
+                        plugin_id=plugin.plugin_id,
                         force_unload=force_reload,
                         timeout=timeout,
                     ),

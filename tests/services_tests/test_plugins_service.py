@@ -1,6 +1,6 @@
 import pathlib
 import uuid
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 
@@ -272,3 +272,32 @@ async def test_load_framework_plugins_loads_from_directory(
     svc.register_plugin = MagicMock()
     await svc.load_framework_plugins()
     svc.register_plugin.assert_called_once_with(mock_plugin)
+
+
+# --- reload_framework_plugins ---
+
+
+@pytest.mark.anyio
+async def test_reload_framework_plugins_unloads_registered_plugins(
+    plugins_service_with_mock_registry,
+    tmp_path,
+):
+    svc, registry = plugins_service_with_mock_registry
+    svc._plugins_directory = tmp_path
+    plugins = [MagicMock(), MagicMock()]
+    registry.get_all_components.return_value = plugins
+    svc.unload_plugin_by_plugin_id = AsyncMock()
+
+    await svc.reload_framework_plugins(force_reload=True, timeout=10)
+
+    svc.unload_plugin_by_plugin_id.assert_has_awaits(
+        [
+            call(
+                plugin_id=plugin.plugin_id,
+                force_unload=True,
+                timeout=10,
+            )
+            for plugin in plugins
+        ],
+        any_order=True,
+    )
