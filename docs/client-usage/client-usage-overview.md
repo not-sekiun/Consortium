@@ -112,9 +112,8 @@ agents                    # once an agent checks in
 
 ## Commands and help
 
-Every command parses its own arguments internally and ships with a help menu. There is
-no
-need to memorize argument formats: use `help` at any time.
+Every command parses its own arguments internally and ships with a built-in help menu.
+There is no need to memorize argument formats: use `help` at any time.
 
 ```text
 help              # list every command available in the current interpreter, grouped by area
