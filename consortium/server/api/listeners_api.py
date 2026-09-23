@@ -173,13 +173,6 @@ async def start_listener_by_listener_id(
         # client can act on. The failure is recorded server side, and the listener's own
         # status carries the client-safe detail for anyone who asks for it.
         raise InternalServerError() from None
-    except Exception as exc:
-        raise InternalServerError(
-            detail={
-                "type": type(exc).__name__,
-                "message": str(exc),
-            },
-        ) from None
 
     return ListenerModel(**listener.to_json())
 
@@ -224,13 +217,6 @@ async def stop_listener_by_listener_id(
         # client can act on. The failure is recorded server side, and the listener's own
         # status carries the client-safe detail for anyone who asks for it.
         raise InternalServerError() from None
-    except Exception as exc:
-        raise InternalServerError(
-            detail={
-                "type": type(exc).__name__,
-                "message": str(exc),
-            },
-        ) from None
 
     return ListenerModel(**listener.to_json())
 
@@ -273,13 +259,6 @@ async def cancel_listener_by_listener_id(
         # client can act on. The failure is recorded server side, and the listener's own
         # status carries the client-safe detail for anyone who asks for it.
         raise InternalServerError() from None
-    except Exception as exc:
-        raise InternalServerError(
-            detail={
-                "type": type(exc).__name__,
-                "message": str(exc),
-            },
-        ) from None
 
     return ListenerModel(**listener.to_json())
 

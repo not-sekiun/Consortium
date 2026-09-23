@@ -185,13 +185,6 @@ async def start_agent_generator_by_agent_generator_id(
         # client can act on. The failure is recorded server side, and the generator's own
         # status carries the client-safe detail for anyone who asks for it.
         raise InternalServerError() from None
-    except Exception as exc:
-        raise InternalServerError(
-            detail={
-                "type": type(exc).__name__,
-                "message": str(exc),
-            },
-        ) from None
 
 
 @router.post(
@@ -236,13 +229,6 @@ async def stop_agent_generator_by_agent_generator_id(
         # client can act on. The failure is recorded server side, and the generator's own
         # status carries the client-safe detail for anyone who asks for it.
         raise InternalServerError() from None
-    except Exception as exc:
-        raise InternalServerError(
-            detail={
-                "type": type(exc).__name__,
-                "message": str(exc),
-            },
-        ) from None
 
 
 @router.post(
@@ -283,13 +269,6 @@ async def cancel_agent_generator_by_agent_generator_id(
         # client can act on. The failure is recorded server side, and the generator's own
         # status carries the client-safe detail for anyone who asks for it.
         raise InternalServerError() from None
-    except Exception as exc:
-        raise InternalServerError(
-            detail={
-                "type": type(exc).__name__,
-                "message": str(exc),
-            },
-        ) from None
 
 
 @router.patch(
