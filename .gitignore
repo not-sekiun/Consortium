@@ -31,6 +31,7 @@ tools/defaults.txt
 .vscode/
 .claude/
 .codex/
+.codex_tmp/
 CLAUDE.md
 AGENTS.md
 .env
@@ -38,11 +39,10 @@ AGENTS.md
 site/
 .cache/
 
-# Throwaway files: remove before merging back into the new repo
-/before_merging.txt
-/agent*
 test_agents/
-/test*.py
+
+# Local scratch
+/scratchpad/
+/agent.py
 /TODO.md
 /HANDOFF*.md
-PROBLEMS.md
