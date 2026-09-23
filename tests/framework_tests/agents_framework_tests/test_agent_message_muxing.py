@@ -906,39 +906,3 @@ async def test_removed_agent_is_not_retained_by_surviving_task_record():
 
     assert tasks_service.find_task(task_id=task.task_id) is task
     assert agent_reference() is None
-
-
-@pytest.mark.anyio
-async def test_terminal_retention_evicts_oldest_record_from_agent_getters():
-    task_runtime_service = TaskRuntimeService()
-    tasks_service = TasksService(
-        events_service=_StubEventsService(),
-        task_runtime_service=task_runtime_service,
-        max_retained_terminal_tasks=1,
-    )
-    agent = _make_agent(
-        tasks_service=tasks_service,
-        task_runtime_service=task_runtime_service,
-    )
-    oldest_task = Task(agent_id=agent.agent_id, command="mock_cmd", arguments={})
-    oldest_task.status._transition_to_succeeded()
-    oldest_task.datetime_completed = utc_now()
-    oldest_outbox = TaskMessagesQueue(queue_activity_notifier=agent._outbox_activity)
-    tasks_service._register_task(task=oldest_task, agent=agent)
-    runtime = TaskRuntime()
-    runtime.attach(handler=None, inbox=None, outbox=oldest_outbox)
-    task_runtime_service.attach_task_runtime(
-        task_id=oldest_task.task_id,
-        agent_id=agent.agent_id,
-        task_runtime=runtime,
-    )
-    newest_task = Task(agent_id=agent.agent_id, command="mock_cmd", arguments={})
-    newest_task.status._transition_to_succeeded()
-    newest_task.datetime_completed = utc_now()
-    tasks_service._register_task(task=newest_task, agent=agent)
-    await asyncio.sleep(0)
-
-    assert tasks_service.find_task(task_id=oldest_task.task_id) is None
-    assert agent.get_all_tasks() == [newest_task]
-    assert task_runtime_service.get_task_runtime(task_id=oldest_task.task_id) is None
-    assert await oldest_outbox.get(timeout=0) is END_OF_STREAM

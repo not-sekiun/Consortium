@@ -28,16 +28,6 @@ if TYPE_CHECKING:
     from consortium.server.objects.agent_objects import Agent
 
 
-TERMINAL_TASK_STATES = frozenset(
-    {
-        TaskState.SUCCEEDED,
-        TaskState.FAILED,
-        TaskState.ERRORED,
-    }
-)
-DEFAULT_MAX_RETAINED_TERMINAL_TASKS = 1000
-
-
 def _canonicalize_uuid(value: str | uuid.UUID) -> str | None:
     # Task and agent IDs are stored as canonical lowercase UUID strings, so a lookup
     # value has to be canonicalized before it is compared against them. This is local
@@ -57,14 +47,9 @@ class TasksService:
         self,
         events_service: EventsService,
         task_runtime_service: TaskRuntimeService,
-        max_retained_terminal_tasks: int = DEFAULT_MAX_RETAINED_TERMINAL_TASKS,
     ):
-        if max_retained_terminal_tasks < 0:
-            raise ValueError("max_retained_terminal_tasks must be non-negative")
-
         self._events_service = events_service
         self._task_runtime_service = task_runtime_service
-        self._max_retained_terminal_tasks = max_retained_terminal_tasks
         self._tasks: dict[str, Task] = {}
         self._logger = logger.bind(
             logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
@@ -203,33 +188,6 @@ class TasksService:
         queues = self._destroy_task_record(task=task)
         await self._shutdown_queues(queues=queues)
 
-    def _prune_terminal_tasks(self) -> None:
-        terminal_tasks = [
-            task
-            for task in self._tasks.values()
-            if task.status.state in TERMINAL_TASK_STATES
-        ]
-        excess_count = len(terminal_tasks) - self._max_retained_terminal_tasks
-        if excess_count <= 0:
-            return
-
-        terminal_tasks.sort(
-            key=lambda task: task.datetime_completed or task.datetime_created
-        )
-        queues_to_shut_down = []
-        for task in terminal_tasks[:excess_count]:
-            self._logger.debug(
-                "Evicting retained terminal task {} after exceeding the limit of {}",
-                task,
-                self._max_retained_terminal_tasks,
-            )
-            queues_to_shut_down.extend(self._destroy_task_record(task=task))
-
-        if queues_to_shut_down:
-            run_async_background_task(
-                coroutine=self._shutdown_queues(queues=queues_to_shut_down)
-            )
-
     def find_task(
         self,
         task_id: str | uuid.UUID,
@@ -279,11 +237,6 @@ class TasksService:
         task_id = str(task.task_id)
         self._tasks[task_id] = task
         self._logger.debug("Registered task {} for agent {}", task, agent)
-        # Registration is the only point at which the record store grows, so it is
-        # where the retention bound is enforced. Keeping this here rather than calling
-        # into the service from the capability handler leaves eviction entirely owned
-        # by this service.
-        self._prune_terminal_tasks()
         return task
 
     @log_and_propagate_error_on_service_method
@@ -335,6 +288,4 @@ class TasksService:
             len(errored_tasks),
             agent,
         )
-        # These tasks just became terminal, so they are now eligible for eviction.
-        self._prune_terminal_tasks()
         return errored_tasks

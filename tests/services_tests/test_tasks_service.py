@@ -46,15 +46,14 @@ class _StubAgent:
         return f"StubAgent({self.agent_id})"
 
 
-def _make_services(
-    max_retained_terminal_tasks: int = 100,
-) -> tuple[TasksService, TaskRuntimeService, _RecordingEventsService]:
+def _make_services() -> tuple[
+    TasksService, TaskRuntimeService, _RecordingEventsService
+]:
     events_service = _RecordingEventsService()
     task_runtime_service = TaskRuntimeService()
     tasks_service = TasksService(
         events_service=events_service,
         task_runtime_service=task_runtime_service,
-        max_retained_terminal_tasks=max_retained_terminal_tasks,
     )
     return tasks_service, task_runtime_service, events_service
 
@@ -340,41 +339,41 @@ async def test_error_pending_tasks_only_touches_the_removed_agents_tasks():
 # --- terminal task retention ---
 
 
-async def test_retention_evicts_the_oldest_terminal_task_and_its_runtime():
-    tasks_service, task_runtime_service, events_service = _make_services(
-        max_retained_terminal_tasks=1
-    )
+async def test_terminal_tasks_are_retained_and_their_runtimes_left_attached():
+    # Records are only ever removed by an explicit delete: terminal tasks accumulate
+    # rather than being evicted to keep the store bounded.
+    tasks_service, task_runtime_service, events_service = _make_services()
     agent = _StubAgent()
-    oldest_task = _register_task(tasks_service, agent)
-    oldest_task.status._transition_to_succeeded()
-    oldest_task.datetime_completed = utc_now()
-    _, oldest_outbox = _attach_runtime(task_runtime_service, oldest_task, agent)
-    newest_task = _register_task(tasks_service, agent)
-    newest_task.status._transition_to_succeeded()
-    newest_task.datetime_completed = utc_now()
+    terminal_tasks = []
+    for _ in range(50):
+        task = _register_task(tasks_service, agent)
+        _attach_runtime(task_runtime_service, task, agent)
+        task.status._transition_to_succeeded()
+        task.datetime_completed = utc_now()
+        terminal_tasks.append(task)
 
-    # Registration is what enforces the bound, so registering a third task triggers it.
     _register_task(tasks_service, agent)
     await asyncio.sleep(0)
 
-    assert tasks_service.find_task(task_id=oldest_task.task_id) is None
-    assert tasks_service.find_task(task_id=newest_task.task_id) is newest_task
-    assert task_runtime_service.get_task_runtime(task_id=oldest_task.task_id) is None
-    assert await oldest_outbox.get(timeout=0) is END_OF_STREAM
-    assert len(events_service.events_of_type(EventType.TASK_DELETED)) == 1
+    for task in terminal_tasks:
+        assert tasks_service.find_task(task_id=task.task_id) is task
+        assert task_runtime_service.get_task_runtime(task_id=task.task_id) is not None
+    assert events_service.events_of_type(EventType.TASK_DELETED) == []
 
 
-async def test_retention_never_evicts_a_pending_task():
-    tasks_service, _, _ = _make_services(max_retained_terminal_tasks=0)
+async def test_erroring_pending_tasks_retains_the_newly_terminal_records():
+    tasks_service, _, events_service = _make_services()
     agent = _StubAgent()
     queued_task = _register_task(tasks_service, agent)
-    running_task = _register_task(tasks_service, agent)
-    running_task.status._transition_to_running()
 
-    _register_task(tasks_service, agent)
+    tasks_service._error_pending_tasks_for_agent(
+        agent=agent,
+        error_message="agent removed",
+    )
+    await asyncio.sleep(0)
 
     assert tasks_service.find_task(task_id=queued_task.task_id) is queued_task
-    assert tasks_service.find_task(task_id=running_task.task_id) is running_task
+    assert events_service.events_of_type(EventType.TASK_DELETED) == []
 
 
 def _an_error():
