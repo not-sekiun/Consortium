@@ -31,6 +31,7 @@ from consortium.server.objects.repository_objects import (
     RepositoryFile,
 )
 from consortium.server.utils import (
+    atomic_write_bytes,
     format_validation_error,
     normalize_uuid,
     wrap_filesystem_errors,
@@ -242,11 +243,11 @@ class RepositoryService:
             # Pinned for the same reason as the read above. There is no encoding error to
             # report on this side: `json.dumps` defaults to `ensure_ascii=True`, so the
             # text handed to the encoder is always pure ASCII and cannot fail to encode.
-            with self._repository_metadata_file_path.open(
-                mode="w", encoding="utf-8"
-            ) as file:
-                data = json.dumps(repository_metadata_json, indent=4)
-                file.write(data)
+            # Written atomically so an interrupted write cannot brick the whole index.
+            data = json.dumps(repository_metadata_json, indent=4)
+            atomic_write_bytes(
+                self._repository_metadata_file_path, data.encode("utf-8")
+            )
 
     def reserve_resource_id(self) -> uuid.UUID:
         """Generates and reserves a resource ID to be claimed during resource creation.

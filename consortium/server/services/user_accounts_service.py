@@ -29,6 +29,7 @@ from consortium.server.models.user_account_models import (
 )
 from consortium.server.services.authorization_service import AuthorizationService
 from consortium.server.utils import (
+    atomic_write_bytes,
     format_validation_error,
     log_and_propagate_error_on_service_method,
     normalize_uuid,
@@ -571,8 +572,10 @@ class UserAccountsService:
             operation="write the user accounts file",
             path=user_accounts_filepath,
         ):
-            with user_accounts_filepath.open("wb") as file:
-                number_of_bytes_written = file.write(encoded_data)
+            # Written atomically so an interrupted write cannot corrupt the accounts file.
+            number_of_bytes_written = atomic_write_bytes(
+                user_accounts_filepath, encoded_data
+            )
 
         self._logger.debug(
             "Wrote user accounts to user accounts file ({} byte(s) written)",

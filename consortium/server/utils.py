@@ -123,6 +123,22 @@ def wrap_filesystem_errors(
         ) from exc
 
 
+def atomic_write_bytes(path: pathlib.Path, data: bytes) -> int:
+    # Writes to a sibling temp file, flushes and fsyncs it, then os.replace()s it over
+    # the target. os.replace is atomic on the same filesystem, so an interrupted write
+    # can never leave the target truncated or half-written: readers see either the old
+    # file or the complete new one. A leftover ".tmp" after a crash is harmless and is
+    # overwritten by the next write. Callers wrap this in their own filesystem-error
+    # context so OSErrors still map to their domain error. Returns the bytes written.
+    temp_path = path.with_name(path.name + ".tmp")
+    with temp_path.open("wb") as temp_file:
+        temp_file.write(data)
+        temp_file.flush()
+        os.fsync(temp_file.fileno())
+    os.replace(temp_path, path)
+    return len(data)
+
+
 def use_route_name_as_operation_id(route: APIRoute) -> str:
     # FastAPI's default operationId is `{route.name}_{path}_{method}`, which makes
     # OpenAPI client generators emit long, mangled method names like

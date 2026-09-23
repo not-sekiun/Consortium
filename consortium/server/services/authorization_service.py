@@ -17,7 +17,7 @@ from consortium.server.exceptions.service_exceptions.authorization_service_excep
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.user_account_objects import UserPermissions
-from consortium.server.utils import wrap_filesystem_errors
+from consortium.server.utils import atomic_write_bytes, wrap_filesystem_errors
 
 
 class AuthorizationService:
@@ -144,8 +144,8 @@ class AuthorizationService:
             operation="write the role permissions file",
             path=path,
         ):
-            with path.open(mode="w", encoding="utf-8") as file:
-                file.write(data)
+            # Written atomically so an interrupted write cannot corrupt the file.
+            atomic_write_bytes(path, data.encode("utf-8"))
         self._logger.debug(
             "Saved role permissions to '{}' ({} byte(s) written)",
             path,
