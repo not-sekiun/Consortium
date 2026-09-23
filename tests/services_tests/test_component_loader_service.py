@@ -115,6 +115,26 @@ def test_bad_entry_point_format_raises(plugin_loader):
         )
 
 
+@pytest.mark.parametrize(
+    "entry_point",
+    [
+        "/abs/path/mod:Sym",  # absolute path escapes the component dir
+        "a..b:Sym",  # empty dotted part is not an identifier
+        "a-b:Sym",  # hyphen is not an identifier
+        "a/b:Sym",  # path separator is not an identifier
+        "mod:Sym-bol",  # symbol is not an identifier
+    ],
+)
+def test_non_identifier_entry_point_rejected(plugin_loader, entry_point):
+    # The module path becomes a filesystem path under the component dir, so a part that
+    # is not a plain identifier is rejected before it can escape that directory.
+    with pytest.raises(InvalidComponentManifestFileSchemaError):
+        plugin_loader._get_entry_point_from_manifest_json(
+            component_directory=pathlib.Path("component_dir"),
+            manifest_json={"entry_point": entry_point},
+        )
+
+
 # --- pyproject.toml errors ---
 
 
@@ -215,6 +235,32 @@ def test_scan_directory_ignore_enabled(plugin_loader):
     labels = [p.label for p in retrieved]
     assert "consortium.tests.services.mock_plugin_disabled" in labels
     assert len(skipped) == 0
+
+
+def test_scan_directory_contains_unexpected_error_per_component(
+    mock_release_service, monkeypatch
+):
+    # An unexpected error from one component is contained to that component instead of
+    # aborting the whole batch scan.
+    loader = PluginLoaderService(
+        release_service=mock_release_service,
+        paths_service=make_mock_paths_service(consortium_root=_CONSORTIUM_ROOT),
+    )
+    target = _MOCK_PLUGINS / "mock_plugin_valid"
+
+    def flaky(directory, ignore_enabled_component_flag=False):
+        if directory == target:
+            raise TypeError("unexpected loader failure")
+        return None
+
+    monkeypatch.setattr(loader, "get_component_from_directory", flaky)
+
+    retrieved, _, errored = loader.get_all_components_from_directory(_MOCK_PLUGINS)
+
+    assert retrieved == []
+    errored_dirs = [directory for directory, _ in errored]
+    assert target in errored_dirs
+    assert all(isinstance(exc, InternalComponentError) for _, exc in errored)
 
 
 # --- Event hook loader ---

@@ -34,8 +34,9 @@ class _AgentGeneratorStub:
 
 
 class _AgentTemplateStub:
-    # Stands in for a loaded agent template class. `_post_validate_component_object`
-    # only ever reaches for these three attributes and assigns through them.
+    # Stands in for a loaded agent template class. `_assemble_component` instantiates
+    # `agent_type` in place and reads `agent_generator` and `compatible_listener_types`
+    # to build the profile; it no longer writes bindings onto the generator.
     def __init__(self, agent_type):
         self.agent_type = agent_type
         self.agent_generator = _AgentGeneratorStub()
@@ -81,7 +82,7 @@ def test_agent_template_metadata_rejects_a_non_class_non_string_agent_type():
 
 
 # ---------------------------------------------------------------------------
-# AgentProfileLoaderService._post_validate_component_object
+# AgentProfileLoaderService._assemble_component
 # ---------------------------------------------------------------------------
 
 
@@ -89,7 +90,7 @@ def test_loader_instantiates_an_agent_type_class():
     # The framework user declares the class; everything downstream expects an instance.
     template = _AgentTemplateStub(agent_type=_AgentType)
 
-    profile = AgentProfileLoaderService._post_validate_component_object(
+    profile = AgentProfileLoaderService._assemble_component(
         component_object=template,
     )
 
@@ -105,7 +106,7 @@ def test_loader_leaves_an_agent_type_string_reference_unresolved():
     # Calling it instead of leaving it raises `TypeError: 'str' object is not callable`.
     template = _AgentTemplateStub(agent_type="agent_x")
 
-    profile = AgentProfileLoaderService._post_validate_component_object(
+    profile = AgentProfileLoaderService._assemble_component(
         component_object=template,
     )
 
@@ -118,7 +119,7 @@ def test_loader_does_not_raise_on_an_agent_type_string_reference():
 
     # Guards the regression directly: this used to raise before the profile was ever
     # handed to the reference resolver.
-    AgentProfileLoaderService._post_validate_component_object(
+    AgentProfileLoaderService._assemble_component(
         component_object=template,
     )
 
@@ -129,7 +130,7 @@ def test_loader_leaves_compatible_listener_types_on_the_template():
     # template per instance.
     template = _AgentTemplateStub(agent_type=_AgentType)
 
-    profile = AgentProfileLoaderService._post_validate_component_object(
+    profile = AgentProfileLoaderService._assemble_component(
         component_object=template,
     )
 

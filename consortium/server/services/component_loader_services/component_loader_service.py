@@ -189,6 +189,22 @@ class ComponentLoaderService[Component: ComponentMetadata]:
                 ),
             )
         component_module, component_symbol = entry_point.split(":", 1)
+        # The module path is turned into a filesystem path under the component
+        # directory, so require every dotted part and the symbol to be a plain Python
+        # identifier. This keeps the resolved file lexically inside the component dir
+        # (no "/", drive letter or "..") without a `.resolve()` that would break
+        # symlinked plugin dirs.
+        module_parts = component_module.split(".")
+        if not all(part.isidentifier() for part in module_parts) or (
+            not component_symbol.isidentifier()
+        ):
+            raise self._component_exceptions.invalid_manifest_file_schema(
+                component_directory=str(component_directory),
+                json_schema_error_message=(
+                    "The 'entry_point' module path and symbol must be valid Python "
+                    "identifiers in the format 'module_path:SymbolName'"
+                ),
+            )
         return component_module, component_symbol
 
     @staticmethod
@@ -291,10 +307,19 @@ class ComponentLoaderService[Component: ComponentMetadata]:
                 component_directory=str(component_directory),
             )
 
-        # Check for valid symbol names in the required component project file.
-        component_module_path = ".".join(
-            component_file.relative_to(self._consortium_root).parts
-        )[: -len(".py")]
+        # Check for valid symbol names in the required component project file. A
+        # component directory outside `consortium_root` (reachable via the un-routed
+        # public methods) makes `relative_to` raise, so it is treated as a missing
+        # entry point rather than aborting the whole load.
+        try:
+            component_module_path = ".".join(
+                component_file.relative_to(self._consortium_root).parts
+            )[: -len(".py")]
+        except ValueError:
+            raise self._component_exceptions.entry_point_module_not_found(
+                entry_point_module=str(component_file),
+                component_directory=str(component_directory),
+            ) from None
 
         # Check for exceptions that occur during import
         try:
@@ -388,11 +413,11 @@ class ComponentLoaderService[Component: ComponentMetadata]:
             ) from None
 
     @staticmethod
-    def _post_validate_component_object(
+    def _assemble_component(
         component_object: Component,
     ) -> Component:
-        # Hook for any post validation steps that need to be performed on the component
-        # class after all validation has been performed.
+        # Hook to assemble the loaded object once validation is done: profile loaders
+        # link and wrap it. This does not validate.
         return component_object
 
     def get_component_from_directory(
@@ -442,7 +467,7 @@ class ComponentLoaderService[Component: ComponentMetadata]:
             component_directory=directory,
             component_symbol=component_symbol,
         )
-        return self._post_validate_component_object(
+        return self._assemble_component(
             component_object=component_object,
         )
 
@@ -486,6 +511,18 @@ class ComponentLoaderService[Component: ComponentMetadata]:
             # the batch load.
             except self._component_framework_error as exc:
                 errored_components.append((directory, exc))
+            # Any other unexpected error is contained to its own component so one bad
+            # component cannot abort loading the rest.
+            except Exception as exc:
+                errored_components.append(
+                    (
+                        directory,
+                        self._component_exceptions.internal_error(
+                            component_directory=str(directory),
+                            internal_error_message=str(exc),
+                        ),
+                    )
+                )
         return retrieved_components, skipped_components, errored_components
 
     def validate_component_component_dependencies(

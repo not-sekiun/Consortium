@@ -76,7 +76,7 @@ class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate])
     )
 
     @staticmethod
-    def _post_validate_component_object(
+    def _assemble_component(
         component_object: BaseListenerTemplate,
     ) -> ListenerProfile:
         # Framework user passes in the listener type class, instantiate the listener

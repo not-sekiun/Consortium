@@ -80,7 +80,7 @@ class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
     )
 
     @staticmethod
-    def _post_validate_component_object(
+    def _assemble_component(
         component_object: BaseAgentTemplate,
     ) -> AgentProfile:
         # Framework user passes in the agent type class, instantiate the agent type. A
