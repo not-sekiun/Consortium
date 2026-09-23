@@ -1,0 +1,149 @@
+{
+    "review": "Consortium core services + infra security/correctness review",
+    "created": "2026-09-23",
+    "base_commit": "0a404028a28d402b7e8694e99c1cfa550782d4a6",
+    "effort": "high",
+    "note": "Resumable. Any agent: pick the first chunk with status 'todo', review ONLY its files, write findings/<id>.md, then set status 'done' + reviewed_commit + reviewed_at here. Never hold state in context; the ledger is the source of truth.",
+    "chunks": [
+        {
+            "id": "A-auth",
+            "theme": "Authentication, authorization, identity, websocket ticketing",
+            "status": "done",
+            "effort": "high",
+            "reviewed_commit": "0a404028a28d402b7e8694e99c1cfa550782d4a6",
+            "reviewed_at": "2026-09-23",
+            "findings_file": "findings/A-auth.md",
+            "loc": 1664,
+            "files": [
+                "consortium/server/services/authorization_service.py",
+                "consortium/server/services/user_accounts_service.py",
+                "consortium/server/services/websocket_tickets_service.py",
+                "consortium/server/services/events_websocket_service.py"
+            ]
+        },
+        {
+            "id": "C-codeloading",
+            "theme": "Plugin + component dynamic loading (RCE / arbitrary-code surface)",
+            "status": "done",
+            "effort": "high",
+            "reviewed_commit": "0a404028a28d402b7e8694e99c1cfa550782d4a6",
+            "reviewed_at": "2026-09-23",
+            "findings_file": "findings/C-codeloading.md",
+            "loc": 2338,
+            "files": [
+                "consortium/server/services/plugins_service.py",
+                "consortium/server/services/component_loader_services",
+                "consortium/server/services/component_registry_services"
+            ]
+        },
+        {
+            "id": "B-runtime",
+            "theme": "Agent + task runtime (command dispatch / execution path)",
+            "status": "done",
+            "effort": "high",
+            "reviewed_commit": "0a404028a28d402b7e8694e99c1cfa550782d4a6",
+            "reviewed_at": "2026-09-23",
+            "findings_file": "findings/B-runtime.md",
+            "loc": 1684,
+            "files": [
+                "consortium/server/services/task_runtime_service.py",
+                "consortium/server/services/tasks_service.py",
+                "consortium/server/services/connected_agents_service.py",
+                "consortium/server/services/agents_service.py"
+            ]
+        },
+        {
+            "id": "E-api",
+            "theme": "HTTP/WS API layer (request boundary, authz enforcement, input handling)",
+            "status": "done",
+            "effort": "low",
+            "reviewed_commit": "0a404028a28d402b7e8694e99c1cfa550782d4a6",
+            "reviewed_at": "2026-09-23",
+            "findings_file": "findings/E-api.md",
+            "loc": 3014,
+            "files": [
+                "consortium/server/api"
+            ]
+        },
+        {
+            "id": "D-files",
+            "theme": "Payload / artifact / repository file handling (path traversal, uploads)",
+            "status": "done",
+            "effort": "high",
+            "reviewed_commit": "0a404028a28d402b7e8694e99c1cfa550782d4a6",
+            "reviewed_at": "2026-09-23",
+            "findings_file": "findings/D-files.md",
+            "loc": 1884,
+            "files": [
+                "consortium/server/services/payloads_service.py",
+                "consortium/server/services/artifacts_service.py",
+                "consortium/server/services/repository_service.py"
+            ]
+        },
+        {
+            "id": "F-listeners",
+            "theme": "Listener subsystem (network-facing listener lifecycle, profiles, templates)",
+            "status": "done",
+            "effort": "high",
+            "reviewed_commit": "0a404028a28d402b7e8694e99c1cfa550782d4a6",
+            "reviewed_at": "2026-09-23",
+            "findings_file": "findings/F-listeners.md",
+            "loc": 1123,
+            "files": [
+                "consortium/server/services/listeners_service.py",
+                "consortium/server/services/listener_profiles_service.py",
+                "consortium/server/services/listener_templates_service.py"
+            ]
+        },
+        {
+            "id": "G-agentgen",
+            "theme": "Agent generation / templates / profiles / file manager (payload+code generation surface)",
+            "status": "done",
+            "effort": "high",
+            "reviewed_commit": "0a404028a28d402b7e8694e99c1cfa550782d4a6",
+            "reviewed_at": "2026-09-23",
+            "findings_file": "findings/G-agentgen.md",
+            "loc": 1894,
+            "files": [
+                "consortium/server/services/agent_generators_service.py",
+                "consortium/server/services/agent_profiles_service.py",
+                "consortium/server/services/agent_templates_payloads_service.py",
+                "consortium/server/services/agent_file_manager_service.py",
+                "consortium/server/services/agent_templates_service.py"
+            ],
+            "note": "Blocked by [cyber] on Opus 4.8 + Sonnet 5; succeeded on retry with Opus."
+        },
+        {
+            "id": "H-events",
+            "theme": "Event core + hooks (non-websocket event emission and hook dispatch)",
+            "status": "done",
+            "effort": "high",
+            "reviewed_commit": "0a404028a28d402b7e8694e99c1cfa550782d4a6",
+            "reviewed_at": "2026-09-23",
+            "findings_file": "findings/H-events.md",
+            "loc": 872,
+            "files": [
+                "consortium/server/services/event_hooks_service.py",
+                "consortium/server/services/events_service.py"
+            ]
+        },
+        {
+            "id": "I-infra",
+            "theme": "Supporting infra (assets file service, path building, logging, c2 types, users, release)",
+            "status": "done",
+            "effort": "high",
+            "reviewed_commit": "0a404028a28d402b7e8694e99c1cfa550782d4a6",
+            "reviewed_at": "2026-09-23",
+            "findings_file": "findings/I-infra.md",
+            "loc": 1796,
+            "files": [
+                "consortium/server/services/assets_service.py",
+                "consortium/server/services/paths_service.py",
+                "consortium/server/services/logging_service.py",
+                "consortium/server/services/c2_types_service.py",
+                "consortium/server/services/users_service.py",
+                "consortium/server/services/release_service.py"
+            ]
+        }
+    ]
+}
