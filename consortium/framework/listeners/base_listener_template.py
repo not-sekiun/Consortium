@@ -299,12 +299,16 @@ class BaseListenerTemplate(ComponentMetadata, ABC):
         # Create listener instance. The endpoint is always derived from the parameters,
         # the name never is: it is passed straight through and the listener generates a
         # random one when it is `None`.
-        return self.listener(
+        listener = self.listener(
             name=name,
             description=description,
             endpoint=self.resolve_listener_endpoint(parameters=parameters),
             parameters=parameters,
         )
+        # Bind the instance to this template so shared listener classes do not overwrite
+        # each other's template and listener type.
+        listener.creating_listener_template = self
+        return listener
 
     def to_json(self) -> dict[str, JsonValue]:
         """Serialize the listener template's full metadata to a JSON-compatible dictionary.

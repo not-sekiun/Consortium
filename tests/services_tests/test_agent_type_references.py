@@ -95,7 +95,9 @@ def test_loader_instantiates_an_agent_type_class():
 
     assert isinstance(profile.agent_type, _AgentType)
     assert profile.agent_type is template.agent_type
-    assert profile.agent_generator.agent_type is template.agent_type
+    # The generator no longer carries its own agent type binding; it derives it from
+    # its creating template per instance.
+    assert not hasattr(profile.agent_generator, "agent_type")
 
 
 def test_loader_leaves_an_agent_type_string_reference_unresolved():
@@ -121,14 +123,16 @@ def test_loader_does_not_raise_on_an_agent_type_string_reference():
     )
 
 
-def test_loader_copies_compatible_listener_types_onto_the_generator():
-    # Compatibility is declared by the template, never by the agent type. The generator
-    # gets its own copy of the reference; the agent type is left without one.
+def test_loader_leaves_compatible_listener_types_on_the_template():
+    # Compatibility is declared by the template, never by the agent type. The loader no
+    # longer copies it onto the generator: the generator derives it from its creating
+    # template per instance.
     template = _AgentTemplateStub(agent_type=_AgentType)
 
     profile = AgentProfileLoaderService._post_validate_component_object(
         component_object=template,
     )
 
-    assert profile.agent_generator.compatible_listener_types == {"type_a"}
+    assert profile.agent_template.compatible_listener_types == {"type_a"}
+    assert not hasattr(profile.agent_generator, "compatible_listener_types")
     assert not hasattr(profile.agent_type, "compatible_listener_types")

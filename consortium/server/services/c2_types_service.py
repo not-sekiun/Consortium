@@ -361,12 +361,11 @@ class C2TypesService:
                     resolved_agent_type = agent_type_name_to_agent_profile_map[
                         agent_type
                     ].agent_type
-                    # The loader assigns the same object to all three of these, so all
-                    # three have to be moved off the string together. The generator in
-                    # particular reads `agent_type.to_json()` when it serializes.
+                    # Move the profile and its template off the string together; the
+                    # generator derives its agent type from the template, so updating
+                    # the template is enough.
                     agent_profile.agent_type = resolved_agent_type
                     agent_profile.agent_template.agent_type = resolved_agent_type
-                    agent_profile.agent_generator.agent_type = resolved_agent_type
                 else:
                     raise UnresolvableAgentTypeReferenceError(
                         agent_template_str=str(agent_profile.agent_template),

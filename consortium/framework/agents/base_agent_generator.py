@@ -53,6 +53,7 @@ from consortium.server.utils import (
 if TYPE_CHECKING:
     # This is used for type checking BaseAgentGeneratorBuildStep another runtime import
     # is within BaseAgentGenerator for actually instantiating the service
+    from consortium.framework.agents.base_agent_type import BaseAgentType
     from consortium.server.services.agent_templates_payloads_service import (
         AgentTemplatesPayloadsService,
     )
@@ -396,11 +397,11 @@ class BaseAgentGenerator(ComponentLifeCycle):
             optionally mirrored to the relevant system logger.
         root_directory: Directory containing the concrete generator's source file.
         services: Server services exposed to the concrete generator.
-        agent_type: Agent type assigned to the concrete generator during loading.
-        compatible_listener_types: Listener types assigned during loading that can
-            create this generator's agents.
-        creating_agent_template: Agent template that created this generator, assigned
-            during loading.
+        agent_type: Agent type of this instance, derived from its creating template.
+        compatible_listener_types: Listener types that can create this generator's
+            agents, derived from its creating template.
+        creating_agent_template: Agent template that created this generator, set per
+            instance by that template at creation time.
     """
 
     agent_generator_build_steps: list[type[BaseAgentGeneratorBuildStep]] = None
@@ -478,7 +479,7 @@ class BaseAgentGenerator(ComponentLifeCycle):
         self.parameters = parameters
 
         self.agent_generator_id = uuid.uuid4()
-        # self.creating_agent_template is assigned as a class variable at load time
+        # self.creating_agent_template is set per instance by the creating template
         self.agent_templates_payload_service = AgentTemplatesPayloadsService(
             agent_template_id=self.creating_agent_template.agent_template_id,
         )
@@ -561,6 +562,16 @@ class BaseAgentGenerator(ComponentLifeCycle):
             f"parameters={self.parameters!r}"
             f")"
         )
+
+    @property
+    def agent_type(self) -> BaseAgentType | str:
+        # Derived from the creating template so instances that share a generator
+        # class each report their own template's type.
+        return self.creating_agent_template.agent_type
+
+    @property
+    def compatible_listener_types(self) -> set[str]:
+        return self.creating_agent_template.compatible_listener_types
 
     async def on_started(self) -> None:
         """Hook invoked before build steps begin executing.
@@ -791,11 +802,9 @@ class BaseAgentGenerator(ComponentLifeCycle):
                 for agent_generator_build_step in self.agent_generator_build_steps
             ],
             "agent_type": self.agent_type.to_json(),
-            # Compatible listener types is assigned to the agent generator class by the
-            # agent profile loader at load time and referenced from the agent template.
+            # Agent type and compatible listener types are derived from the creating
+            # template, which is bound per instance at creation time.
             "compatible_listener_types": list(self.compatible_listener_types),
-            # `creating_agent_template` is assigned to the agent generator class by the
-            # agent profile loader at load time.
             "creating_agent_template": self.creating_agent_template.to_json_reference(),
         }
 

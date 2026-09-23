@@ -155,8 +155,6 @@ class BaseAgentTemplate(ComponentMetadata):
         cls.agent_template_id = uuid.uuid4()
         # Remap options set to a dictionary for easier access by name.
         cls.options = {option.name: option for option in cls.options}
-        # TODO: Remove this same stupid fuckass hack as the listener template
-        cls.agent_generator.creating_agent_template = cls()
         super().__init_subclass__(**kwargs)
 
     def __str__(self) -> str:
@@ -268,14 +266,19 @@ class BaseAgentTemplate(ComponentMetadata):
                     detail=exc.detail,
                 ) from None
 
-        # Create agent generator instance. The name is passed straight through and the
-        # generator generates a random one when it is `None`; it is never resolved from
-        # the parameters.
-        return self.agent_generator(
+        # Bind this template before construction so __init__ (which builds the
+        # per-template payload service) sees the right template, then pin it on the
+        # instance. create_agent_generator is synchronous, so the transient class
+        # binding cannot interleave; the instance attribute is what every later read
+        # resolves, so shared generator classes no longer overwrite each other.
+        self.agent_generator.creating_agent_template = self
+        agent_generator = self.agent_generator(
             name=name,
             description=description,
             parameters=parameters,
         )
+        agent_generator.creating_agent_template = self
+        return agent_generator
 
     def to_json(self) -> dict[str, JsonValue]:
         """Serialize the agent template's full metadata to a JSON-compatible dictionary.
@@ -295,7 +298,7 @@ class BaseAgentTemplate(ComponentMetadata):
             "authors": list(self.authors),
             "component_dependencies": list(map(str, self.component_dependencies)),
             "third_party_dependencies": list(map(str, self.third_party_dependencies)),
-            "agent_type": self.agent_generator.agent_type.to_json(),
+            "agent_type": self.agent_type.to_json(),
             "compatible_listener_types": list(self.compatible_listener_types),
             "options": {
                 name: option.to_json() for name, option in self.options.items()

@@ -595,12 +595,12 @@ def test_resolve_agent_type_references_deduplicates_after_resolution(
     assert service.get_all_agent_types() == [at]
 
 
-def test_resolve_agent_type_references_resolves_template_and_generator(
+def test_resolve_agent_type_references_resolves_profile_and_template(
     service: C2TypesService, agent_profiles_service: MagicMock
 ):
-    # The loader points the profile, its template and its generator at one agent type
-    # object, so resolution has to move all three off the string. The generator matters
-    # in particular: it calls `agent_type.to_json()` when it serializes itself.
+    # The profile and its template hold the agent type; resolution moves both off the
+    # string. The generator derives its agent type from the template, so it needs no
+    # separate move.
     at = _AgentTypeX()
     p_real = _make_agent_profile(at, set())
     p_ref = _make_agent_profile("agent_x", set())
@@ -608,8 +608,8 @@ def test_resolve_agent_type_references_resolves_template_and_generator(
     agent_profiles_service.get_all_agent_profiles.return_value = [p_real, p_ref]
     service._resolve_agent_type_references()
 
+    assert p_ref.agent_type is at
     assert p_ref.agent_template.agent_type is at
-    assert p_ref.agent_generator.agent_type is at
 
 
 def test_resolve_agent_type_references_leaves_resolved_profiles_alone(

@@ -79,11 +79,10 @@ class ListenerProfileLoaderService(ComponentLoaderService[BaseListenerTemplate])
     def _post_validate_component_object(
         component_object: BaseListenerTemplate,
     ) -> ListenerProfile:
-        # listener refers to the class of the listener that the template creates
-        component_object.listener.creating_listener_template = component_object
-        # Framework user passes in the listener type class, instantiate the listener type
+        # Framework user passes in the listener type class, instantiate the listener
+        # type. The listener derives its listener type from its creating template, so
+        # no class writes here.
         component_object.listener_type = component_object.listener_type()
-        component_object.listener.listener_type = component_object.listener_type
         return ListenerProfile(
             listener=component_object.listener,
             listener_template=component_object,

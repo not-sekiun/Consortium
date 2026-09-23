@@ -83,21 +83,15 @@ class AgentProfileLoaderService(ComponentLoaderService[BaseAgentTemplate]):
     def _post_validate_component_object(
         component_object: BaseAgentTemplate,
     ) -> AgentProfile:
-        # agent generator refers to the class of the agent generator that the
-        # template creates
-        component_object.agent_generator.creating_agent_template = component_object
         # Framework user passes in the agent type class, instantiate the agent type. A
         # `str` is an agent type reference to another profile's agent type and is left
         # alone: the profile it names may not be loaded yet, so it can only be resolved
         # once every profile is in, by
         # `C2TypesService._resolve_agent_type_references`. Instantiating unconditionally
-        # here would call the string itself.
+        # here would call the string itself. The generator derives its agent type and
+        # compatible listener types from its creating template, so no class writes here.
         if not isinstance(component_object.agent_type, str):
             component_object.agent_type = component_object.agent_type()
-        component_object.agent_generator.agent_type = component_object.agent_type
-        component_object.agent_generator.compatible_listener_types = (
-            component_object.compatible_listener_types
-        )
         return AgentProfile(
             agent_generator=component_object.agent_generator,
             agent_template=component_object,

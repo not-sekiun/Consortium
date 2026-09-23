@@ -84,7 +84,6 @@ class BaseListener(ComponentLifeCycle):
     """
 
     creating_listener_template: BaseListenerTemplate
-    listener_type: BaseListenerType
 
     # Raise listener errors directly from the shared lifecycle instead of raising generic
     # component errors and remapping them here, which would format the message twice.
@@ -197,6 +196,12 @@ class BaseListener(ComponentLifeCycle):
             f"parameters={self.parameters!r}"
             f")"
         )
+
+    @property
+    def listener_type(self) -> BaseListenerType:
+        # Derived from the creating template so instances that share a listener class
+        # each report their own template's type.
+        return self.creating_listener_template.listener_type
 
     @property
     def connected_agents(self) -> list[Agent]:
@@ -355,8 +360,8 @@ class BaseListener(ComponentLifeCycle):
             "connected_agents": [
                 agent.to_json_reference() for agent in self.connected_agents
             ],
-            # `creating_listener_template` is assigned to the listener class by the
-            # listener profile loader at load time.
+            # `creating_listener_template` is bound per instance at creation time; the
+            # listener type is derived from it.
             "creating_listener_template": self.creating_listener_template.to_json_reference(),
         }
 
