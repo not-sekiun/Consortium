@@ -1,5 +1,6 @@
 import asyncio
-from collections.abc import Callable, Coroutine
+import inspect
+from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any
 
 from loguru import logger
@@ -51,14 +52,17 @@ class EventsService:
     def register_event_handler_to_event_type(
         self,
         event_type: EventType,
-        event_handler: Callable[[Event], Coroutine[Any, Any, None]],
+        event_handler: Callable[[Event], Awaitable[None] | None],
     ) -> None:
-        """Registers an async event handler for the specified event type.
+        """Registers an event handler for the specified event type.
 
         Args:
             event_type: The event type to subscribe the handler to.
-            event_handler: An async callable that accepts an `Event` and is invoked
-                whenever the event type is triggered.
+            event_handler: A callable that accepts an `Event` and is invoked whenever
+                the event type is triggered. It may be async or sync. A sync handler
+                runs inline on the event loop while it executes, so keep it quick or
+                offload blocking work with `asyncio.to_thread`; a slow sync handler
+                stalls every other handler and the loop.
 
         Raises:
             InvalidEventTypeError: If the provided event type does not correspond to a
@@ -160,6 +164,18 @@ class EventsService:
         """
         return list(EventType)
 
+    @staticmethod
+    async def _invoke_event_handler(
+        event_handler: Callable[[Event], Awaitable[None] | None],
+        event: Event,
+    ) -> None:
+        # Call the handler inside a coroutine so both sync and async handlers can be
+        # gathered uniformly: a sync handler's return (or raise) is captured by the
+        # gather rather than escaping while the argument tuple is being built.
+        result = event_handler(event)
+        if inspect.isawaitable(result):
+            await result
+
     @log_and_propagate_error_on_service_method
     async def trigger_event(
         self, event_type: EventType, message: str = "", data: JSON | None = None
@@ -215,7 +231,10 @@ class EventsService:
         # propagates, which is the distinction `TaskGroup` cannot express here since it
         # tears down the siblings on the first failure.
         results = await asyncio.gather(
-            *(event_handler(event) for event_handler in event_handlers),
+            *(
+                self._invoke_event_handler(event_handler, event)
+                for event_handler in event_handlers
+            ),
             return_exceptions=True,
         )
 
