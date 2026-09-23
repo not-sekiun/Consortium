@@ -246,3 +246,23 @@ def test_configure_default_logging_respects_level():
     )
     service.configure_default_logging(config)
     assert service.get_all_sinks()[0].level == "ERROR"
+
+
+# ---------------------------------------------------------------------------
+# Log format injection
+# ---------------------------------------------------------------------------
+
+
+def test_bound_logger_name_is_emitted_literally_not_parsed():
+    # A logger name is attacker-influenceable, so loguru placeholders or colour markup
+    # in it must be emitted literally rather than parsed out of the format template.
+    service = LoggingService()
+    stream = io.StringIO()
+    service.add_sink(sink=stream, level="DEBUG", label="capture", colorize=False)
+
+    injected_name = "{message} <red>x</red>"
+    logger.bind(logger_name=injected_name).info("real message")
+
+    output = stream.getvalue()
+    assert injected_name in output
+    assert "real message" in output

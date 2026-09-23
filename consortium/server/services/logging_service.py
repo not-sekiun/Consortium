@@ -74,14 +74,17 @@ class LoggingService:
 
         logger_name = record["extra"].get("logger_name") or record["name"]
 
-        # logger_name is resolved here rather than via {extra[logger_name]} in the
-        # format string to avoid a KeyError when logging without a bound logger_name.
-        # Can't use f-string here because of the loguru syntax. Also, we need to add
-        # the newline character at the end of the string for formatter functions.
+        # logger_name is stored back on the record and referenced as a field rather than
+        # concatenated into the template, so that "{...}" or "<tag>" in a logger name is
+        # emitted literally instead of being parsed as a loguru placeholder or colour
+        # markup. The key is always set here, so referencing it never raises a KeyError
+        # when logging without a bound logger_name. Can't use an f-string because of the
+        # loguru syntax, and the trailing newline is required for formatter functions.
+        record["extra"]["_resolved_logger_name"] = logger_name
         return (
             "<dim><white>{time:YYYY-MM-DDTHH:mm:ss.SSSZ}</></> <level>{level:<8}</> "
             + color
-            + logger_name
+            + "{extra[_resolved_logger_name]}"
             + "</></>: {message}\n{exception}"
         )
 
