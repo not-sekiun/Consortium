@@ -64,10 +64,13 @@ class UserAccessTokenNotFoundError(UserNotFoundError):
         self,
         access_token: str,
     ):
+        # The access token is a session secret, so it is deliberately kept out of the
+        # message and detail: this exception travels beyond the logs (into API
+        # responses), where secret redaction does not apply. The argument is retained
+        # for the caller's convenience but is not echoed back.
         super().__init__(
             message=(
                 "Failed to find the requested user. No user found with the provided "
-                f"access token '{access_token}'."
+                "access token."
             ),
-            detail={"access_token": access_token},
         )

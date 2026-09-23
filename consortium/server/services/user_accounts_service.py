@@ -7,6 +7,7 @@ from pathlib import Path
 from loguru import logger
 from pydantic import ValidationError
 
+import consortium.server.server_singletons as server_singletons
 from consortium.server.exceptions.service_exceptions.user_accounts_service_exceptions import (
     EmptyUserAccountPasswordError,
     EmptyUserAccountUsernameError,
@@ -262,11 +263,14 @@ class UserAccountsService:
         if password is not None and password != user_account.password:
             old_password = user_account.password
             user_account.password = password
+            # Passwords are logged only when secret logging is explicitly enabled;
+            # otherwise both values are redacted. repr=False does not help here because
+            # these are interpolated directly, not through the model's repr.
             self._logger.info(
                 "Updated password for user account {} from '{}' to '{}'",
                 user_account,
-                old_password,
-                password,
+                server_singletons.logging_service.secret(old_password),
+                server_singletons.logging_service.secret(password),
             )
         if role is not None:
             if role != user_account.role:

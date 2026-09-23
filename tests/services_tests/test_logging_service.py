@@ -266,3 +266,44 @@ def test_bound_logger_name_is_emitted_literally_not_parsed():
     output = stream.getvalue()
     assert injected_name in output
     assert "real message" in output
+
+
+# ---------------------------------------------------------------------------
+# Secret redaction gate
+# ---------------------------------------------------------------------------
+
+
+def test_secret_redacts_by_default():
+    service = LoggingService()
+    assert service.secret("hunter2") == "<redacted>"
+
+
+def test_secret_returns_value_when_log_secrets_enabled():
+    service = LoggingService()
+    service.logging_config = LoggingConfigModel(log_secrets=True)
+    assert service.secret("hunter2") == "hunter2"
+
+
+def test_configure_default_logging_warns_when_log_secrets_enabled():
+    service = LoggingService()
+    config = LoggingConfigModel(
+        level="INFO",
+        log_file=None,
+        rotation=None,
+        retention=None,
+        colorize=False,
+        log_secrets=True,
+    )
+
+    warnings = []
+    handler_id = logger.add(
+        lambda message: warnings.append(message.record),
+        level="WARNING",
+        filter=lambda record: "log_secrets is enabled" in record["message"],
+    )
+    try:
+        service.configure_default_logging(config)
+    finally:
+        logger.remove(handler_id)
+
+    assert any("log_secrets is enabled" in record["message"] for record in warnings)

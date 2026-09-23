@@ -6,7 +6,9 @@ from pydantic import UUID4, BaseModel, ConfigDict, Field, RootModel
 class UserAccountModel(BaseModel):
     user_account_id: UUID4 = Field(default_factory=uuid.uuid4)
     username: str
-    password: str
+    # repr=False keeps the plaintext password out of repr(), which neutralises every
+    # {!r} log site that dumps an account or a User wrapping one.
+    password: str = Field(repr=False)
     role: str
 
     def __str__(self) -> str:
@@ -24,7 +26,7 @@ class PersistentUserAccountModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     username: str = Field(min_length=1)
-    password: str = Field(min_length=1)
+    password: str = Field(min_length=1, repr=False)
     role: str
 
 

@@ -11,17 +11,27 @@ rotation, and retention of the server's logs.
     "log_file": "data/server/logs/{time}.log",
     "rotation": null,
     "retention": 1,
-    "colorize": true
+    "colorize": true,
+    "log_secrets": false
 }
 ```
 
-| Field       | Description                                                                                                                                                          | Default Value                   |
-|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
-| `level`     | The minimum logging level for messages to be logged. One of: `TRACE`, `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`, or `SUCCESS`.                                 | `"INFO"`                        |
-| `log_file`  | The file path where log files will be written. Supports dynamic placeholders like `{time}` for timestamps.                                                           | `"data/server/logs/{time}.log"` |
-| `rotation`  | The condition for rotating log files. A file size (e.g. `"10 MB"`), a time period (e.g. `"1 day"`), a specific time (e.g. `"00:00"`), or `null` to disable rotation. | `null`                          |
-| `retention` | The number of log files to retain before deletion, or a time period (e.g. `"1 week"`). An integer or string, or `null` to keep all logs indefinitely.                | `1`                             |
-| `colorize`  | Whether to enable colorized output in the terminal/console. `true` to enable colored log messages in stdout, or `false` to disable.                                  | `true`                          |
+| Field         | Description                                                                                                                                                          | Default Value                   |
+|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
+| `level`       | The minimum logging level for messages to be logged. One of: `TRACE`, `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`, or `SUCCESS`.                                 | `"INFO"`                        |
+| `log_file`    | The file path where log files will be written. Supports dynamic placeholders like `{time}` for timestamps.                                                           | `"data/server/logs/{time}.log"` |
+| `rotation`    | The condition for rotating log files. A file size (e.g. `"10 MB"`), a time period (e.g. `"1 day"`), a specific time (e.g. `"00:00"`), or `null` to disable rotation. | `null`                          |
+| `retention`   | The number of log files to retain before deletion, or a time period (e.g. `"1 week"`). An integer or string, or `null` to keep all logs indefinitely.                | `1`                             |
+| `colorize`    | Whether to enable colorized output in the terminal/console. `true` to enable colored log messages in stdout, or `false` to disable.                                  | `true`                          |
+| `log_secrets` | Whether to log secret values (such as passwords and session tokens) in the clear. `false` redacts them as `<redacted>`; `true` writes them verbatim. See the warning below. | `false`                         |
+
+!!! warning "log_secrets exposes credentials"
+    `log_secrets` is off by default and should stay off outside of local debugging. When
+    it is `true`, secrets such as account passwords and session access tokens are written
+    to the logs (and any log file) in the clear, and the server emits a `WARNING` on
+    startup to make the choice visible. This flag never affects object representations:
+    passwords are always kept out of `repr()` regardless of its value. It only ungates
+    the small number of log lines that deliberately record a secret.
 
 To load a logging configuration file from a different location, use the `-l/--logging-config`
 flag when starting the server. Passing `--debug` at startup overrides `level` and raises it

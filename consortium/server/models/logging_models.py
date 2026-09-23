@@ -18,6 +18,10 @@ class LoggingConfigModel(BaseModel):
     rotation: str | int | None = None
     retention: str | int | None = None
     colorize: bool = True
+    # When true, deliberate secret logging (e.g. passwords, session ids) is emitted in
+    # the clear instead of redacted. Off by default: reprs are always redacted, and this
+    # only ungates the explicit secret() log sites. Intended for local debugging only.
+    log_secrets: bool = False
 
 
 # Provide a custom logger type to color mapping. So that we can specially highlight log

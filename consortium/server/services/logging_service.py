@@ -50,6 +50,17 @@ class LoggingService:
     def __repr__(self) -> str:
         return "LoggingService()"
 
+    def secret(self, value: Any) -> Any:
+        """Returns `value` for logging only when secret logging is enabled.
+
+        Deliberate secret logging (for example a password or session id) is gated
+        behind the `log_secrets` config flag, which is off by default. When it is off
+        this returns a redaction placeholder instead of the value, so a log line that
+        interpolates `secret(...)` never leaks the secret unless an operator has opted
+        in. This does not affect reprs, which are always redacted at the model level.
+        """
+        return value if self.logging_config.log_secrets else "<redacted>"
+
     @staticmethod
     def _log_formatter(record) -> str:
         logger_type_to_color_str_map = {
@@ -353,6 +364,12 @@ class LoggingService:
                 opened.
         """
         self.logging_config = logging_config
+
+        if logging_config.log_secrets:
+            self._logger.warning(
+                "log_secrets is enabled: secrets such as passwords and session ids "
+                "will be written to the logs in the clear. Use for local debugging only."
+            )
 
         # Find all server default sinks and remove them first.
         for label in [

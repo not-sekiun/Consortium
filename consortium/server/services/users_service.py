@@ -73,7 +73,9 @@ class UsersService:
         for user in self.get_all_users():
             if str(user.json_web_token.subject) == access_token:
                 self._logger.debug(
-                    "Retrieved user by access value '{}': {!r}", access_token, user
+                    "Retrieved user by access value '{}': {!r}",
+                    server_singletons.logging_service.secret(access_token),
+                    user,
                 )
                 return user
         raise UserAccessTokenNotFoundError(access_token=access_token)
