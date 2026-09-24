@@ -1,4 +1,7 @@
+import io
 import pathlib
+import tarfile
+import zipfile
 
 import pytest
 
@@ -356,3 +359,84 @@ def test_directory_to_json_carries_no_extension(tmp_path: pathlib.Path):
 
     assert resource_json["name"] == "collection.v2"
     assert "extension" not in resource_json
+
+
+# ---------------------------------------------------------------------------
+# archive extraction pins the tar filter rather than inheriting the default
+# ---------------------------------------------------------------------------
+
+
+def _tar_bytes_with_member(member_name: str) -> bytes:
+    buffer = io.BytesIO()
+    payload = b"owned"
+    with tarfile.open(fileobj=buffer, mode="w") as archive:
+        info = tarfile.TarInfo(name=member_name)
+        info.size = len(payload)
+        archive.addfile(info, io.BytesIO(payload))
+    return buffer.getvalue()
+
+
+def test_directory_create_rejects_a_tar_member_that_escapes_the_destination(
+    tmp_path: pathlib.Path,
+):
+    # filter='data' is pinned at the extraction call instead of relying on the
+    # interpreter default, which is version dependent.
+    destination = tmp_path / "unpacked"
+    archive = _tar_bytes_with_member("../escaped.txt")
+
+    with pytest.raises(tarfile.OutsideDestinationError):
+        RepositoryDirectory.create(
+            path=destination,
+            content=archive,
+            archive_file_format="tar",
+        )
+
+    assert not (tmp_path / "escaped.txt").exists()
+
+
+def test_directory_create_contains_an_absolute_tar_member(tmp_path: pathlib.Path):
+    # The data filter strips the leading separator rather than raising, so the member
+    # lands inside the destination instead of at the absolute path it asked for.
+    destination = tmp_path / "unpacked_absolute"
+    archive = _tar_bytes_with_member("/tmp/consortium_escaped.txt")
+
+    repository_directory = RepositoryDirectory.create(
+        path=destination,
+        content=archive,
+        archive_file_format="tar",
+    )
+
+    extracted = [
+        path for path in repository_directory.path.rglob("*") if path.is_file()
+    ]
+    assert extracted == [repository_directory.path / "tmp" / "consortium_escaped.txt"]
+
+
+def test_directory_create_unpacks_a_well_formed_tar(tmp_path: pathlib.Path):
+    destination = tmp_path / "unpacked_ok"
+    archive = _tar_bytes_with_member("inner.txt")
+
+    repository_directory = RepositoryDirectory.create(
+        path=destination,
+        content=archive,
+        archive_file_format="tar",
+    )
+
+    assert (repository_directory.path / "inner.txt").read_bytes() == b"owned"
+
+
+def test_directory_create_unpacks_a_zip(tmp_path: pathlib.Path):
+    # The zip unpacker takes no filter argument, so the format check that decides
+    # whether to pass one has to keep zip working.
+    destination = tmp_path / "unpacked_zip"
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, mode="w") as archive:
+        archive.writestr("inner.txt", "owned")
+
+    repository_directory = RepositoryDirectory.create(
+        path=destination,
+        content=buffer.getvalue(),
+        archive_file_format="zip",
+    )
+
+    assert (repository_directory.path / "inner.txt").read_text() == "owned"

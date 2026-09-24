@@ -70,6 +70,13 @@ def _stat_or_none(path: pathlib.Path, operation: str) -> os.stat_result | None:
         raise _filesystem_error(operation=operation, path=path, exc=exc) from exc
 
 
+def _archive_extraction_filter(archive_file_format: str) -> dict[str, str]:
+    # Pin tar extraction to the 'data' filter instead of inheriting the interpreter
+    # default, which is version dependent. `zipfile` sanitizes member paths itself and
+    # its unpacker takes no filter argument.
+    return {} if archive_file_format == "zip" else {"filter": "data"}
+
+
 class RepositoryFile:
     def __init__(
         self,
@@ -613,6 +620,7 @@ class RepositoryDirectory:
                             filename=temp_file,
                             extract_dir=path,
                             format=archive_file_format,
+                            **_archive_extraction_filter(archive_file_format),
                         )
                 except shutil.ReadError, ValueError:
                     raise InvalidRepositoryDirectoryArchiveFileFormatError(
@@ -630,6 +638,7 @@ class RepositoryDirectory:
                             filename=temp_file,
                             extract_dir=path,
                             format=archive_file_format,
+                            **_archive_extraction_filter(archive_file_format),
                         )
                 except shutil.ReadError, ValueError:
                     raise InvalidRepositoryDirectoryArchiveFileFormatError(
