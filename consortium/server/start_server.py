@@ -94,6 +94,7 @@ async def _start_server(arguments: argparse.Namespace) -> None:
             rotation=json_data.get("rotation", None),
             retention=json_data.get("retention", 1),
             colorize=json_data.get("colorize", True),
+            log_secrets=json_data.get("log_secrets", False),
         )
     except FileNotFoundError:
         print(
