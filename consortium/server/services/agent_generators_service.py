@@ -136,6 +136,8 @@ class AgentGeneratorsService:
             AgentGeneratorCreationParameterTypeError: If `name` is not a string, or if
                 `description` or the resolved `parameters` fail type validation when the
                 agent generator instance is constructed.
+            AgentGeneratorAlreadyExistsError: If the template produced an ID that is
+                already registered.
 
         Note that every option validation error above is raised by the template before
         the agent generator is instantiated, so nothing is registered and no
@@ -152,6 +154,13 @@ class AgentGeneratorsService:
             description=description,
             parameters=parameters,
         )
+        # Same guard as add_agent_generator: a colliding ID must be rejected rather than
+        # silently replacing a live generator that callers still hold a reference to.
+        if str(agent_generator.agent_generator_id) in self._agent_generators:
+            raise AgentGeneratorAlreadyExistsError(
+                agent_generator_id=str(agent_generator.agent_generator_id),
+            )
+
         self._agent_generators[str(agent_generator.agent_generator_id)] = (
             agent_generator
         )
