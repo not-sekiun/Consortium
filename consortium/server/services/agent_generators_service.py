@@ -330,15 +330,17 @@ class AgentGeneratorsService:
                 )
 
             # Fill in any missing parameters with values from the existing set of
-            # parameters.
+            # parameters. Resolved into a local dict: back-filling into the argument
+            # would silently expand the caller's partial update into the full set.
+            # `parameter_value` could be a list or a dict, so deep copy to prevent
+            # reference sharing.
+            resolved_parameters = dict(parameters)
             for parameter_name, parameter_value in agent_generator.parameters.items():
-                if parameter_name not in parameters:
-                    # `parameter_value` could be a list or a dict, so we need to perform
-                    # a deep copy to prevent reference sharing.
-                    parameters[parameter_name] = copy.deepcopy(parameter_value)
+                if parameter_name not in resolved_parameters:
+                    resolved_parameters[parameter_name] = copy.deepcopy(parameter_value)
 
-            # Perform validation of `parameters` if they are being updated.
-            for parameter_name, parameter_value in parameters.items():
+            # Perform validation of the resolved parameters if they are being updated.
+            for parameter_name, parameter_value in resolved_parameters.items():
                 if (
                     parameter_name
                     not in agent_generator.creating_agent_template.options
@@ -358,9 +360,8 @@ class AgentGeneratorsService:
                         parameter_value=str(parameter_value),
                         error_message=str(exc),
                     ) from None
-                parameters[parameter_name] = parameter_value
 
-            if parameters == agent_generator.parameters:
+            if resolved_parameters == agent_generator.parameters:
                 # No parameter changes so skip updating.
                 pass
             else:
@@ -373,7 +374,7 @@ class AgentGeneratorsService:
                 # generator's name alone.
                 temp_agent_generator = (
                     agent_generator.creating_agent_template.create_agent_generator(
-                        parameters=parameters,
+                        parameters=resolved_parameters,
                     )
                 )
                 old_parameters = copy.deepcopy(agent_generator.parameters)

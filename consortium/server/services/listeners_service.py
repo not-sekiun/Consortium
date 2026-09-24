@@ -269,15 +269,17 @@ class ListenersService:
                 )
 
             # Fill in any missing parameters with values from the existing set of
-            # parameters.
+            # parameters. Resolved into a local dict: back-filling into the argument
+            # would silently expand the caller's partial update into the full set.
+            # `parameter_value` could be a list or a dict, so deep copy to prevent
+            # reference sharing.
+            resolved_parameters = dict(parameters)
             for parameter_name, parameter_value in listener.parameters.items():
-                if parameter_name not in parameters:
-                    # `parameter_value` could be a list or a dict, so we need to perform
-                    # a deep copy to prevent reference sharing.
-                    parameters[parameter_name] = copy.deepcopy(parameter_value)
+                if parameter_name not in resolved_parameters:
+                    resolved_parameters[parameter_name] = copy.deepcopy(parameter_value)
 
-            # Perform validation of `parameters` if they are being updated.
-            for parameter_name, parameter_value in parameters.items():
+            # Perform validation of the resolved parameters if they are being updated.
+            for parameter_name, parameter_value in resolved_parameters.items():
                 if parameter_name not in listener.creating_listener_template.options:
                     raise InvalidListenerParameterNameError(
                         listener_str=str(listener),
@@ -294,9 +296,8 @@ class ListenersService:
                         parameter_value=str(parameter_value),
                         error_message=str(exc),
                     ) from None
-                parameters[parameter_name] = parameter_value
 
-            if parameters == listener.parameters:
+            if resolved_parameters == listener.parameters:
                 # No parameter changes so skip updating.
                 pass
             else:
@@ -308,7 +309,7 @@ class ListenersService:
                 # are not derived from parameters, so an update must leave the existing
                 # listener's name alone.
                 temp_listener = listener.creating_listener_template.create_listener(
-                    parameters=parameters,
+                    parameters=resolved_parameters,
                 )
                 listener.endpoint = temp_listener.endpoint
                 old_parameters = copy.deepcopy(listener.parameters)
