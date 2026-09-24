@@ -78,10 +78,12 @@ class EventsService:
         if str(event_type) in self._event_handlers:
             if event_handler in self._event_handlers[str(event_type)]:
                 raise EventHandlerAlreadyRegisteredError(event_type=event_type)
-            self._event_handlers[str(event_type)].append(event_handler)
-        else:
-            self._event_handlers[str(event_type)] = [event_handler]
+
+        # Index first: it hashes the handler and so is the only step that can fail here.
+        # Appending first would leave the two structures diverged on an unhashable
+        # handler.
         self._handler_event_types.setdefault(event_handler, set()).add(str(event_type))
+        self._event_handlers.setdefault(str(event_type), []).append(event_handler)
 
     @log_and_propagate_error_on_service_method
     def deregister_event_handler_from_event_type(
