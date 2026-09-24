@@ -19,6 +19,9 @@ class AgentTemplatesPayloadsService:
         # Importing here to avoid circular imports.
         import consortium.server.server_singletons as server_singletons
 
+        # Not an isolation boundary: the bound template is stamped onto payloads this
+        # facade creates, but reads and deletes resolve by ID across every template.
+        # Ownership is attribution only, per the authorization model in AGENTS.md.
         self._payloads_service = server_singletons.payloads_service
         self._agent_template_id = agent_template_id
         self._logger = logger.bind(

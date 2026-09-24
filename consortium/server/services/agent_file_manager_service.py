@@ -25,6 +25,9 @@ class AgentFileManagerService:
         # artifact written through this facade is attributed to the owning agent by
         # threading its agent ID into the artifacts service, which resolves it into a
         # stored agent reference.
+        # Not an isolation boundary: writes are attributed to the owning agent but reads
+        # are unscoped, so any agent can read every asset and artifact. Ownership is
+        # attribution only, per the authorization model in AGENTS.md.
         self._agent = agent
         self._assets_service = server_singletons.assets_service
         self._artifacts_service = server_singletons.artifacts_service
