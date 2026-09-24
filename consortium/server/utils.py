@@ -186,6 +186,19 @@ def normalize_uuid(value: str | uuid.UUID) -> str:
     return str(value)
 
 
+def canonicalize_uuid(value: str | uuid.UUID) -> str | None:
+    # Records keyed by a canonical lowercase UUID string need the lookup value put in
+    # the same form before it is compared, so that an uppercase or braced id matches an
+    # entry attached with a UUID object. Returns None when the value is not a UUID at
+    # all, which callers treat as "no such record" rather than as an error. Kept
+    # separate from normalize_uuid, which every service calls with identifiers that are
+    # not always UUIDs and which must keep returning a str for error messages.
+    try:
+        return str(uuid.UUID(str(value)))
+    except ValueError:
+        return None
+
+
 def utc_now() -> datetime:
     # Timezone-aware UTC timestamp. Use this everywhere a datetime is persisted or
     # serialized so stored and emitted timestamps carry an explicit UTC offset instead

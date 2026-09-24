@@ -5,20 +5,10 @@ from loguru import logger
 
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.task_runtime import TaskRuntime
+from consortium.server.utils import canonicalize_uuid
 
 if TYPE_CHECKING:
     from consortium.framework.agents._task_messages_queue import TaskMessagesQueue
-
-
-def _canonicalize_uuid(value: str | uuid.UUID) -> str | None:
-    # Runtime entries are keyed by canonical lowercase UUID strings so that a lookup
-    # made with a raw string matches an entry attached with a UUID object. Returns None
-    # when the value is not a UUID at all, which callers treat as "no such runtime"
-    # rather than as an error.
-    try:
-        return str(uuid.UUID(str(value)))
-    except ValueError:
-        return None
 
 
 class TaskRuntimeService:
@@ -46,8 +36,8 @@ class TaskRuntimeService:
         agent_id: str | uuid.UUID,
         task_runtime: TaskRuntime,
     ) -> None:
-        normalized_task_id = _canonicalize_uuid(value=task_id)
-        normalized_agent_id = _canonicalize_uuid(value=agent_id)
+        normalized_task_id = canonicalize_uuid(value=task_id)
+        normalized_agent_id = canonicalize_uuid(value=agent_id)
         if normalized_task_id is None or normalized_agent_id is None:
             return
 
@@ -62,13 +52,13 @@ class TaskRuntimeService:
         )
 
     def get_task_runtime(self, task_id: str | uuid.UUID) -> TaskRuntime | None:
-        normalized_task_id = _canonicalize_uuid(value=task_id)
+        normalized_task_id = canonicalize_uuid(value=task_id)
         if normalized_task_id is None:
             return None
         return self._runtimes.get(normalized_task_id)
 
     def pop(self, task_id: str | uuid.UUID) -> TaskRuntime | None:
-        normalized_task_id = _canonicalize_uuid(value=task_id)
+        normalized_task_id = canonicalize_uuid(value=task_id)
         if normalized_task_id is None:
             return None
 
@@ -86,7 +76,7 @@ class TaskRuntimeService:
         return runtime
 
     def pop_all_for_agent(self, agent_id: str | uuid.UUID) -> list[TaskRuntime]:
-        normalized_agent_id = _canonicalize_uuid(value=agent_id)
+        normalized_agent_id = canonicalize_uuid(value=agent_id)
         if normalized_agent_id is None:
             return []
 
@@ -105,7 +95,7 @@ class TaskRuntimeService:
         return runtimes
 
     def first_readable_task_id_for_agent(self, agent_id: str | uuid.UUID) -> str | None:
-        normalized_agent_id = _canonicalize_uuid(value=agent_id)
+        normalized_agent_id = canonicalize_uuid(value=agent_id)
         if normalized_agent_id is None:
             return None
 
@@ -126,7 +116,7 @@ class TaskRuntimeService:
     def readable_outboxes_for_agent(
         self, agent_id: str | uuid.UUID
     ) -> list[tuple[str, TaskMessagesQueue]]:
-        normalized_agent_id = _canonicalize_uuid(value=agent_id)
+        normalized_agent_id = canonicalize_uuid(value=agent_id)
         if normalized_agent_id is None:
             return []
 

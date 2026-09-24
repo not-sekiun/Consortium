@@ -17,6 +17,7 @@ from consortium.server.objects.task_objects import Task
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.task_runtime_service import TaskRuntimeService
 from consortium.server.utils import (
+    canonicalize_uuid,
     log_and_propagate_error_on_service_method,
     normalize_uuid,
     run_async_background_task,
@@ -26,20 +27,6 @@ from consortium.server.utils import (
 if TYPE_CHECKING:
     from consortium.framework.agents._task_messages_queue import TaskMessagesQueue
     from consortium.server.objects.agent_objects import Agent
-
-
-def _canonicalize_uuid(value: str | uuid.UUID) -> str | None:
-    # Task and agent IDs are stored as canonical lowercase UUID strings, so a lookup
-    # value has to be canonicalized before it is compared against them. This is local
-    # to this service rather than folded into normalize_uuid because the shared helper
-    # is called by every other service with identifiers that are not always UUIDs, and
-    # raising there would turn their not-found errors into unhandled ValueErrors.
-    # Returns None when the value is not a UUID at all, which callers treat as "no
-    # such record" rather than as an error.
-    try:
-        return str(uuid.UUID(str(value)))
-    except ValueError:
-        return None
 
 
 class TasksService:
@@ -83,7 +70,7 @@ class TasksService:
         if agent_id is None:
             normalized_agent_id = None
         else:
-            normalized_agent_id = _canonicalize_uuid(value=agent_id)
+            normalized_agent_id = canonicalize_uuid(value=agent_id)
             # A filter value that is not a UUID can never match a stored agent ID.
             if normalized_agent_id is None:
                 self._logger.debug(
@@ -123,7 +110,7 @@ class TasksService:
         """
         task = self.find_task(task_id=task_id)
         if task is None:
-            normalized_task_id = _canonicalize_uuid(value=task_id)
+            normalized_task_id = canonicalize_uuid(value=task_id)
             raise TaskNotFoundError(
                 task_id=normalized_task_id or normalize_uuid(value=task_id)
             )
@@ -208,7 +195,7 @@ class TasksService:
             with that ID exists, or the task does not match the given `agent_id` or
             `status`.
         """
-        normalized_task_id = _canonicalize_uuid(value=task_id)
+        normalized_task_id = canonicalize_uuid(value=task_id)
         if normalized_task_id is None:
             return None
 
@@ -217,7 +204,7 @@ class TasksService:
             return None
 
         if agent_id is not None:
-            normalized_agent_id = _canonicalize_uuid(value=agent_id)
+            normalized_agent_id = canonicalize_uuid(value=agent_id)
             if normalized_agent_id is None or str(task.agent_id) != normalized_agent_id:
                 return None
 
