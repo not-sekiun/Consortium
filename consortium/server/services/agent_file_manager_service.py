@@ -1,7 +1,11 @@
 import uuid
 from typing import TYPE_CHECKING
 
+from loguru import logger
+
 from consortium.server import server_singletons as server_singletons
+from consortium.server.models.logging_models import LoggerType
+from consortium.server.utils import log_and_propagate_error_on_service_method
 
 if TYPE_CHECKING:
     import pathlib
@@ -24,7 +28,17 @@ class AgentFileManagerService:
         self._agent = agent
         self._assets_service = server_singletons.assets_service
         self._artifacts_service = server_singletons.artifacts_service
+        self._logger = logger.bind(
+            logger_name=str(self), logger_type=LoggerType.SERVICE_LOGGER
+        )
 
+    def __str__(self) -> str:
+        return f"Agent File Manager Service ({self._agent})"
+
+    def __repr__(self) -> str:
+        return f"AgentFileManagerService(agent={self._agent!r})"
+
+    @log_and_propagate_error_on_service_method
     def get_all_assets(self) -> list[Asset]:
         """Returns all asset resources available to the agent.
 
@@ -33,6 +47,7 @@ class AgentFileManagerService:
         """
         return self._assets_service.get_all_assets()
 
+    @log_and_propagate_error_on_service_method
     def get_asset_by_asset_id(
         self,
         asset_id: str | uuid.UUID,
@@ -52,6 +67,7 @@ class AgentFileManagerService:
             resource_id=asset_id,
         )
 
+    @log_and_propagate_error_on_service_method
     def get_all_artifacts(self) -> list[Artifact]:
         """Returns all artifact resources produced by agents.
 
@@ -60,6 +76,7 @@ class AgentFileManagerService:
         """
         return self._artifacts_service.get_all_artifacts()
 
+    @log_and_propagate_error_on_service_method
     def get_artifact_by_artifact_id(
         self,
         artifact_id: str | uuid.UUID,
@@ -79,6 +96,7 @@ class AgentFileManagerService:
             resource_id=artifact_id,
         )
 
+    @log_and_propagate_error_on_service_method
     def read_asset_by_asset_id(
         self,
         asset_id: str | uuid.UUID,
@@ -144,6 +162,7 @@ class AgentFileManagerService:
             chunk_size=chunk_size,
         )
 
+    @log_and_propagate_error_on_service_method
     async def create_artifact_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
@@ -184,6 +203,7 @@ class AgentFileManagerService:
             agent_id=self._agent.agent_id,
         )
 
+    @log_and_propagate_error_on_service_method
     async def add_artifact_file(
         self,
         path: pathlib.Path | str,
@@ -224,6 +244,7 @@ class AgentFileManagerService:
             agent_id=self._agent.agent_id,
         )
 
+    @log_and_propagate_error_on_service_method
     async def create_artifact_directory(
         self,
         content: bytes | BinaryIO | str | pathlib.Path | None = None,
@@ -276,6 +297,7 @@ class AgentFileManagerService:
             agent_id=self._agent.agent_id,
         )
 
+    @log_and_propagate_error_on_service_method
     async def add_artifact_directory(
         self,
         path: pathlib.Path | str,
