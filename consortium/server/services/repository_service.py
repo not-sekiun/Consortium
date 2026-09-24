@@ -1,6 +1,8 @@
 import functools
 import json
 import pathlib
+import shutil
+import threading
 import uuid
 from collections.abc import Callable
 from typing import BinaryIO, Literal, TextIO
@@ -18,7 +20,7 @@ from consortium.server.exceptions.service_exceptions.repository_service_exceptio
     RepositoryMetadataFileResourceDataSchemaError,
     RepositoryMetadataFileSchemaError,
     RepositoryMetadataFileSystemError,
-    RepositoryMetadataFileUnsyncedError,
+    ResourceAlreadyExistsError,
     ResourceIDReservationNotFoundError,
     ResourceNotFoundError,
 )
@@ -38,12 +40,8 @@ from consortium.server.utils import (
     wrap_filesystem_errors,
 )
 
-# The metadata file is the only thing this service touches on disk itself. Every operation
-# on a resource's own bytes is delegated to the `RepositoryFile` and `RepositoryDirectory`
-# objects, which report their own failures as `RepositoryResourceFileSystemError`. That
-# keeps the service's filesystem contract to a single question, whether the record of what
-# the repository contains could be read or written, and leaves a caller able to tell a
-# resource that was never placed from one that was placed but not recorded.
+# Resource objects report placement failures separately from metadata I/O failures.
+# Rollback preserves the original failure and logs any secondary recovery failure.
 _wrap_metadata_filesystem_errors = functools.partial(
     wrap_filesystem_errors,
     RepositoryMetadataFileSystemError,
@@ -58,6 +56,7 @@ class RepositoryService:
     ):
         self.repository_directory_path = repository_directory_path
         self._data_model = data_model
+        self._lock = threading.Lock()
         self._resources = {}
         self._reserved_resource_ids = set()
         self._repository_metadata_file_path = (
@@ -80,9 +79,12 @@ class RepositoryService:
     def load_repository_metadata(self) -> None:
         """Loads repository resource metadata from the repository metadata JSON file on disk.
 
-        If the metadata file does not yet exist, an empty metadata file is created via
-        `save_repository_metadata`. Resources listed in the metadata but missing from
-        disk raise an error rather than being silently skipped.
+        Replaces the current index with the validated metadata. If the metadata file
+        does not exist, an empty index is persisted. Missing-on-disk records are warned
+        about and dropped, then the repaired metadata is saved. If that save fails,
+        survivors remain available in memory and the next save retries persistence.
+        Corrupt metadata leaves the previous index untouched. Unindexed files and
+        partially deleted directory contents are not reconciled.
 
         Raises:
             RepositoryMetadataFileEncodingError: If the metadata file's bytes are
@@ -91,133 +93,133 @@ class RepositoryService:
                 invalid JSON.
             RepositoryMetadataFileSchemaError: If the metadata file does not
                 follow the expected schema.
-            RepositoryMetadataFileUnsyncedError: If a resource recorded in the metadata
-                file does not exist on disk.
             RepositoryMetadataFileResourceDataSchemaError: If a `data` field in the
                 metadata file fails validation against the repository's `data_model`.
                 Only raised when the repository was constructed with a `data_model`.
-            RepositoryMetadataFileSystemError: If the metadata file cannot be read from
-                disk.
+            RepositoryMetadataFileSystemError: If the metadata file cannot be read or
+                initialized, or a recorded resource path cannot be inspected.
         """
-        if not self._repository_metadata_file_path.exists():
-            self.save_repository_metadata()
-            return
-
-        # The encoding is pinned rather than left to the platform default so that a
-        # metadata file written on one machine reads back identically on another. Reading
-        # the text and parsing it are separated so that bytes which are not valid UTF-8
-        # are reported as a decoding failure rather than surfacing as a JSON syntax error
-        # or, worse, decoding cleanly into different characters under a different default.
-        with _wrap_metadata_filesystem_errors(
-            operation="read the repository metadata file",
-            path=self._repository_metadata_file_path,
-        ):
-            try:
-                with self._repository_metadata_file_path.open(
-                    mode="r", encoding="utf-8"
-                ) as file:
-                    repository_metadata_file_content = file.read()
-            except UnicodeDecodeError as exc:
-                raise RepositoryMetadataFileEncodingError(
-                    path=str(self.repository_directory_path),
-                    underlying_error=f"{type(exc).__name__}: {exc}",
-                ) from None
-
-        try:
-            repository_metadata_json = json.loads(repository_metadata_file_content)
-        except json.JSONDecodeError:
-            raise RepositoryMetadataFileJSONError(
-                path=str(self.repository_directory_path),
-            ) from None
-
-        # `PersistentRepositoryMetadataModel` covers the whole file in one pass: the
-        # resource IDs keying it, the shape of every resource entry, and the parsing of
-        # the ISO 8601 timestamps into `datetime` objects. Anything malformed surfaces
-        # here as a validation error rather than escaping later as a raw `ValueError`
-        # while the resources are being reconstructed below.
-        try:
-            repository_metadata = PersistentRepositoryMetadataModel.model_validate(
-                repository_metadata_json,
-            ).root
-        except ValidationError as exc:
-            raise RepositoryMetadataFileSchemaError(
-                path=str(self.repository_directory_path),
-                validation_error_message=format_validation_error(exc),
-            ) from None
-
-        # A resource's `data` is validated separately from the metadata file's own shape
-        # so that a failure can be reported against the specific resource carrying the
-        # bad data, which a single whole-file validation pass could not attribute.
-        if self._data_model is not None:
-            for resource_id, resource_metadata in repository_metadata.items():
+        with self._lock:
+            if not self._repository_metadata_file_path.exists():
+                previous_resources = self._resources
+                self._resources = {}
                 try:
-                    self._data_model.model_validate(resource_metadata.data)
-                except ValidationError as exc:
-                    raise RepositoryMetadataFileResourceDataSchemaError(
+                    self._save_repository_metadata_locked()
+                except Exception:
+                    self._resources = previous_resources
+                    raise
+                return
+
+            # Decode separately so invalid UTF-8 remains distinct from invalid JSON.
+            with _wrap_metadata_filesystem_errors(
+                operation="read the repository metadata file",
+                path=self._repository_metadata_file_path,
+            ):
+                try:
+                    with self._repository_metadata_file_path.open(
+                        mode="r", encoding="utf-8"
+                    ) as file:
+                        repository_metadata_file_content = file.read()
+                except UnicodeDecodeError as exc:
+                    raise RepositoryMetadataFileEncodingError(
                         path=str(self.repository_directory_path),
-                        resource_id=str(resource_id),
-                        validation_error_message=format_validation_error(exc),
+                        underlying_error=f"{type(exc).__name__}: {exc}",
                     ) from None
 
-        # Pre-pass check and verify all resources actually exist on disk before
-        # populating `self._resources`, so a failure never leaves the registry in a
-        # partially-populated state. Checks real filesystem presence rather than
-        # trusting the metadata file's own `exists_on_disk` boolean.
-        unsynced_resource_ids = []
-        resource_id_to_path_and_metadata_map: dict[
-            str, tuple[pathlib.Path, PersistentRepositoryResourceModel]
-        ] = {}
-        for resource_metadata in repository_metadata.values():
-            resource_id = str(resource_metadata.resource_id)
-            # Files and directories are stored under their bare resource ID, so a
-            # resource's path is the one thing about it that never has to be derived from
-            # anything the operator supplied.
-            resource_path = self.repository_directory_path / resource_id
-            if not resource_path.exists():
-                unsynced_resource_ids.append(resource_id)
-            else:
+            try:
+                repository_metadata_json = json.loads(repository_metadata_file_content)
+            except json.JSONDecodeError:
+                raise RepositoryMetadataFileJSONError(
+                    path=str(self.repository_directory_path),
+                ) from None
+
+            # Validate IDs, entry shapes and timestamps before reconstructing resources.
+            try:
+                repository_metadata = PersistentRepositoryMetadataModel.model_validate(
+                    repository_metadata_json,
+                ).root
+            except ValidationError as exc:
+                raise RepositoryMetadataFileSchemaError(
+                    path=str(self.repository_directory_path),
+                    validation_error_message=format_validation_error(exc),
+                ) from None
+
+            # Attribute data-model failures to their resource, even if its bytes are gone.
+            if self._data_model is not None:
+                for resource_id, resource_metadata in repository_metadata.items():
+                    try:
+                        self._data_model.model_validate(resource_metadata.data)
+                    except ValidationError as exc:
+                        raise RepositoryMetadataFileResourceDataSchemaError(
+                            path=str(self.repository_directory_path),
+                            resource_id=str(resource_id),
+                            validation_error_message=format_validation_error(exc),
+                        ) from None
+
+            # Stage the replacement so validation failures preserve the live index.
+            unsynced_resource_ids = []
+            resource_id_to_path_and_metadata_map: dict[
+                str, tuple[pathlib.Path, PersistentRepositoryResourceModel]
+            ] = {}
+            for resource_metadata in repository_metadata.values():
+                resource_id = str(resource_metadata.resource_id)
+                # Storage paths use the resource ID, never the display name.
+                resource_path = self.repository_directory_path / resource_id
+                with _wrap_metadata_filesystem_errors(
+                    operation="inspect the repository resource", path=resource_path
+                ):
+                    try:
+                        resource_path.stat()
+                    except FileNotFoundError:
+                        unsynced_resource_ids.append(resource_id)
+                        self._logger.warning(
+                            "Dropping missing repository resource '{}' at '{}'",
+                            resource_id,
+                            resource_path,
+                        )
+                        continue
                 resource_id_to_path_and_metadata_map[resource_id] = (
                     resource_path,
                     resource_metadata,
                 )
-        if unsynced_resource_ids:
-            raise RepositoryMetadataFileUnsyncedError(
-                path=str(self.repository_directory_path),
-                unsynced_resource_ids=unsynced_resource_ids,
-            )
 
-        # After the pre-pass validated all the metadata and computed and validated the
-        # actual expected paths to find the resources we load them into the repository
-        for resource_id, (
-            resource_path,
-            resource_metadata,
-        ) in resource_id_to_path_and_metadata_map.items():
-            if resource_metadata.is_directory:
-                resource = RepositoryDirectory(
-                    path=resource_path,
+            resources = {}
+            for resource_id, (
+                resource_path,
+                resource_metadata,
+            ) in resource_id_to_path_and_metadata_map.items():
+                if resource_metadata.is_directory:
+                    resource = RepositoryDirectory(
+                        path=resource_path,
+                    )
+                else:
+                    resource = RepositoryFile(
+                        path=resource_path,
+                    )
+
+                # Override the ID generated by the constructor with the persisted ID.
+                resource.resource_id = resource_id
+                # The unnamed fallback must use the persisted ID too.
+                resource.name = (
+                    resource_metadata.name if resource_metadata.name else resource_id
                 )
-            else:
-                resource = RepositoryFile(
-                    path=resource_path,
-                )
+                resource.description = resource_metadata.description
+                resource.datetime_created = resource_metadata.datetime_created
+                resource.is_directory = resource_metadata.is_directory
+                resource.data = resource_metadata.data
 
-            # `resource_id` is generated at instantiation time so we need to override
-            # it with the saved `resource_id` which also correlates to the actual path
-            # on disk
-            resource.resource_id = resource_id
-            # An entry that recorded no name falls back to the resource ID, matching what
-            # the objects themselves do for an unnamed resource. The object's own
-            # fallback cannot be relied on here: it names itself after the ID it
-            # generated at instantiation, which the line above has just replaced.
-            resource.name = (
-                resource_metadata.name if resource_metadata.name else resource_id
-            )
-            resource.description = resource_metadata.description
-            resource.datetime_created = resource_metadata.datetime_created
-            resource.is_directory = resource_metadata.is_directory
-            resource.data = resource_metadata.data
+                resources[resource.resource_id] = resource
 
-            self._resources[resource.resource_id] = resource
+            self._resources = resources
+            if unsynced_resource_ids:
+                try:
+                    self._save_repository_metadata_locked()
+                except Exception:
+                    self._logger.exception(
+                        "Failed to persist reconciled repository metadata at '{}'; "
+                        "surviving resources remain available in memory",
+                        self._repository_metadata_file_path,
+                    )
 
     def save_repository_metadata(self) -> None:
         """Writes the current in-memory repository resource metadata to disk as JSON.
@@ -233,6 +235,11 @@ class RepositoryService:
                 resource that cannot be persisted, which is a defect in that caller
                 rather than a condition the repository can report on and continue past.
         """
+        with self._lock:
+            self._save_repository_metadata_locked()
+
+    def _save_repository_metadata_locked(self) -> None:
+        # The caller holds _lock through serialization, including directory traversal.
         repository_metadata_json = {
             resource_id: resource.to_json()
             for resource_id, resource in self._resources.items()
@@ -241,10 +248,8 @@ class RepositoryService:
             operation="write the repository metadata file",
             path=self._repository_metadata_file_path,
         ):
-            # Pinned for the same reason as the read above. There is no encoding error to
-            # report on this side: `json.dumps` defaults to `ensure_ascii=True`, so the
-            # text handed to the encoder is always pure ASCII and cannot fail to encode.
-            # Written atomically so an interrupted write cannot brick the whole index.
+            # ASCII JSON encodes losslessly; atomic replacement preserves the old index
+            # if the write fails before publication.
             data = json.dumps(repository_metadata_json, indent=4)
             atomic_write_bytes(
                 self._repository_metadata_file_path, data.encode("utf-8")
@@ -260,29 +265,90 @@ class RepositoryService:
         Returns:
             The reserved resource ID.
         """
-        resource_id = uuid.uuid4()
-        self._reserved_resource_ids.add(str(resource_id))
-        return resource_id
+        with self._lock:
+            resource_id = uuid.uuid4()
+            self._reserved_resource_ids.add(str(resource_id))
+            return resource_id
 
     def _create_resource[Resource: RepositoryFile | RepositoryDirectory](
         self,
         factory: Callable[[pathlib.Path], Resource],
         resource_id: str | uuid.UUID | None,
+        move_source: pathlib.Path | None = None,
     ) -> Resource:
-        if resource_id is not None:
-            resource_id_str = normalize_uuid(resource_id)
-            if resource_id_str not in self._reserved_resource_ids:
-                raise ResourceIDReservationNotFoundError(resource_id=resource_id_str)
-            self._reserved_resource_ids.discard(resource_id_str)
-            unique_resource_id = uuid.UUID(resource_id_str)
-        else:
-            unique_resource_id = uuid.uuid4()
+        with self._lock:
+            if resource_id is not None:
+                resource_id_str = normalize_uuid(resource_id)
+                if resource_id_str not in self._reserved_resource_ids:
+                    raise ResourceIDReservationNotFoundError(
+                        resource_id=resource_id_str
+                    )
+                unique_resource_id = uuid.UUID(resource_id_str)
+            else:
+                unique_resource_id = uuid.uuid4()
+                resource_id_str = str(unique_resource_id)
 
-        resource = factory(self.repository_directory_path / str(unique_resource_id))
-        resource.resource_id = unique_resource_id
-        self._resources[str(unique_resource_id)] = resource
-        self.save_repository_metadata()
-        return resource
+            destination = self.repository_directory_path / resource_id_str
+            # A previous failed rollback may have retained the only copy here.
+            if destination.exists() or destination.is_symlink():
+                raise ResourceAlreadyExistsError(resource_id=resource_id_str)
+            if move_source is not None:
+                move_source = move_source.absolute()
+            self._reserved_resource_ids.discard(resource_id_str)
+            resource = None
+            try:
+                resource = factory(destination)
+                resource.resource_id = unique_resource_id
+                self._resources[resource_id_str] = resource
+                self._save_repository_metadata_locked()
+            except Exception:
+                self._resources.pop(resource_id_str, None)
+                if resource_id is not None:
+                    self._reserved_resource_ids.add(resource_id_str)
+                self._rollback_created_resource_locked(
+                    resource, destination, move_source
+                )
+                raise
+            return resource
+
+    def _rollback_created_resource_locked(
+        self,
+        resource: RepositoryFile | RepositoryDirectory | None,
+        destination: pathlib.Path,
+        move_source: pathlib.Path | None,
+    ) -> None:
+        if move_source is not None:
+            try:
+                if not (destination.exists() or destination.is_symlink()):
+                    return
+                if move_source.exists() or move_source.is_symlink():
+                    raise FileExistsError(f"Source path is occupied: {move_source}")
+                shutil.move(str(destination), move_source)
+            except Exception:
+                self._logger.exception(
+                    "Failed to move repository resource back from '{}' to '{}'; "
+                    "retaining the repository destination to preserve its bytes",
+                    destination,
+                    move_source,
+                )
+            return
+
+        if resource is None:
+            # Placement may have failed partway through; no complete resource to undo.
+            self._logger.warning(
+                "Resource placement failed at '{}'; partial unindexed bytes may remain",
+                destination,
+            )
+            return
+        try:
+            resource.delete()
+        except RepositoryFileDoesNotExistError, RepositoryDirectoryDoesNotExistError:
+            pass
+        except Exception:
+            self._logger.exception(
+                "Failed to remove unindexed repository resource at '{}' during rollback",
+                destination,
+            )
 
     def create_file(
         self,
@@ -295,7 +361,9 @@ class RepositoryService:
         """Creates and persists a new file resource in the repository.
 
         The file is stored on disk under its resource ID alone, with no extension.
-        Metadata is persisted after creation.
+        Metadata is persisted after creation. A failure removes the new record,
+        restores an explicit reservation and attempts to delete the new bytes.
+        Failed cleanup can leave unindexed bytes; crashes are not reconciled atomically.
 
         Args:
             content: The file content to write.
@@ -314,6 +382,8 @@ class RepositoryService:
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            ResourceAlreadyExistsError: If the destination is already occupied, such as
+                by bytes retained after a failed rollback.
             RepositoryResourceFileSystemError: If the file cannot be written to disk.
             RepositoryMetadataFileSystemError: If the metadata file cannot be written to
                 disk.
@@ -346,7 +416,11 @@ class RepositoryService:
         Unlike `create_file`, no new file is written. The file at `path` is moved
         (or copied when `copy=True`) into the repository directory under its resource ID
         alone, with no extension, and registered as a resource. Metadata is persisted
-        after registration.
+        after registration. On failure, the record is removed and an explicit
+        reservation is restored. Copies are deleted on a best-effort basis; moves
+        are moved back. If the source path is occupied or move-back fails, the bytes
+        are retained in the repository and both paths are logged. Partial placement,
+        failed cleanup and crashes can leave unindexed bytes.
 
         Args:
             path: Path to the existing file to register.
@@ -369,12 +443,14 @@ class RepositoryService:
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but
                 has no corresponding reservation.
+            ResourceAlreadyExistsError: If the destination is already occupied, such as
+                by bytes retained after a failed rollback.
             RepositoryResourceFileSystemError: If no file exists at `path`, or the file
                 cannot be moved or copied into the repository.
             RepositoryMetadataFileSystemError: If the metadata file cannot be written to
-                disk. The file has already been moved or copied into the repository by
-                this point, so the resource exists on disk without being recorded.
+                disk. Rollback is attempted before this error is propagated.
         """
+        path = pathlib.Path(path)
         return self._create_resource(
             factory=lambda destination: RepositoryFile.from_existing_path(
                 source_path=path,
@@ -385,6 +461,7 @@ class RepositoryService:
                 data=data,
             ),
             resource_id=resource_id,
+            move_source=path if not copy else None,
         )
 
     def create_directory(
@@ -404,6 +481,9 @@ class RepositoryService:
         `archive_file_format`. A `str` or `pathlib.Path` is instead treated as a path to
         an existing source directory whose tree is copied into the new directory, and
         `archive_file_format` is ignored. Metadata is persisted after creation.
+        A failure removes the record, restores an explicit reservation and attempts
+        cleanup. Partial placement or failed cleanup can leave unindexed bytes;
+        this is not a crash-consistent transaction.
 
         Args:
             content: Archive content to unpack into the directory (as raw bytes or an
@@ -427,6 +507,8 @@ class RepositoryService:
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but has no
                 corresponding reservation.
+            ResourceAlreadyExistsError: If the destination is already occupied, such as
+                by bytes retained after a failed rollback.
             InvalidRepositoryDirectoryArchiveFileFormatError: If `content` is archive
                 content that cannot be unpacked as `archive_file_format`, or if
                 `archive_file_format` is not set.
@@ -465,7 +547,11 @@ class RepositoryService:
         (via `shutil.copytree`) and the original at `path` is left in place; when
         `copy=False` (default), the source directory itself is relocated via
         `shutil.move`, and no copy is made. Metadata is persisted after
-        registration.
+        registration. On failure, the record is removed and an explicit reservation
+        is restored. Copies are deleted on a best-effort basis; moves are moved back.
+        If the source path is occupied or move-back fails, the bytes are retained in
+        the repository and both paths are logged. Partial placement, failed cleanup
+        and crashes can leave unindexed bytes.
 
         Args:
             path: Path to the existing directory to register.
@@ -486,13 +572,15 @@ class RepositoryService:
         Raises:
             ResourceIDReservationNotFoundError: If `resource_id` is provided but
                 has no corresponding reservation.
+            ResourceAlreadyExistsError: If the destination is already occupied, such as
+                by bytes retained after a failed rollback.
             RepositoryResourceFileSystemError: If no directory exists at `path`, or the
                 directory or any file within it cannot be moved or copied into the
                 repository.
             RepositoryMetadataFileSystemError: If the metadata file cannot be written to
-                disk. The directory has already been moved or copied into the repository
-                by this point, so the resource exists on disk without being recorded.
+                disk. Rollback is attempted before this error is propagated.
         """
+        path = pathlib.Path(path)
         return self._create_resource(
             factory=lambda destination: RepositoryDirectory.from_existing_path(
                 source_path=path,
@@ -503,6 +591,7 @@ class RepositoryService:
                 data=data,
             ),
             resource_id=resource_id,
+            move_source=path if not copy else None,
         )
 
     def update_resource_by_resource_id(
@@ -514,7 +603,8 @@ class RepositoryService:
     ) -> RepositoryFile | RepositoryDirectory:
         """Updates a repository resource's metadata.
 
-        Metadata is persisted after the update.
+        Metadata is persisted after the update. On failure, the previous name,
+        description and data are restored on the same live resource object.
 
         Args:
             resource_id: The ID of the resource to update.
@@ -534,22 +624,25 @@ class RepositoryService:
             RepositoryMetadataFileSystemError: If the metadata file cannot be written to
                 disk.
         """
-        resource_id = normalize_uuid(resource_id)
+        with self._lock:
+            resource_id = normalize_uuid(resource_id)
 
-        resource = self.get_resource_by_resource_id(
-            resource_id=resource_id,
-        )
+            resource = self._get_resource_by_resource_id_locked(resource_id)
 
-        if name is not None:
-            resource.name = name
-        if description is not None:
-            resource.description = description
-        if data is not None:
-            resource.data = data
+            previous_fields = resource.name, resource.description, resource.data
+            try:
+                if name is not None:
+                    resource.name = name
+                if description is not None:
+                    resource.description = description
+                if data is not None:
+                    resource.data = data
+                self._save_repository_metadata_locked()
+            except Exception:
+                resource.name, resource.description, resource.data = previous_fields
+                raise
 
-        self.save_repository_metadata()
-
-        return resource
+            return resource
 
     def delete_resource_by_resource_id(
         self,
@@ -557,7 +650,10 @@ class RepositoryService:
     ) -> None:
         """Deletes a repository resource from disk and removes it from the registry.
 
-        Metadata is persisted after deletion.
+        Metadata is persisted after deletion. Deleted bytes cannot be rolled back:
+        a failed save leaves the resource deregistered in memory and a stale disk
+        record that the next load reconciles. A failed directory deletion may leave
+        partially deleted contents. This is not a crash-consistent transaction.
 
         Args:
             resource_id: The ID of the resource to delete.
@@ -573,36 +669,38 @@ class RepositoryService:
             RepositoryMetadataFileSystemError: If the metadata file cannot be written to
                 disk.
         """
-        resource_id = normalize_uuid(resource_id)
+        with self._lock:
+            resource_id = normalize_uuid(resource_id)
 
-        resource = self.get_resource_by_resource_id(
-            resource_id=resource_id,
-        )
+            resource = self._get_resource_by_resource_id_locked(resource_id)
 
-        # Refusing to delete a resource that is already gone from disk would leave its
-        # record permanently undeletable, since the deregistration below never runs: the
-        # only remaining routes to removing it would be editing the metadata file by hand
-        # or recreating the file purely so it can be deleted again. The repository being
-        # out of sync is recorded here as a warning instead of being reported to the
-        # caller, and `load_repository_metadata` still refuses to load a repository left
-        # in that state.
-        try:
-            resource.delete()
-        except (
-            RepositoryFileDoesNotExistError,
-            RepositoryDirectoryDoesNotExistError,
-        ):
-            self._logger.warning(
-                "Deregistered the repository resource '{}' whose {} was already missing "
-                "from the repository directory. The repository metadata was out of sync "
-                "with the contents of the directory on disk.",
-                resource_id,
-                "directory" if resource.is_directory else "file",
-            )
+            # Missing bytes already satisfy deletion; remove their stale record too.
+            try:
+                resource.delete()
+            except (
+                RepositoryFileDoesNotExistError,
+                RepositoryDirectoryDoesNotExistError,
+            ):
+                self._logger.warning(
+                    "Deregistered the repository resource '{}' whose {} was already missing "
+                    "from the repository directory. The repository metadata was out of sync "
+                    "with the contents of the directory on disk.",
+                    resource_id,
+                    "directory" if resource.is_directory else "file",
+                )
 
-        del self._resources[resource_id]
+            del self._resources[resource_id]
 
-        self.save_repository_metadata()
+            try:
+                self._save_repository_metadata_locked()
+            except Exception:
+                self._logger.exception(
+                    "Resource '{}' was deleted but metadata at '{}' could not be saved; "
+                    "the next load will reconcile its missing bytes",
+                    resource_id,
+                    self._repository_metadata_file_path,
+                )
+                raise
 
     def get_all_resources(
         self,
@@ -610,9 +708,11 @@ class RepositoryService:
         """Returns all resources currently tracked by the repository service.
 
         Returns:
-            A list of all repository resources. Empty if none have been created.
+            A snapshot list of live repository resources, empty if none exist.
+            Their fields and on-disk contents may change concurrently after return.
         """
-        return list(self._resources.values())
+        with self._lock:
+            return list(self._resources.values())
 
     def get_resource_by_resource_id(
         self,
@@ -624,13 +724,20 @@ class RepositoryService:
             resource_id: The ID of the resource to retrieve.
 
         Returns:
-            The requested repository resource.
+            The live repository resource. Its fields and on-disk contents may change
+            concurrently after return.
 
         Raises:
             ResourceNotFoundError: If no resource with the given ID exists.
         """
         resource_id = normalize_uuid(resource_id)
 
+        with self._lock:
+            return self._get_resource_by_resource_id_locked(resource_id)
+
+    def _get_resource_by_resource_id_locked(
+        self, resource_id: str
+    ) -> RepositoryFile | RepositoryDirectory:
         try:
             resource = self._resources[resource_id]
         except KeyError:

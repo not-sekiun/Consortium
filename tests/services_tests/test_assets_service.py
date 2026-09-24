@@ -1,3 +1,5 @@
+import asyncio
+import json
 import pathlib
 import shutil
 import uuid
@@ -13,6 +15,7 @@ from consortium.server.exceptions.service_exceptions.repository_service_exceptio
     RepositoryMetadataFileSystemError,
     ResourceNotFoundError,
 )
+from consortium.server.services import repository_service as repository_module
 from consortium.server.services.assets_service import AssetsService
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
@@ -98,6 +101,76 @@ async def test_save_repository_metadata(service: AssetsService, repo_dir: pathli
 
     data = json.loads((repo_dir / ".repository.json").read_text())
     assert len(data) == 1
+
+
+async def test_concurrent_asset_mutations_preserve_metadata(service, repo_service):
+    with patch("consortium.server.services.assets_service.run_async_background_task"):
+        first, second = await asyncio.gather(
+            service.create_asset_file(content="first"),
+            service.create_asset_directory(name="second"),
+        )
+        await asyncio.gather(
+            service.update_asset_by_resource_id(first.resource_id, name="updated"),
+            service.delete_asset_by_resource_id(second.resource_id),
+        )
+    metadata = json.loads(repo_service._repository_metadata_file_path.read_text())
+    assert set(metadata) == {str(first.resource_id)}
+    assert metadata[str(first.resource_id)]["name"] == "updated"
+    assert len(service.get_all_assets()) == 1
+
+
+@pytest.mark.parametrize("directory", [False, True])
+@pytest.mark.parametrize("operation", ["create", "copy", "move"])
+async def test_asset_placement_failure_rolls_back_without_creation_event(
+    service, repo_service, events_service, tmp_path, monkeypatch, directory, operation
+):
+    reserved = service.reserve_resource_id()
+    shape = "directory" if directory else "file"
+    kwargs = {"resource_id": reserved}
+    source = tmp_path / "source"
+    if operation == "create":
+        method = getattr(service, f"create_asset_{shape}")
+        if not directory:
+            kwargs["content"] = "new"
+    else:
+        method = getattr(service, f"add_asset_{shape}")
+        if directory:
+            source.mkdir()
+            (source / "content").write_text("original")
+        else:
+            source.write_text("original")
+        kwargs.update(path=source, copy=operation == "copy")
+
+    def fail_write(*args, **kwargs):
+        raise OSError("injected write failure")
+
+    monkeypatch.setattr(repository_module, "atomic_write_bytes", fail_write)
+    with pytest.raises(RepositoryMetadataFileSystemError):
+        await method(**kwargs)
+    assert repo_service.get_all_resources() == []
+    assert repo_service._reserved_resource_ids == {str(reserved)}
+    assert not (repo_service.repository_directory_path / str(reserved)).exists()
+    if operation != "create":
+        assert (source / "content" if directory else source).read_text() == "original"
+    events_service.trigger_event.assert_not_called()
+
+
+async def test_failed_asset_update_restores_live_metadata(
+    service, repo_service, events_service, monkeypatch
+):
+    with patch("consortium.server.services.assets_service.run_async_background_task"):
+        asset = await service.create_asset_file(content="x", name="original")
+    events_service.trigger_event.reset_mock()
+    resource = repo_service.get_resource_by_resource_id(asset.resource_id)
+
+    def fail_write(*args, **kwargs):
+        raise OSError("injected write failure")
+
+    monkeypatch.setattr(repository_module, "atomic_write_bytes", fail_write)
+    with pytest.raises(RepositoryMetadataFileSystemError):
+        await service.update_asset_by_resource_id(asset.resource_id, name="failed")
+    assert resource.name == "original"
+    events_service.trigger_event.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

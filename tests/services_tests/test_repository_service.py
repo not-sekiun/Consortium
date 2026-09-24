@@ -13,7 +13,6 @@ from consortium.server.exceptions.service_exceptions.repository_service_exceptio
     RepositoryMetadataFileJSONError,
     RepositoryMetadataFileSchemaError,
     RepositoryMetadataFileSystemError,
-    RepositoryMetadataFileUnsyncedError,
     ResourceIDReservationNotFoundError,
     ResourceNotFoundError,
 )
@@ -123,14 +122,15 @@ def test_load_repository_metadata_invalid_schema_raises(
 # ---------------------------------------------------------------------------
 
 
-def test_load_repository_metadata_unsynced_file_raises(
+def test_load_repository_metadata_drops_missing_file(
     service: RepositoryService, repo_dir: pathlib.Path
 ):
     resource_id = str(uuid.uuid4())
     metadata = {resource_id: _metadata_entry(resource_id, "missing_file.txt")}
     (repo_dir / ".repository.json").write_text(json.dumps(metadata))
-    with pytest.raises(RepositoryMetadataFileUnsyncedError):
-        service.load_repository_metadata()
+    service.load_repository_metadata()
+    assert service.get_all_resources() == []
+    assert json.loads((repo_dir / ".repository.json").read_text()) == {}
 
 
 # ---------------------------------------------------------------------------
@@ -587,10 +587,7 @@ def test_load_repository_metadata_filesystem_error_is_metadata_scoped(
 def test_add_file_missing_source_raises_resource_error(
     service: RepositoryService, tmp_path: pathlib.Path
 ):
-    # The service performs no resource IO of its own, so this must surface as the object
-    # layer's resource error rather than anything metadata scoped. A caller needs to be
-    # able to tell "the content was never placed" from "the content was placed but not
-    # recorded".
+    # Placement failures retain the object layer's resource error.
     with pytest.raises(RepositoryResourceFileSystemError):
         service.add_file(path=tmp_path / "does_not_exist.txt")
 
