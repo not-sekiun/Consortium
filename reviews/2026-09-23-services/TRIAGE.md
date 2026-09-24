@@ -12,6 +12,23 @@
 - [x] PLAN #1 password / session-id redaction + `log_secrets` = Q1 #1 (`54ff7367`)
 - Q1 #6 (secret build/listener params) remains on hold per PLAN.md.
 
+**Q2 high-complexity/high-gain status (triaged 2026-09-24): decided; B and C implemented 2026-09-24**
+(`6363427b` factor-out, `01364a04` lock + reconcile), pushed, services suite green; E, D and A planned. Per-item
+design + order in `PLAN.md` ("Q2 implementation handoff"). Order: B+C (repository lock + partial-failure
+reconcile) -> E (reload/resolve rollback) -> D (session/socket revocation hook on delete/downgrade) ->
+A (opt-in password hashing + constant-time compare). **F deferred** pending a trust-boundary ruling on
+the ingest facade; **G already closed** as by-design (peer authorization). Key decisions: A keeps
+`user_accounts.json` hand-editable in plaintext, hashing is opt-in via `hash_passwords_at_rest`
+(default off) with whole-file write-back on load; D uses a revocation hook that tears down live
+sessions+sockets. Constant-time compare in A lands regardless of the flag and also closes A-auth's
+enumeration timing oracle and E-api's re-auth timing leak.
+**Review round 2 (Codex, 2026-09-24) folded into `Q2-PLAN.md`** as per-item "Spec additions" blocks.
+Corrections: A's dummy-verify as written *widens* the timing oracle (a fast plaintext path next to a slow
+KDF path), so it now needs uniform verify work; E is a candidate-graph transaction, not a mechanical
+reorder; D gained three bypasses to close (handshake race, logged-out sockets, role-permission edits).
+Passwords in account API responses are an **intentional admin feature** (user decision); how that
+combines with hashing and `log_secrets` is A's one open decision.
+
 **Q3 mop-up status (2026-09-24, committed; starts at tag `q3-low-complexity-low-gain-start`):** all
 items actioned in one pass, landed as nine commits, one per item. Suite green and lint clean. See
 the "Q3 mop-up" section in `PLAN.md` for per-item notes. Two did not become code changes:

@@ -73,6 +73,11 @@ Implementation notes (committed locally on `fix/code-review-fixes`, not pushed):
   `secret()`/warning tests to `test_logging_service.py`. Note: the direct-interpolation
   password-change log line (`user_accounts_service.py`) was not in the plan's #6 repr list
   but is a real plaintext leak repr=False cannot cover, so it was gated too.
+  Follow-up 2026-09-24 (found by Q2 review round 2): `start_server.py` built `LoggingConfigModel`
+  from an explicit field list that omitted `log_secrets`, so the flag was unreachable from
+  `logging_config.json` despite the docs. Fixed by passing `log_secrets=json_data.get("log_secrets",
+  False)` through (committed `24aed1c0`, pushed). No start_server test harness exists, so no
+  regression test was added.
 
 All Q1 low-complexity/high-gain items now implemented locally on `fix/code-review-fixes`
 (not pushed). #6 remains on hold per the user. Tests/lint/pre-commit run green per commit.
@@ -265,10 +270,18 @@ Do not implement. Sites for later: `agent_generators_service.py:374-388,424-433`
 
 ## Backlog raised during triage (not scheduled)
 
-- Q2-A password hashing: needs a migration decision (rehash-on-login vs one-shot). After hashing,
-  plaintext exists only at login/password change, which narrows what #1's flag can show.
 - Optional: enforce "type classes define no `__init__`" in `BaseAgentType`/`BaseListenerType`
   `__init_subclass__` (user has not asked for it).
+
+---
+
+# Q2 — High complexity, High gain
+
+Triaged and decided 2026-09-24. **Moved to its own file: see `Q2-PLAN.md`** (kept separate to stop this
+handoff bloating). Summary: order B+C (repository lock + partial-failure reconcile) -> E (reload/resolve
+rollback) -> D (session/socket revocation hook) -> A (opt-in password hashing + constant-time compare);
+F deferred pending a trust-boundary ruling; G closed by-design. **B and C are implemented and pushed**
+(`6363427b` factor-out, `01364a04` lock + reconcile; services suite green); E, D and A remain planned.
 
 ---
 
