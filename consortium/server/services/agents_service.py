@@ -257,6 +257,10 @@ class AgentsService:
             AgentNotFoundError: If no agent with the given ID is registered.
         """
         agent = self.get_agent_by_agent_id(agent_id=agent_id)
+        agent.datetime_last_checked_in = utc_now()
+        agent.mark_as_active()
+        # Serialize after the update so subscribers see this check-in, not the
+        # previous one.
         run_async_background_task(
             coroutine=self._events_service.trigger_event(
                 event_type=EventType.AGENT_CHECKED_IN,
@@ -264,8 +268,6 @@ class AgentsService:
                 data=agent.to_json(),
             )
         )
-        agent.datetime_last_checked_in = utc_now()
-        agent.mark_as_active()
         self._logger.debug("Checked in agent {!r}", agent)
 
     @log_and_propagate_error_on_service_method
