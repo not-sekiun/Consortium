@@ -269,3 +269,48 @@ Do not implement. Sites for later: `agent_generators_service.py:374-388,424-433`
   plaintext exists only at login/password change, which narrows what #1's flag can show.
 - Optional: enforce "type classes define no `__init__`" in `BaseAgentType`/`BaseListenerType`
   `__init_subclass__` (user has not asked for it).
+
+---
+
+## Q3 mop-up (implemented 2026-09-24, committed on `fix/code-review-fixes`)
+
+All Q3 rows from `TRIAGE.md` actioned in one pass, on top of the Q1 commits. Nothing here is a
+behaviour change an operator would notice except the plugin reload dedup, which previously never
+matched.
+
+| Item | Finding | Change |
+|---|---|---|
+| Plugin reload dedup | C-reverify med | `plugins_service.py` reload rescan: `plugin.root_directory.parent == path.parent` -> `plugin.root_directory.is_relative_to(path.parent)`. `root_directory` is the entry point module's folder, so the old test compared the *plugins* dir against the *plugin* dir and never matched; a plugin that failed to unload was loaded a second time. `is_relative_to` also covers an entry point in a subpackage. |
+| Events two-index order | H med | `events_service.register_event_handler_to_event_type` now updates `_handler_event_types` (the step that hashes the handler, the only one that can fail) before appending to `_event_handlers`, so an unhashable handler leaves both structures untouched. Note: the finding's bound-method premise does not hold on 3.14, which hashes a bound method by its `__self__`'s address; a directly unhashable callable still raises. |
+| Facade "not an isolation boundary" | G low | Comment added at the top of `AgentFileManagerService.__init__` and `AgentTemplatesPayloadsService.__init__`. No scoping checks, per the authorization model. |
+| Tar extraction filter | D low | `repository_objects._archive_extraction_filter()` passes `filter="data"` to `shutil.unpack_archive` for every tar format and nothing for zip. Verified against the project interpreter: the zip unpacker's signature is `(filename, extract_dir)` and takes no `filter`, so passing one unconditionally would be a `TypeError`. |
+| UUID helper consolidation | B low | The two identical `_canonicalize_uuid` copies (`tasks_service`, `task_runtime_service`) are now one `canonicalize_uuid` in `server/utils.py`. **Deferred:** making `normalize_uuid` itself canonicalize. It is called from ~25 sites across 12 services with identifiers that are not always UUIDs, its result is used as a dict key and in error message text, and changing it would turn some current 404s into hits. That is a cross-service behaviour decision, not a mop-up. |
+| `create` vs `add` dup-id guard | G low | `create_agent_generator_from_agent_template_by_agent_template_id` now raises `AgentGeneratorAlreadyExistsError` on a colliding ID, matching `add_agent_generator`; docstring `Raises:` updated. |
+| `AGENT_CHECKED_IN` ordering | B low | `agents_service.check_in_agent_by_agent_id` updates `datetime_last_checked_in` and `mark_as_active()` before building the event payload, so subscribers no longer see the previous check-in. |
+| Caller-dict mutation | F/G low | `update_agent_generator_by_agent_generator_id` and `update_listener_by_listener_id` resolve the back-filled parameter set into a local `resolved_parameters` instead of writing into the caller's dict; the no-op self-assignment in each validation loop is gone. |
+| Service decorator | G low | `AgentFileManagerService` gained `_logger`, `__str__`, `__repr__` and `@log_and_propagate_error_on_service_method` on all nine public methods, matching every sibling service. Nested double-logging with the inner services is the existing pattern across the codebase, not new here. |
+| Upload `None` name | E low | **No change: non-issue.** `create_asset_file` and `create_asset_directory` both declare and document `name: str | None = None` -> "the asset's generated UUID is used as its name". The reviewer flagged this as low confidence pending exactly this check. |
+
+Tests added (13 cases across 3 modified and 3 new files):
+- `tests/services_tests/test_plugins_service.py`: three reload-dedup cases (failed-to-unload skipped,
+  nested entry point skipped, cleanly-unloaded reloaded).
+- `tests/services_tests/test_events_service.py`: unhashable handler leaves both indices untouched;
+  duplicate registration still rejected.
+- `tests/services_tests/test_repository_objects.py`: escaping tar member raises
+  `tarfile.OutsideDestinationError`; absolute member is contained under the destination (the data
+  filter strips the separator rather than raising); well-formed tar and zip still unpack.
+- `tests/services_tests/test_update_does_not_mutate_caller_parameters.py` (new): both update methods
+  leave the caller's dict alone while still resolving the full set onto the object.
+- `tests/services_tests/test_agents_service_check_in.py` (new): emitted payload carries the new
+  timestamp; `mark_as_active` lands before `to_json`.
+- `tests/services_tests/test_agent_generators_service.py` (new): `create` rejects a colliding ID and
+  keeps the live generator; a fresh ID still registers.
+
+Verified 2026-09-24: `uv run pytest` green (1288 passed, 63 subtests), `uv run ruff check consortium`
+clean, `ruff format` applied to the three modified test files, and pre-commit passed on every commit.
+Landed as nine commits, one per row above, starting at the `q3-low-complexity-low-gain-start` tag.
+
+Note: `ruff check .` cannot parse `tests/services_tests/mocks/plugins/mock_plugin_bad_toml/pyproject.toml`
+(deliberately malformed fixture), so lint the `consortium` package directly, per AGENTS.md. Two files
+outside this change (`framework/utils/network_utils.py`, `component_loader_service.py`) carry
+pre-existing `ruff format` drift and were left alone.

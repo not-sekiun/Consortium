@@ -12,6 +12,13 @@
 - [x] PLAN #1 password / session-id redaction + `log_secrets` = Q1 #1 (`54ff7367`)
 - Q1 #6 (secret build/listener params) remains on hold per PLAN.md.
 
+**Q3 mop-up status (2026-09-24, committed; starts at tag `q3-low-complexity-low-gain-start`):** all
+items actioned in one pass, landed as nine commits, one per item. Suite green and lint clean. See
+the "Q3 mop-up" section in `PLAN.md` for per-item notes. Two did not become code changes:
+the E-api upload `None`-name finding is a **non-issue** (both asset create handlers document
+and support `name=None`, falling back to the generated UUID), and making `normalize_uuid`
+canonicalize is **deferred** as a cross-service behaviour change rather than a mop-up.
+
 Base commit `0a404028a28d402b7e8694e99c1cfa550782d4a6`. Derived from the 9 chunk findings +
 the A-auth / C-codeloading Opus re-reviews. See `SUMMARY.md` for context and `findings/` for detail.
 
@@ -88,17 +95,20 @@ sessions), Q3 as mop-up, Q4 only if the deployment model demands it.
   docstring nicety (label the payload/file-manager facades "not an isolation boundary"). NOTE: this does *not* close
   the WS re-auth/revocation finding (Q2-D) — that is a revoked principal, not a peer.
 
-## Q3 — Low complexity, Low/Med gain — MOP-UP (batch in a single cleanup pass)
+## Q3 — Low complexity, Low/Med gain — MOP-UP (batch in a single cleanup pass) — DONE 2026-09-24
 
-- Plugin reload dedup off-by-one (`plugins_service.py:689` — compare manifest dir, not `root_directory.parent`).
-- Event handler two-index registration reorder / hashability check (`events_service.py:74-80`).
-- Payload / file-manager facade docstrings: state they are "not an isolation boundary" (G) — the *only*
+- [x] Plugin reload dedup off-by-one (`plugins_service.py:689` — now `is_relative_to(path.parent)`).
+- [x] Event handler two-index registration reorder / hashability check (`events_service.py:74-80`).
+- [x] Payload / file-manager facade docstrings: state they are "not an isolation boundary" (G) — the *only*
   residual of the ownership decision; do NOT add scoping checks (ownership is metadata-only per AGENTS.md).
-- Pin tar `filter='data'` explicitly at extraction (D low) — defense-in-depth + regression test.
-- Consolidate the three UUID helpers into one canonicalizing `normalize_uuid` (B/D/F).
-- Small correctness nits: `create` vs `add` dup-id guard (G); upload `None`-name guard (E); `AGENT_CHECKED_IN`
-  serialize-after-update (B); `update_listener`/`update_agent_generator` operate on a copy not the caller's dict
-  (F/G); apply the `log_and_propagate_error` decorator to `AgentFileManagerService` (G).
+- [x] Pin tar `filter='data'` explicitly at extraction (D low) — defense-in-depth + regression test.
+- [~] Consolidate the three UUID helpers (B/D/F): the two identical `_canonicalize_uuid` copies are now one
+  shared `canonicalize_uuid` in `server/utils.py`. Making `normalize_uuid` itself canonicalize is **deferred**
+  as a cross-service behaviour change, not a mop-up — see PLAN.md.
+- Small correctness nits: [x] `create` vs `add` dup-id guard (G); [n/a] upload `None`-name guard (E — non-issue,
+  both asset create handlers document and support `name=None`); [x] `AGENT_CHECKED_IN` serialize-after-update (B);
+  [x] `update_listener`/`update_agent_generator` operate on a copy not the caller's dict (F/G); [x] apply the
+  `log_and_propagate_error` decorator to `AgentFileManagerService` (G).
 
 ## Q4 — High complexity, Low gain — DEFER (intentional design per AGENTS.md, or low ROI)
 
