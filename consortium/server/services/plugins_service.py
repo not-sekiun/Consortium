@@ -686,7 +686,9 @@ class PluginsService:
                     continue
                 plugin_loaded = False
                 for plugin in self.get_all_plugins():
-                    if plugin.root_directory.parent == path.parent:
+                    # root_directory is the entry point module's folder, which is the
+                    # manifest folder or a subpackage below it.
+                    if plugin.root_directory.is_relative_to(path.parent):
                         plugin_loaded = True
                         break
                 if not plugin_loaded:

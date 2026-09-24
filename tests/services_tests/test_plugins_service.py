@@ -301,3 +301,76 @@ async def test_reload_framework_plugins_unloads_registered_plugins(
         ],
         any_order=True,
     )
+
+
+@pytest.mark.anyio
+async def test_reload_framework_plugins_skips_a_plugin_that_failed_to_unload(
+    plugins_service_with_mock_registry,
+    tmp_path,
+):
+    # The dedup compares the loaded plugin's root_directory against the manifest's
+    # directory. root_directory is the entry point module's folder, which is the
+    # manifest folder itself in the normal layout, so a still-loaded plugin has to be
+    # recognised and not loaded a second time.
+    svc, registry = plugins_service_with_mock_registry
+    svc._plugins_directory = tmp_path
+    plugin_directory = tmp_path / "stuck_plugin"
+    plugin_directory.mkdir()
+    (plugin_directory / "manifest.json").write_text("{}", encoding="utf-8")
+
+    stuck_plugin = MagicMock()
+    stuck_plugin.root_directory = plugin_directory
+    registry.get_all_components.return_value = [stuck_plugin]
+    svc.unload_plugin_by_plugin_id = AsyncMock()
+    svc.load_plugin_from_directory = AsyncMock()
+
+    await svc.reload_framework_plugins(force_reload=False, timeout=10)
+
+    svc.load_plugin_from_directory.assert_not_awaited()
+
+
+@pytest.mark.anyio
+async def test_reload_framework_plugins_skips_a_plugin_whose_entry_point_is_nested(
+    plugins_service_with_mock_registry,
+    tmp_path,
+):
+    # A plugin whose entry point lives in a subpackage has a root_directory below the
+    # manifest directory; it is still the same plugin and must also be skipped.
+    svc, registry = plugins_service_with_mock_registry
+    svc._plugins_directory = tmp_path
+    plugin_directory = tmp_path / "nested_plugin"
+    (plugin_directory / "inner").mkdir(parents=True)
+    (plugin_directory / "manifest.json").write_text("{}", encoding="utf-8")
+
+    stuck_plugin = MagicMock()
+    stuck_plugin.root_directory = plugin_directory / "inner"
+    registry.get_all_components.return_value = [stuck_plugin]
+    svc.unload_plugin_by_plugin_id = AsyncMock()
+    svc.load_plugin_from_directory = AsyncMock()
+
+    await svc.reload_framework_plugins(force_reload=False, timeout=10)
+
+    svc.load_plugin_from_directory.assert_not_awaited()
+
+
+@pytest.mark.anyio
+async def test_reload_framework_plugins_loads_a_plugin_that_unloaded_cleanly(
+    plugins_service_with_mock_registry,
+    tmp_path,
+):
+    svc, registry = plugins_service_with_mock_registry
+    svc._plugins_directory = tmp_path
+    plugin_directory = tmp_path / "clean_plugin"
+    plugin_directory.mkdir()
+    (plugin_directory / "manifest.json").write_text("{}", encoding="utf-8")
+
+    registry.get_all_components.return_value = []
+    svc.unload_plugin_by_plugin_id = AsyncMock()
+    svc.load_plugin_from_directory = AsyncMock()
+
+    await svc.reload_framework_plugins(force_reload=False, timeout=10)
+
+    svc.load_plugin_from_directory.assert_awaited_once_with(
+        directory=plugin_directory,
+        ignore_enabled_flag=False,
+    )
