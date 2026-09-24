@@ -1,6 +1,7 @@
 import asyncio
 import pathlib
 import uuid
+from collections.abc import Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any, BinaryIO, Literal, TextIO
 
@@ -13,6 +14,10 @@ from consortium.server.models.listener_and_agent_reference_models import (
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.artifact_objects import Artifact
+from consortium.server.objects.repository_objects import (
+    RepositoryDirectory,
+    RepositoryFile,
+)
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
 from consortium.server.utils import (
@@ -77,6 +82,26 @@ class ArtifactsService:
             agent_type=agent.agent_type.name,
         )
         return {"agent": agent_reference.model_dump(mode="json")}
+
+    async def _create_artifact(
+        self,
+        operation: Callable[..., RepositoryFile | RepositoryDirectory],
+        message: str,
+        agent_id: str | uuid.UUID | None,
+        event_message: str | None = None,
+        **kwargs: Any,
+    ) -> Artifact:
+        data = self._build_artifact_resource_data(agent_id=agent_id)
+        resource = await asyncio.to_thread(operation, data=data, **kwargs)
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.ARTIFACT_CREATED,
+                message=f"{event_message or message}: {resource.resource_id}",
+                data=resource.to_json(),
+            )
+        )
+        self._logger.debug("{}: {!r}", message, resource)
+        return Artifact(resource=resource, agents_service=self._agents_service)
 
     # @wraps copies function docstring information over to avoid rewriting it, used for
     # boilerplate forwarding methods that don't do anything meaningfully different. We
@@ -155,23 +180,16 @@ class ArtifactsService:
             UnicodeDecodeError: If `content` is a text stream carrying content that
                 cannot be decoded.
         """
-        artifact = await asyncio.to_thread(
-            self._repository_service.create_file,
+        return await self._create_artifact(
+            operation=self._repository_service.create_file,
+            message="Created artifact file",
+            event_message="Created artifact",
+            agent_id=agent_id,
             content=content,
             name=name,
             description=description,
             resource_id=resource_id,
-            data=self._build_artifact_resource_data(agent_id=agent_id),
         )
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.ARTIFACT_CREATED,
-                message=f"Created artifact: {artifact.resource_id}",
-                data=artifact.to_json(),
-            )
-        )
-        self._logger.debug("Created artifact file: {!r}", artifact)
-        return Artifact(resource=artifact, agents_service=self._agents_service)
 
     @log_and_propagate_error_on_service_method
     async def add_artifact_file(
@@ -219,24 +237,17 @@ class ArtifactsService:
             RepositoryMetadataFileSystemError: If the artifact metadata cannot be written
                 to disk afterwards.
         """
-        artifact = await asyncio.to_thread(
-            self._repository_service.add_file,
+        return await self._create_artifact(
+            operation=self._repository_service.add_file,
+            message="Added artifact file",
+            event_message="Added artifact",
+            agent_id=agent_id,
             path=path,
+            copy=copy,
             name=name,
             description=description,
             resource_id=resource_id,
-            copy=copy,
-            data=self._build_artifact_resource_data(agent_id=agent_id),
         )
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.ARTIFACT_CREATED,
-                message=f"Added artifact: {artifact.resource_id}",
-                data=artifact.to_json(),
-            )
-        )
-        self._logger.debug("Added artifact file: {!r}", artifact)
-        return Artifact(resource=artifact, agents_service=self._agents_service)
 
     @log_and_propagate_error_on_service_method
     async def create_artifact_directory(
@@ -292,24 +303,16 @@ class ArtifactsService:
             RepositoryMetadataFileSystemError: If the artifact metadata cannot be written
                 to disk after the directory is created.
         """
-        artifact = await asyncio.to_thread(
-            self._repository_service.create_directory,
+        return await self._create_artifact(
+            operation=self._repository_service.create_directory,
+            message="Created artifact directory",
+            agent_id=agent_id,
             content=content,
             archive_file_format=archive_file_format,
             name=name,
             description=description,
             resource_id=resource_id,
-            data=self._build_artifact_resource_data(agent_id=agent_id),
         )
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.ARTIFACT_CREATED,
-                message=f"Created artifact directory: {artifact.resource_id}",
-                data=artifact.to_json(),
-            )
-        )
-        self._logger.debug("Created artifact directory: {!r}", artifact)
-        return Artifact(resource=artifact, agents_service=self._agents_service)
 
     @log_and_propagate_error_on_service_method
     async def add_artifact_directory(
@@ -359,24 +362,16 @@ class ArtifactsService:
             RepositoryMetadataFileSystemError: If the artifact metadata cannot be written
                 to disk afterwards.
         """
-        artifact = await asyncio.to_thread(
-            self._repository_service.add_directory,
+        return await self._create_artifact(
+            operation=self._repository_service.add_directory,
+            message="Added artifact directory",
+            agent_id=agent_id,
             path=path,
+            copy=copy,
             name=name,
             description=description,
             resource_id=resource_id,
-            copy=copy,
-            data=self._build_artifact_resource_data(agent_id=agent_id),
         )
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.ARTIFACT_CREATED,
-                message=f"Added artifact directory: {artifact.resource_id}",
-                data=artifact.to_json(),
-            )
-        )
-        self._logger.debug("Added artifact directory: {!r}", artifact)
-        return Artifact(resource=artifact, agents_service=self._agents_service)
 
     @log_and_propagate_error_on_service_method
     async def update_artifact_by_resource_id(

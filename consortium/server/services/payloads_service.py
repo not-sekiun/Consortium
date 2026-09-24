@@ -1,6 +1,7 @@
 import asyncio
 import pathlib
 import uuid
+from collections.abc import Callable
 from functools import wraps
 from typing import Any, BinaryIO, Literal, TextIO
 
@@ -14,6 +15,10 @@ from consortium.server.models.agent_template_models import (
 )
 from consortium.server.models.logging_models import LoggerType
 from consortium.server.objects.payload_objects import Payload
+from consortium.server.objects.repository_objects import (
+    RepositoryDirectory,
+    RepositoryFile,
+)
 from consortium.server.services.agent_templates_service import AgentTemplatesService
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
@@ -69,6 +74,41 @@ class PayloadsService:
             "build_parameters": build_parameters,
             "payload_data": payload_data if payload_data is not None else {},
         }
+
+    async def _create_payload(
+        self,
+        operation: Callable[..., RepositoryFile | RepositoryDirectory],
+        message: str,
+        agent_template_id: str | uuid.UUID,
+        build_parameters: dict[str, Any],
+        payload_data: dict[str, JsonValue] | None,
+        **kwargs: Any,
+    ) -> Payload:
+        agent_template = (
+            self._agent_templates_service.get_agent_template_by_agent_template_id(
+                agent_template_id=agent_template_id,
+            )
+        )
+        agent_template.create_agent_generator(parameters=build_parameters)
+        data = self._build_payload_resource_data(
+            agent_template=agent_template,
+            build_parameters=build_parameters,
+            payload_data=payload_data,
+        )
+        resource = await asyncio.to_thread(operation, data=data, **kwargs)
+        payload = Payload(
+            resource=resource,
+            agent_templates_service=self._agent_templates_service,
+        )
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.PAYLOAD_CREATED,
+                message=f"Created payload: {resource.resource_id}",
+                data=payload.to_json(),
+            )
+        )
+        self._logger.debug("{} with resource ID '{}'", message, resource.resource_id)
+        return payload
 
     # @wraps copies function docstring information over to avoid rewriting it, used for
     # boilerplate forwarding methods that don't do anything meaningfully different. We
@@ -157,47 +197,17 @@ class PayloadsService:
             UnicodeDecodeError: If `content` is a text stream carrying content that
                 cannot be decoded.
         """
-        # Validate payload build parameters against the agent template and check that
-        # the agent template exists
-        agent_template = (
-            self._agent_templates_service.get_agent_template_by_agent_template_id(
-                agent_template_id=agent_template_id,
-            )
-        )
-        agent_template.create_agent_generator(
-            parameters=build_parameters,
-        )
-        # Offload the blocking repository disk I/O to a worker thread so it does not
-        # block the event loop, mirroring the assets and artifacts services.
-        resource = await asyncio.to_thread(
-            self._repository_service.create_file,
+        return await self._create_payload(
+            operation=self._repository_service.create_file,
+            message="Created payload file",
+            agent_template_id=agent_template_id,
+            build_parameters=build_parameters,
+            payload_data=payload_data,
             content=content,
             name=name,
             description=description,
             resource_id=resource_id,
-            data=self._build_payload_resource_data(
-                agent_template=agent_template,
-                build_parameters=build_parameters,
-                payload_data=payload_data,
-            ),
         )
-        payload = Payload(
-            resource=resource,
-            agent_templates_service=self._agent_templates_service,
-        )
-
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.PAYLOAD_CREATED,
-                message=f"Created payload: {resource.resource_id}",
-                data=payload.to_json(),
-            )
-        )
-        self._logger.debug(
-            "Created payload file with resource ID '{}'",
-            resource.resource_id,
-        )
-        return payload
 
     @log_and_propagate_error_on_service_method
     async def add_payload_file(
@@ -257,44 +267,18 @@ class PayloadsService:
             RepositoryMetadataFileSystemError: If the payload metadata cannot be written
                 to disk afterwards.
         """
-        agent_template = (
-            self._agent_templates_service.get_agent_template_by_agent_template_id(
-                agent_template_id=agent_template_id,
-            )
-        )
-        agent_template.create_agent_generator(
-            parameters=build_parameters,
-        )
-        resource = await asyncio.to_thread(
-            self._repository_service.add_file,
+        return await self._create_payload(
+            operation=self._repository_service.add_file,
+            message="Added payload file",
+            agent_template_id=agent_template_id,
+            build_parameters=build_parameters,
+            payload_data=payload_data,
             path=path,
+            copy=copy,
             name=name,
             description=description,
             resource_id=resource_id,
-            copy=copy,
-            data=self._build_payload_resource_data(
-                agent_template=agent_template,
-                build_parameters=build_parameters,
-                payload_data=payload_data,
-            ),
         )
-        payload = Payload(
-            resource=resource,
-            agent_templates_service=self._agent_templates_service,
-        )
-
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.PAYLOAD_CREATED,
-                message=f"Created payload: {resource.resource_id}",
-                data=payload.to_json(),
-            )
-        )
-        self._logger.debug(
-            "Added payload file with resource ID '{}'",
-            resource.resource_id,
-        )
-        return payload
 
     @log_and_propagate_error_on_service_method
     async def create_payload_directory(
@@ -354,45 +338,18 @@ class PayloadsService:
             RepositoryMetadataFileSystemError: If the payload metadata cannot be written
                 to disk after the directory is created.
         """
-        # Validate payload build parameters against the agent template and check that
-        # the agent template exists
-        agent_template = (
-            self._agent_templates_service.get_agent_template_by_agent_template_id(
-                agent_template_id=agent_template_id,
-            )
-        )
-        agent_template.create_agent_generator(
-            parameters=build_parameters,
-        )
-        resource = await asyncio.to_thread(
-            self._repository_service.create_directory,
+        return await self._create_payload(
+            operation=self._repository_service.create_directory,
+            message="Created payload directory",
+            agent_template_id=agent_template_id,
+            build_parameters=build_parameters,
+            payload_data=payload_data,
             content=content,
             archive_file_format=archive_file_format,
             name=name,
             description=description,
             resource_id=resource_id,
-            data=self._build_payload_resource_data(
-                agent_template=agent_template,
-                build_parameters=build_parameters,
-                payload_data=payload_data,
-            ),
         )
-        payload = Payload(
-            resource=resource,
-            agent_templates_service=self._agent_templates_service,
-        )
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.PAYLOAD_CREATED,
-                message=f"Created payload: {resource.resource_id}",
-                data=payload.to_json(),
-            )
-        )
-        self._logger.debug(
-            "Created payload directory with resource ID '{}'",
-            resource.resource_id,
-        )
-        return payload
 
     @log_and_propagate_error_on_service_method
     async def add_payload_directory(
@@ -454,44 +411,18 @@ class PayloadsService:
             RepositoryMetadataFileSystemError: If the payload metadata cannot be written
                 to disk afterwards.
         """
-        agent_template = (
-            self._agent_templates_service.get_agent_template_by_agent_template_id(
-                agent_template_id=agent_template_id,
-            )
-        )
-        agent_template.create_agent_generator(
-            parameters=build_parameters,
-        )
-        resource = await asyncio.to_thread(
-            self._repository_service.add_directory,
+        return await self._create_payload(
+            operation=self._repository_service.add_directory,
+            message="Added payload directory",
+            agent_template_id=agent_template_id,
+            build_parameters=build_parameters,
+            payload_data=payload_data,
             path=path,
+            copy=copy,
             name=name,
             description=description,
             resource_id=resource_id,
-            copy=copy,
-            data=self._build_payload_resource_data(
-                agent_template=agent_template,
-                build_parameters=build_parameters,
-                payload_data=payload_data,
-            ),
         )
-        payload = Payload(
-            resource=resource,
-            agent_templates_service=self._agent_templates_service,
-        )
-
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.PAYLOAD_CREATED,
-                message=f"Created payload: {resource.resource_id}",
-                data=payload.to_json(),
-            )
-        )
-        self._logger.debug(
-            "Added payload directory with resource ID '{}'",
-            resource.resource_id,
-        )
-        return payload
 
     @log_and_propagate_error_on_service_method
     async def update_payload_by_resource_id(

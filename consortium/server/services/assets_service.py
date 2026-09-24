@@ -1,6 +1,7 @@
 import asyncio
 import pathlib
 import uuid
+from collections.abc import Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any, BinaryIO, Literal, TextIO
 
@@ -13,6 +14,10 @@ from consortium.server.models.user_account_models import (
     PersistentUserAccountReferenceModel,
 )
 from consortium.server.objects.asset_objects import Asset
+from consortium.server.objects.repository_objects import (
+    RepositoryDirectory,
+    RepositoryFile,
+)
 from consortium.server.services.events_service import EventsService
 from consortium.server.services.repository_service import RepositoryService
 from consortium.server.utils import (
@@ -75,6 +80,28 @@ class AssetsService:
         return {
             "user_account": user_account_reference.model_dump(mode="json"),
         }
+
+    async def _create_asset(
+        self,
+        operation: Callable[..., RepositoryFile | RepositoryDirectory],
+        message: str,
+        user_account_id: str | uuid.UUID | None,
+        event_message: str | None = None,
+        **kwargs: Any,
+    ) -> Asset:
+        data = self._build_asset_resource_data(user_account_id=user_account_id)
+        resource = await asyncio.to_thread(operation, data=data, **kwargs)
+        run_async_background_task(
+            coroutine=self._events_service.trigger_event(
+                event_type=EventType.ASSET_CREATED,
+                message=f"{event_message or message}: {resource.resource_id}",
+                data=resource.to_json(),
+            )
+        )
+        self._logger.debug("{}: {!r}", message, resource)
+        return Asset(
+            resource=resource, user_accounts_service=self._user_accounts_service
+        )
 
     # @wraps copies function docstring information over to avoid rewriting it, used for
     # boilerplate forwarding methods that don't do anything meaningfully different. We
@@ -154,23 +181,16 @@ class AssetsService:
             UnicodeDecodeError: If `content` is a text stream carrying content that
                 cannot be decoded.
         """
-        asset = await asyncio.to_thread(
-            self._repository_service.create_file,
+        return await self._create_asset(
+            operation=self._repository_service.create_file,
+            message="Created asset file",
+            event_message="Created asset",
+            user_account_id=user_account_id,
             content=content,
             name=name,
             description=description,
             resource_id=resource_id,
-            data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.ASSET_CREATED,
-                message=f"Created asset: {asset.resource_id}",
-                data=asset.to_json(),
-            )
-        )
-        self._logger.debug("Created asset file: {!r}", asset)
-        return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
 
     @log_and_propagate_error_on_service_method
     async def add_asset_file(
@@ -217,24 +237,17 @@ class AssetsService:
             RepositoryMetadataFileSystemError: If the asset metadata cannot be written to
                 disk afterwards.
         """
-        asset = await asyncio.to_thread(
-            self._repository_service.add_file,
+        return await self._create_asset(
+            operation=self._repository_service.add_file,
+            message="Added asset file",
+            event_message="Added asset",
+            user_account_id=user_account_id,
             path=path,
+            copy=copy,
             name=name,
             description=description,
             resource_id=resource_id,
-            copy=copy,
-            data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.ASSET_CREATED,
-                message=f"Added asset: {asset.resource_id}",
-                data=asset.to_json(),
-            )
-        )
-        self._logger.debug("Added asset file: {!r}", asset)
-        return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
 
     @log_and_propagate_error_on_service_method
     async def create_asset_directory(
@@ -290,24 +303,16 @@ class AssetsService:
             RepositoryMetadataFileSystemError: If the asset metadata cannot be written to
                 disk after the directory is created.
         """
-        asset = await asyncio.to_thread(
-            self._repository_service.create_directory,
+        return await self._create_asset(
+            operation=self._repository_service.create_directory,
+            message="Created asset directory",
+            user_account_id=user_account_id,
             content=content,
             archive_file_format=archive_file_format,
             name=name,
             description=description,
             resource_id=resource_id,
-            data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.ASSET_CREATED,
-                message=f"Created asset directory: {asset.resource_id}",
-                data=asset.to_json(),
-            )
-        )
-        self._logger.debug("Created asset directory: {!r}", asset)
-        return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
 
     @log_and_propagate_error_on_service_method
     async def add_asset_directory(
@@ -356,24 +361,16 @@ class AssetsService:
             RepositoryMetadataFileSystemError: If the asset metadata cannot be written to
                 disk afterwards.
         """
-        asset = await asyncio.to_thread(
-            self._repository_service.add_directory,
+        return await self._create_asset(
+            operation=self._repository_service.add_directory,
+            message="Added asset directory",
+            user_account_id=user_account_id,
             path=path,
+            copy=copy,
             name=name,
             description=description,
             resource_id=resource_id,
-            copy=copy,
-            data=self._build_asset_resource_data(user_account_id=user_account_id),
         )
-        run_async_background_task(
-            coroutine=self._events_service.trigger_event(
-                event_type=EventType.ASSET_CREATED,
-                message=f"Added asset directory: {asset.resource_id}",
-                data=asset.to_json(),
-            )
-        )
-        self._logger.debug("Added asset directory: {!r}", asset)
-        return Asset(resource=asset, user_accounts_service=self._user_accounts_service)
 
     @log_and_propagate_error_on_service_method
     async def update_asset_by_resource_id(

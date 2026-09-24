@@ -2,6 +2,7 @@ import functools
 import json
 import pathlib
 import uuid
+from collections.abc import Callable
 from typing import BinaryIO, Literal, TextIO
 
 from loguru import logger
@@ -263,6 +264,26 @@ class RepositoryService:
         self._reserved_resource_ids.add(str(resource_id))
         return resource_id
 
+    def _create_resource[Resource: RepositoryFile | RepositoryDirectory](
+        self,
+        factory: Callable[[pathlib.Path], Resource],
+        resource_id: str | uuid.UUID | None,
+    ) -> Resource:
+        if resource_id is not None:
+            resource_id_str = normalize_uuid(resource_id)
+            if resource_id_str not in self._reserved_resource_ids:
+                raise ResourceIDReservationNotFoundError(resource_id=resource_id_str)
+            self._reserved_resource_ids.discard(resource_id_str)
+            unique_resource_id = uuid.UUID(resource_id_str)
+        else:
+            unique_resource_id = uuid.uuid4()
+
+        resource = factory(self.repository_directory_path / str(unique_resource_id))
+        resource.resource_id = unique_resource_id
+        self._resources[str(unique_resource_id)] = resource
+        self.save_repository_metadata()
+        return resource
+
     def create_file(
         self,
         content: str | bytes | TextIO | BinaryIO,
@@ -300,30 +321,16 @@ class RepositoryService:
                 cannot be decoded. Left unwrapped as it describes the content the caller
                 supplied rather than a failure of the repository itself.
         """
-        if resource_id is not None:
-            resource_id_str = normalize_uuid(resource_id)
-            if resource_id_str not in self._reserved_resource_ids:
-                raise ResourceIDReservationNotFoundError(resource_id=resource_id_str)
-            self._reserved_resource_ids.discard(resource_id_str)
-            unique_resource_id = uuid.UUID(resource_id_str)
-        else:
-            unique_resource_id = uuid.uuid4()
-
-        # TODO: Implement create_* class methods to allow creating the repository file
-        #  in memory and on disk.
-        repository_file = RepositoryFile.create(
-            path=self.repository_directory_path / str(unique_resource_id),
-            content=content,
-            name=name if name else str(unique_resource_id),
-            description=description,
-            data=data,
+        return self._create_resource(
+            factory=lambda destination: RepositoryFile.create(
+                path=destination,
+                content=content,
+                name=name if name else destination.name,
+                description=description,
+                data=data,
+            ),
+            resource_id=resource_id,
         )
-        repository_file.resource_id = unique_resource_id
-        self._resources[str(repository_file.resource_id)] = repository_file
-
-        self.save_repository_metadata()
-
-        return repository_file
 
     def add_file(
         self,
@@ -368,34 +375,17 @@ class RepositoryService:
                 disk. The file has already been moved or copied into the repository by
                 this point, so the resource exists on disk without being recorded.
         """
-        if isinstance(path, str):
-            path = pathlib.Path(path)
-
-        if resource_id is not None:
-            resource_id_str = normalize_uuid(resource_id)
-            if resource_id_str not in self._reserved_resource_ids:
-                raise ResourceIDReservationNotFoundError(resource_id=resource_id_str)
-            self._reserved_resource_ids.discard(resource_id_str)
-            unique_resource_id = uuid.UUID(resource_id_str)
-        else:
-            unique_resource_id = uuid.uuid4()
-
-        dest_path = self.repository_directory_path / str(unique_resource_id)
-
-        repository_file = RepositoryFile.from_existing_path(
-            source_path=path,
-            path=dest_path,
-            copy=copy,
-            name=name,
-            description=description,
-            data=data,
+        return self._create_resource(
+            factory=lambda destination: RepositoryFile.from_existing_path(
+                source_path=path,
+                path=destination,
+                copy=copy,
+                name=name,
+                description=description,
+                data=data,
+            ),
+            resource_id=resource_id,
         )
-        repository_file.resource_id = unique_resource_id
-        self._resources[str(repository_file.resource_id)] = repository_file
-
-        self.save_repository_metadata()
-
-        return repository_file
 
     def create_directory(
         self,
@@ -445,29 +435,17 @@ class RepositoryService:
             RepositoryMetadataFileSystemError: If the metadata file cannot be written to
                 disk.
         """
-        if resource_id is not None:
-            resource_id_str = normalize_uuid(resource_id)
-            if resource_id_str not in self._reserved_resource_ids:
-                raise ResourceIDReservationNotFoundError(resource_id=resource_id_str)
-            self._reserved_resource_ids.discard(resource_id_str)
-            unique_resource_id = uuid.UUID(resource_id_str)
-        else:
-            unique_resource_id = uuid.uuid4()
-
-        repository_directory = RepositoryDirectory.create(
-            path=self.repository_directory_path / str(unique_resource_id),
-            content=content,
-            archive_file_format=archive_file_format,
-            name=name if name else str(unique_resource_id),
-            description=description,
-            data=data,
+        return self._create_resource(
+            factory=lambda destination: RepositoryDirectory.create(
+                path=destination,
+                content=content,
+                archive_file_format=archive_file_format,
+                name=name if name else destination.name,
+                description=description,
+                data=data,
+            ),
+            resource_id=resource_id,
         )
-        repository_directory.resource_id = unique_resource_id
-        self._resources[str(repository_directory.resource_id)] = repository_directory
-
-        self.save_repository_metadata()
-
-        return repository_directory
 
     def add_directory(
         self,
@@ -515,34 +493,17 @@ class RepositoryService:
                 disk. The directory has already been moved or copied into the repository
                 by this point, so the resource exists on disk without being recorded.
         """
-        if isinstance(path, str):
-            path = pathlib.Path(path)
-
-        if resource_id is not None:
-            resource_id_str = normalize_uuid(resource_id)
-            if resource_id_str not in self._reserved_resource_ids:
-                raise ResourceIDReservationNotFoundError(resource_id=resource_id_str)
-            self._reserved_resource_ids.discard(resource_id_str)
-            unique_resource_id = uuid.UUID(resource_id_str)
-        else:
-            unique_resource_id = uuid.uuid4()
-
-        dest_path = self.repository_directory_path / str(unique_resource_id)
-
-        repository_directory = RepositoryDirectory.from_existing_path(
-            source_path=path,
-            path=dest_path,
-            copy=copy,
-            name=name,
-            description=description,
-            data=data,
+        return self._create_resource(
+            factory=lambda destination: RepositoryDirectory.from_existing_path(
+                source_path=path,
+                path=destination,
+                copy=copy,
+                name=name,
+                description=description,
+                data=data,
+            ),
+            resource_id=resource_id,
         )
-        repository_directory.resource_id = unique_resource_id
-        self._resources[str(repository_directory.resource_id)] = repository_directory
-
-        self.save_repository_metadata()
-
-        return repository_directory
 
     def update_resource_by_resource_id(
         self,
