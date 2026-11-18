@@ -34,18 +34,18 @@ class ExecCommand(BaseCommand[AnyContext]):
             help="The command to execute in the system shell.",
         )
 
+    def parse_arguments(self, arguments: list[str]) -> argparse.Namespace:
+        parsed_args = super().parse_arguments(arguments)
+        if not parsed_args.shell_command:
+            self.parser.error("the following arguments are required: shell_command")
+        return parsed_args
+
     async def run(
         self,
         context: AnyContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            if not parsed_args.shell_command:
-                self.parser.error("the following arguments are required: shell_command")
+        parsed_args = context.parsed_args
 
-            # shell_command = context.raw_input.split(maxsplit=1)[1]
-            subprocess.run(parsed_args.shell_command, shell=True)
-        except SystemExit:
-            pass
+        subprocess.run(parsed_args.shell_command, shell=True)
 
         return ContinueSignal()

@@ -38,22 +38,19 @@ class ListenerRenameCommand(BaseConnectedCommand):
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            listener = await rest_api.get_listener_by_listener_id(
-                listener_id=parsed_args.listener_id[0],
-            )
-            await rest_api.update_listener_by_listener_id(
-                listener_id=parsed_args.listener_id[0],
-                new_listener_attributes={"name": parsed_args.name[0]},
-            )
-            print_success(
-                f"Renamed listener '{listener['name']}' ({listener['listener_id']}) "
-                f"to '{parsed_args.name[0]}'",
-            )
-        except SystemExit:
-            pass
+        listener = await rest_api.get_listener_by_listener_id(
+            listener_id=parsed_args.listener_id[0],
+        )
+        await rest_api.update_listener_by_listener_id(
+            listener_id=parsed_args.listener_id[0],
+            new_listener_attributes={"name": parsed_args.name[0]},
+        )
+        print_success(
+            f"Renamed listener '{listener['name']}' ({listener['listener_id']}) "
+            f"to '{parsed_args.name[0]}'",
+        )
 
         return ContinueSignal()

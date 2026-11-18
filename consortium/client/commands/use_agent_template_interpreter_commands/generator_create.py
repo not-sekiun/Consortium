@@ -51,42 +51,37 @@ class GeneratorCreateCommand(BaseConnectedCommand):
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
-            agent_template_id = context.interpreter_context.agent_template[
-                "agent_template_id"
-            ]
-            agent_template_options = context.interpreter_context.agent_template[
-                "options"
-            ]
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
+        agent_template_id = context.interpreter_context.agent_template[
+            "agent_template_id"
+        ]
+        agent_template_options = context.interpreter_context.agent_template["options"]
 
-            agent_template_option_values = {}
-            for option_name, option in agent_template_options.items():
-                agent_template_option_values[option_name] = option["value"]
-            # The name and description are sent separately from the option values: they
-            # are the created agent generator's display metadata rather than agent
-            # template options, so an agent template that declares its own option called
-            # `name` or `description` still sets that option through `set` as normal. A
-            # name of `None` means none was given, leaving the server to generate one.
-            agent_generator = await rest_api.create_agent_generator_through_agent_template_by_agent_template_id(
-                agent_template_id=agent_template_id,
-                agent_template_option_values=agent_template_option_values,
-                name=parsed_args.name,
-                description=parsed_args.description,
+        agent_template_option_values = {}
+        for option_name, option in agent_template_options.items():
+            agent_template_option_values[option_name] = option["value"]
+        # The name and description are sent separately from the option values: they
+        # are the created agent generator's display metadata rather than agent
+        # template options, so an agent template that declares its own option called
+        # `name` or `description` still sets that option through `set` as normal. A
+        # name of `None` means none was given, leaving the server to generate one.
+        agent_generator = await rest_api.create_agent_generator_through_agent_template_by_agent_template_id(
+            agent_template_id=agent_template_id,
+            agent_template_option_values=agent_template_option_values,
+            name=parsed_args.name,
+            description=parsed_args.description,
+        )
+        if parsed_args.no_start:
+            print_success(
+                f"Created agent generator: '{agent_generator['name']}' ({agent_generator['agent_generator_id']})",
             )
-            if parsed_args.no_start:
-                print_success(
-                    f"Created agent generator: '{agent_generator['name']}' ({agent_generator['agent_generator_id']})",
-                )
-            else:
-                _ = await rest_api.start_agent_generator_by_agent_generator_id(
-                    agent_generator_id=agent_generator["agent_generator_id"],
-                )
-                print_success(
-                    f"Created and started agent generator: '{agent_generator['name']}' ({agent_generator['agent_generator_id']})",
-                )
-        except SystemExit:
-            pass
+        else:
+            _ = await rest_api.start_agent_generator_by_agent_generator_id(
+                agent_generator_id=agent_generator["agent_generator_id"],
+            )
+            print_success(
+                f"Created and started agent generator: '{agent_generator['name']}' ({agent_generator['agent_generator_id']})",
+            )
 
         return ContinueSignal()

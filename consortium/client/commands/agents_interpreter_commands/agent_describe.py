@@ -37,16 +37,13 @@ class AgentDescribeCommand(BaseConnectedCommand):
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            await describe_agent(
-                rest_api=rest_api,
-                agent_id=parsed_args.agent_id[0],
-                description=parsed_args.description[0],
-            )
-        except SystemExit:
-            pass
+        await describe_agent(
+            rest_api=rest_api,
+            agent_id=parsed_args.agent_id[0],
+            description=parsed_args.description[0],
+        )
 
         return ContinueSignal()

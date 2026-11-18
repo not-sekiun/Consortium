@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 
 from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
-    ContinueSignal,
     InterpreterSignal,
     SwitchInteractAgentInterpreterSignal,
 )
@@ -36,20 +35,15 @@ class AgentInteractCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            agent = await rest_api.get_agent_by_agent_id(
-                parsed_args.agent_id[0],
-            )
-            print_success(
-                f"Interacting with agent: '{agent['name']}' ({agent['agent_id']})"
-            )
-            return SwitchInteractAgentInterpreterSignal(
-                agent=agent,
-            )
-        except SystemExit:
-            pass
-
-        return ContinueSignal()
+        agent = await rest_api.get_agent_by_agent_id(
+            parsed_args.agent_id[0],
+        )
+        print_success(
+            f"Interacting with agent: '{agent['name']}' ({agent['agent_id']})"
+        )
+        return SwitchInteractAgentInterpreterSignal(
+            agent=agent,
+        )

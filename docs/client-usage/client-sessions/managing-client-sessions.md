@@ -41,13 +41,20 @@ connection details:
 
 ```text
 session connect                                      # connect using the default client_config.json
+session connect -u operator                          # override the username from the default configuration file
 session connect -c path/to/client_config.json        # connect using a custom configuration file
-session connect -c -u admin -p admin -rh 127.0.0.1 -rp 9999  # connect with explicit details
+session connect -u admin -p admin -rh 127.0.0.1 -rp 9999  # connect directly, without reading a configuration file
 ```
 
-When a configuration file is supplied, individual flags (`-u`, `-p`, `-rh`, `-rp`)
-override the matching field from the file. Pass `-c` without a path to connect without
-a configuration file; in that case, all four connection details must be provided.
+When only some connection flags (`-u`, `-p`, `-rh`, `-rp`) are supplied, the default
+`data/client/client_config.json` fills in the missing details. Supplied flags override
+the matching fields from the file. When all four flags are supplied, the default file
+is not read, so a manual connection works even if that file is missing or invalid.
+
+The `-c/--config` option requires a path. An explicitly selected file is always read
+and validated, even when all four connection flags are also supplied. Individual flags
+still override its values. A missing or invalid file produces an error identifying the
+file and returns to the prompt.
 
 ## Disconnected mode
 

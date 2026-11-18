@@ -175,10 +175,20 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
             print_error(f"Command '{parsed_command.command}' not found")
             return ContinueSignal()
 
-        return await self.commands[parsed_command.command].run(
+        command = self.commands[parsed_command.command]
+        try:
+            parsed_args = command.parse_arguments(parsed_command.arguments)
+        # `SystemExit` is raised when the argparse parser attempts an exit typically
+        # when displaying the help menu. Since the parser does not run in the context of
+        # a standalone CLI application here, we catch and return
+        except SystemExit:
+            return ContinueSignal()
+
+        return await command.run(
             context=ConnectedContext(
                 command=parsed_command.command,
                 arguments=parsed_command.arguments,
+                parsed_args=parsed_args,
                 raw_input=parsed_command.raw_input,
                 client_session=self.client_session,
                 interpreter_context=self.interpreter_context,
@@ -187,6 +197,7 @@ class _BaseInterpreter[TClientSession: (ClientSession, None)]:
             else DisconnectedContext(
                 command=parsed_command.command,
                 arguments=parsed_command.arguments,
+                parsed_args=parsed_args,
                 raw_input=parsed_command.raw_input,
                 interpreter_context=self.interpreter_context,
             )

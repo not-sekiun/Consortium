@@ -34,50 +34,45 @@ class AgentTemplateUnsetOptionCommand(BaseConnectedCommand):
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
+        parsed_args = context.parsed_args
+        agent_template_options = context.interpreter_context.agent_template["options"]
+        option_name = parsed_args.option_name[0]
+
         try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            agent_template_options = context.interpreter_context.agent_template[
-                "options"
-            ]
-            option_name = parsed_args.option_name[0]
+            option = agent_template_options[option_name]
+        except KeyError:
+            print_error(
+                f"Agent template option not found: '{option_name}'",
+            )
+            return ContinueSignal()
 
-            try:
-                option = agent_template_options[option_name]
-            except KeyError:
-                print_error(
-                    f"Agent template option not found: '{option_name}'",
-                )
-                return ContinueSignal()
-
-            if option["option_type"] == OptionType.LIST_VALUE_OPTION:
-                option["value"] = []
-                print_success(
-                    f"Unset agent template option: '{option_name}'",
-                )
-            elif option["option_type"] == OptionType.DICTIONARY_VALUE_OPTION:
-                option["value"] = {}
-                print_success(
-                    f"Unset agent template option: '{option_name}'",
-                )
-            elif option["option_type"] == OptionType.TOGGLEABLE_CHOICES_VALUE_OPTION:
-                print_error(
-                    f"Agent template option '{option_name}' is of option type "
-                    f"'{option['option_type']}' which cannot be unset",
-                )
-            elif option["option_type"] in (
-                OptionType.SINGLE_VALUE_OPTION,
-                OptionType.CHOICE_VALUE_OPTION,
-            ):
-                option["value"] = None
-                print_success(
-                    f"Unset agent template option: '{option_name}'",
-                )
-            else:
-                raise AssertionError(
-                    f"Unhandled option type '{option['option_type']}' "
-                    f"for agent template option unset",
-                )
-        except SystemExit:
-            pass
+        if option["option_type"] == OptionType.LIST_VALUE_OPTION:
+            option["value"] = []
+            print_success(
+                f"Unset agent template option: '{option_name}'",
+            )
+        elif option["option_type"] == OptionType.DICTIONARY_VALUE_OPTION:
+            option["value"] = {}
+            print_success(
+                f"Unset agent template option: '{option_name}'",
+            )
+        elif option["option_type"] == OptionType.TOGGLEABLE_CHOICES_VALUE_OPTION:
+            print_error(
+                f"Agent template option '{option_name}' is of option type "
+                f"'{option['option_type']}' which cannot be unset",
+            )
+        elif option["option_type"] in (
+            OptionType.SINGLE_VALUE_OPTION,
+            OptionType.CHOICE_VALUE_OPTION,
+        ):
+            option["value"] = None
+            print_success(
+                f"Unset agent template option: '{option_name}'",
+            )
+        else:
+            raise AssertionError(
+                f"Unhandled option type '{option['option_type']}' "
+                f"for agent template option unset",
+            )
 
         return ContinueSignal()

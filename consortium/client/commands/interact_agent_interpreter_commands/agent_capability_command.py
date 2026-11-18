@@ -7,6 +7,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.argparse_actions import ExtendedHelpAction
 from consortium.client.repl_interface.base_command import (
     BaseConnectedCommand,
 )
@@ -331,124 +332,111 @@ def construct_agent_capability_command(
                     "Show this help message and include detailed examples "
                     "for specifying option value types."
                 ),
-                action="store_true",
+                action=ExtendedHelpAction,
+                epilog=format_value_type_specification_with_examples_epilog(
+                    example_prefix=f"{agent_capability['name']} --<option>",
+                ),
             )
 
         async def run(
             self,
             context: ConnectedContext,
         ) -> InterpreterSignal:
-            try:
-                # Bypass allowing argparse to parse for the --help-full flag
-                # because if a required argument is not provided, argparse
-                # will ignore --help-full.
-                if "--help-full" in context.arguments:
-                    self.parser.epilog = (
-                        format_value_type_specification_with_examples_epilog(
-                            example_prefix=f"{agent_capability['name']} --<option>"
-                        )
-                    )
-                    self.parser.print_help()
-                    self.parser.epilog = self.epilog  # Reset epilog
-                    return ContinueSignal()
+            parsed_args = context.parsed_args
+            client_rest_api_connection = context.client_session.rest_api
 
-                parsed_args = self.parser.parse_args(context.arguments)
-                client_rest_api_connection = context.client_session.rest_api
+            options = agent_capability["options"]
+            arguments = {}
+            value_type_flag = getattr(parsed_args, "value_type", None)
 
-                options = agent_capability["options"]
-                arguments = {}
-                value_type_flag = getattr(parsed_args, "value_type", None)
+            for original_name, option in options.items():
+                # Get the normalized name for this option
+                normalized_name = self._original_to_normalized_name_map.get(
+                    original_name
+                )
+                if normalized_name is None:
+                    continue
 
-                for original_name, option in options.items():
-                    # Get the normalized name for this option
-                    normalized_name = self._original_to_normalized_name_map.get(
-                        original_name
-                    )
-                    if normalized_name is None:
+                # Get the value(s) from parsed args using normalized (`parsed_args`
+                # attribute) name
+                option_value = getattr(parsed_args, normalized_name, None)
+
+                # Check if the option is a toggleable flag
+                if original_name in self._flag_toggle_option_names:
+                    arguments[original_name] = bool(option_value)
+                    continue
+
+                # Skip if no value was provided (None means flag wasn't used)
+                if option_value is None:
+                    continue
+
+                # Handle empty list case
+                if isinstance(option_value, list) and len(option_value) == 0:
+                    # For positional multi-value arguments, an empty list is valid
+                    # (it means no values were provided, which is allowed for nargs="*")
+                    if original_name in self._positional_option_names:
+                        # Pass empty list for positional multi-value options
+                        arguments[original_name] = []
+                        continue
+                    else:
+                        # For flagged arguments with empty list, use default if available
+                        if option.get("default_value") is not None:
+                            arguments[original_name] = option["default_value"]
                         continue
 
-                    # Get the value(s) from parsed args using normalized (`parsed_args`
-                    # attribute) name
-                    option_value = getattr(parsed_args, normalized_name, None)
+                # For single value options where argparse already converted the type
+                # and no value-type flag was specified, use the value directly
+                if (
+                    _is_single_value_option(option)
+                    and value_type_flag is None
+                    and option.get("value_type") in ("int", "float")
+                    and not isinstance(option_value, str)
+                    and not isinstance(option_value, list)
+                ):
+                    arguments[original_name] = option_value
+                    continue
 
-                    # Check if the option is a toggleable flag
-                    if original_name in self._flag_toggle_option_names:
-                        arguments[original_name] = bool(option_value)
-                        continue
-
-                    # Skip if no value was provided (None means flag wasn't used)
-                    if option_value is None:
-                        continue
-
-                    # Handle empty list case
-                    if isinstance(option_value, list) and len(option_value) == 0:
-                        # For positional multi-value arguments, an empty list is valid
-                        # (it means no values were provided, which is allowed for nargs="*")
-                        if original_name in self._positional_option_names:
-                            # Pass empty list for positional multi-value options
-                            arguments[original_name] = []
-                            continue
-                        else:
-                            # For flagged arguments with empty list, use default if available
-                            if option.get("default_value") is not None:
-                                arguments[original_name] = option["default_value"]
-                            continue
-
-                    # For single value options where argparse already converted the type
-                    # and no value-type flag was specified, use the value directly
+                # Handle list from positional with nargs=1
+                if isinstance(option_value, list) and len(option_value) == 1:
                     if (
                         _is_single_value_option(option)
                         and value_type_flag is None
                         and option.get("value_type") in ("int", "float")
-                        and not isinstance(option_value, str)
-                        and not isinstance(option_value, list)
+                        and not isinstance(option_value[0], str)
                     ):
-                        arguments[original_name] = option_value
+                        arguments[original_name] = option_value[0]
                         continue
 
-                    # Handle list from positional with nargs=1
-                    if isinstance(option_value, list) and len(option_value) == 1:
-                        if (
-                            _is_single_value_option(option)
-                            and value_type_flag is None
-                            and option.get("value_type") in ("int", "float")
-                            and not isinstance(option_value[0], str)
-                        ):
-                            arguments[original_name] = option_value[0]
-                            continue
+                # Convert to list of strings for options_utils processing
+                if isinstance(option_value, list):
+                    value_strings = [str(v) for v in option_value]
+                else:
+                    value_strings = [str(option_value)]
 
-                    # Convert to list of strings for options_utils processing
-                    if isinstance(option_value, list):
-                        value_strings = [str(v) for v in option_value]
-                    else:
-                        value_strings = [str(option_value)]
-
-                    try:
-                        _parameter_name, parameter_value = (
-                            convert_option_value_strings_to_option_value(
-                                option_json_data=option,
-                                value_strings=value_strings,
-                                value_type_flag=value_type_flag,
-                            )
+                try:
+                    _parameter_name, parameter_value = (
+                        convert_option_value_strings_to_option_value(
+                            option_json_data=option,
+                            value_strings=value_strings,
+                            value_type_flag=value_type_flag,
                         )
-                        # Use original name for the arguments dict
-                        arguments[original_name] = parameter_value
-                    except ValueError as exc:
-                        print_error(str(exc))
-                        return ContinueSignal()
+                    )
+                    # Use original name for the arguments dict
+                    arguments[original_name] = parameter_value
+                except ValueError as exc:
+                    print_error(str(exc))
+                    return ContinueSignal()
 
-                task = await client_rest_api_connection.task_agent_by_agent_id(
-                    agent_id=context.interpreter_context.agent["agent_id"],
-                    command=self.name,
-                    arguments=arguments,
-                )
-                print_info(
-                    f"Tasked agent '{context.interpreter_context.agent['name']}' "
-                    f"({context.interpreter_context.agent['agent_id']}) with task "
-                    f"'{task['command']}' ({task['task_id']}).",
-                )
-            except SystemExit:
-                pass
+            task = await client_rest_api_connection.task_agent_by_agent_id(
+                agent_id=context.interpreter_context.agent["agent_id"],
+                command=self.name,
+                arguments=arguments,
+            )
+            print_info(
+                f"Tasked agent '{context.interpreter_context.agent['name']}' "
+                f"({context.interpreter_context.agent['agent_id']}) with task "
+                f"'{task['command']}' ({task['task_id']}).",
+            )
 
             return ContinueSignal()
 

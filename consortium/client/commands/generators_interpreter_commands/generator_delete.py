@@ -33,23 +33,20 @@ class GeneratorDeleteCommand(BaseConnectedCommand):
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            # If agent generator does not exist, a RESTAPIError is raised and caught by
-            # the outer try-except block
-            agent_generator = await rest_api.get_agent_generator_by_agent_generator_id(
-                parsed_args.agent_generator_id[0],
-            )
-            _ = await rest_api.delete_agent_generator_by_agent_generator_id(
-                agent_generator_id=parsed_args.agent_generator_id[0],
-            )
-            print_success(
-                f"Deleted agent generator: '{agent_generator['name']}' "
-                f"({agent_generator['agent_generator_id']})",
-            )
-        except SystemExit:
-            pass
+        # If agent generator does not exist, a RESTAPIError is raised and caught by
+        # the outer try-except block
+        agent_generator = await rest_api.get_agent_generator_by_agent_generator_id(
+            parsed_args.agent_generator_id[0],
+        )
+        _ = await rest_api.delete_agent_generator_by_agent_generator_id(
+            agent_generator_id=parsed_args.agent_generator_id[0],
+        )
+        print_success(
+            f"Deleted agent generator: '{agent_generator['name']}' "
+            f"({agent_generator['agent_generator_id']})",
+        )
 
         return ContinueSignal()

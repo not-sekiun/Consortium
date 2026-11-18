@@ -39,34 +39,29 @@ class ListenerTemplateUseCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
-            current_listener_template = context.interpreter_context.listener_template
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
+        current_listener_template = context.interpreter_context.listener_template
 
-            if (
-                parsed_args.listener_template_id[0]
-                == current_listener_template["listener_template_id"]
-            ):
-                print_error(
-                    f"Already using listener template: '{current_listener_template['name']}' "
-                    f"({current_listener_template['listener_template_id']})",
-                )
-                return ContinueSignal()
+        if (
+            parsed_args.listener_template_id[0]
+            == current_listener_template["listener_template_id"]
+        ):
+            print_error(
+                f"Already using listener template: '{current_listener_template['name']}' "
+                f"({current_listener_template['listener_template_id']})",
+            )
+            return ContinueSignal()
 
-            listener_template = (
-                await rest_api.get_listener_template_by_listener_template_id(
-                    parsed_args.listener_template_id[0],
-                )
+        listener_template = (
+            await rest_api.get_listener_template_by_listener_template_id(
+                parsed_args.listener_template_id[0],
             )
-            print_info(
-                f"Using listener template: '{listener_template['name']}' "
-                f"({listener_template['listener_template_id']})",
-            )
-            return SwitchUseListenerTemplateInterpreterSignal(
-                listener_template=listener_template
-            )
-        except SystemExit:
-            pass
-
-        return ContinueSignal()
+        )
+        print_info(
+            f"Using listener template: '{listener_template['name']}' "
+            f"({listener_template['listener_template_id']})",
+        )
+        return SwitchUseListenerTemplateInterpreterSignal(
+            listener_template=listener_template
+        )

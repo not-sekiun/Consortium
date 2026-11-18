@@ -27,14 +27,10 @@ class GeneratorListCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            _ = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        rest_api = context.client_session.rest_api
 
-            display_all_agent_generators(
-                all_agent_generators=await rest_api.get_all_agent_generators()
-            )
-        except SystemExit:
-            pass
+        display_all_agent_generators(
+            all_agent_generators=await rest_api.get_all_agent_generators()
+        )
 
         return ContinueSignal()

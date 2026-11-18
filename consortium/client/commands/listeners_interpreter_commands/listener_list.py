@@ -25,12 +25,8 @@ class ListenerListCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            _ = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        rest_api = context.client_session.rest_api
 
-            display_all_listeners(all_listeners=await rest_api.get_all_listeners())
-        except SystemExit:
-            pass
+        display_all_listeners(all_listeners=await rest_api.get_all_listeners())
 
         return ContinueSignal()

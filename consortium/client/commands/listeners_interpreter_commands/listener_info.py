@@ -71,83 +71,80 @@ class ListenerInfoCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            listener = await rest_api.get_listener_by_listener_id(
-                parsed_args.listener_id[0],
-                limit=parsed_args.limit,
-                offset=parsed_args.offset,
-            )
-            table = Table(title="Listener Information", highlight=True)
-            table.add_column("Information")
-            table.add_column("Data")
-            table.add_row(
-                "Listener ID",
-                listener["listener_id"],
-            )
-            table.add_row("Name", listener["name"])
-            table.add_row("Description", listener["description"])
-            table.add_row("Endpoint", listener["endpoint"])
-            table.add_row(
-                "Listener Type",
-                listener["listener_type"]["name"],
-            )
-            # Imprecise wording for this row but improves UX by hiding technical
-            # implementation details
-            table.add_row(
-                "Compatible Agent Types",
-                format_list_as_multi_line_bulleted_string(
-                    input_list=listener["listener_type"][
-                        "registered_compatible_agent_types"
-                    ]
-                ),
-            )
-            table.add_row(
-                "Status",
-                format_listener_state_string_with_color(listener["status"]["state"])
-                + (
-                    "(" + listener["status"]["error"]["message"] + ")"
-                    if listener["status"]["error"]
-                    else ""
-                ),
-            )
-            table.add_row(
-                "Parameters",
-                format_dict_as_multi_line_key_value_string(
-                    input_dict=listener["parameters"]
-                ),
-            )
-            table.add_row(
-                "Datetime Created",
-                format_datetime_as_human_readable_str(
-                    datetime_str=listener["datetime_created"], include_elapsed_time=True
-                ),
-            )
-            table.add_row(
-                "Connected Agents",
-                format_list_as_multi_line_bulleted_string(
-                    input_list=[
-                        f"'{agent['name']}' ({agent['agent_id']})"
-                        for agent in listener["connected_agents"]
-                    ],
-                ),
-            )
-            table.add_row(
-                "Creating Listener Template",
-                f"'{listener['creating_listener_template']['name']}' "
-                f"({listener['creating_listener_template']['listener_template_id']})",
-            )
+        listener = await rest_api.get_listener_by_listener_id(
+            parsed_args.listener_id[0],
+            limit=parsed_args.limit,
+            offset=parsed_args.offset,
+        )
+        table = Table(title="Listener Information", highlight=True)
+        table.add_column("Information")
+        table.add_column("Data")
+        table.add_row(
+            "Listener ID",
+            listener["listener_id"],
+        )
+        table.add_row("Name", listener["name"])
+        table.add_row("Description", listener["description"])
+        table.add_row("Endpoint", listener["endpoint"])
+        table.add_row(
+            "Listener Type",
+            listener["listener_type"]["name"],
+        )
+        # Imprecise wording for this row but improves UX by hiding technical
+        # implementation details
+        table.add_row(
+            "Compatible Agent Types",
+            format_list_as_multi_line_bulleted_string(
+                input_list=listener["listener_type"][
+                    "registered_compatible_agent_types"
+                ]
+            ),
+        )
+        table.add_row(
+            "Status",
+            format_listener_state_string_with_color(listener["status"]["state"])
+            + (
+                "(" + listener["status"]["error"]["message"] + ")"
+                if listener["status"]["error"]
+                else ""
+            ),
+        )
+        table.add_row(
+            "Parameters",
+            format_dict_as_multi_line_key_value_string(
+                input_dict=listener["parameters"]
+            ),
+        )
+        table.add_row(
+            "Datetime Created",
+            format_datetime_as_human_readable_str(
+                datetime_str=listener["datetime_created"], include_elapsed_time=True
+            ),
+        )
+        table.add_row(
+            "Connected Agents",
+            format_list_as_multi_line_bulleted_string(
+                input_list=[
+                    f"'{agent['name']}' ({agent['agent_id']})"
+                    for agent in listener["connected_agents"]
+                ],
+            ),
+        )
+        table.add_row(
+            "Creating Listener Template",
+            f"'{listener['creating_listener_template']['name']}' "
+            f"({listener['creating_listener_template']['listener_template_id']})",
+        )
 
-            event_log_table = create_event_log_table(
-                event_log=listener["event_log"],
-                title="Listener Event Log",
-            )
+        event_log_table = create_event_log_table(
+            event_log=listener["event_log"],
+            title="Listener Event Log",
+        )
 
-            console.print(table, "")
-            console.print(event_log_table, "")
-        except SystemExit:
-            pass
+        console.print(table, "")
+        console.print(event_log_table, "")
 
         return ContinueSignal()

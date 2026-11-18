@@ -1,6 +1,6 @@
 import inspect
 from abc import ABC, abstractmethod
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
 
 from consortium.client.models.context_models import (
     AnyContext,
@@ -53,6 +53,9 @@ class BaseCommand[
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         return None
+
+    def parse_arguments(self, arguments: list[str]) -> Namespace:
+        return self.parser.parse_args(arguments)
 
     @abstractmethod
     async def run(self, context: TContext) -> InterpreterSignal: ...

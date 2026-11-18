@@ -155,14 +155,10 @@ class BannerCommand(BaseCommand[AnyContext]):
         self,
         context: AnyContext,
     ) -> InterpreterSignal:
-        try:
-            _ = self.parser.parse_args(context.arguments)
-            await self._display_banner(
-                rest_api=context.client_session.rest_api
-                if isinstance(context, ConnectedContext)
-                else None
-            )
-        except SystemExit:
-            pass
+        await self._display_banner(
+            rest_api=context.client_session.rest_api
+            if isinstance(context, ConnectedContext)
+            else None
+        )
 
         return ContinueSignal()

@@ -151,11 +151,14 @@ class Client:
     async def _display_startup_banner(
         self, client_session: ClientSession | None
     ) -> None:
+        command = BannerCommand()
+        parsed_args = command.parse_arguments([])
         if client_session is None:
-            await BannerCommand().run(
+            await command.run(
                 context=DisconnectedContext(
                     command="banner",
                     arguments=[],
+                    parsed_args=parsed_args,
                     raw_input="banner",
                     interpreter_context=BaseInterpreterContext(
                         aliases=self._aliases,
@@ -164,10 +167,11 @@ class Client:
                 ),
             )
         else:
-            await BannerCommand().run(
+            await command.run(
                 context=ConnectedContext(
                     command="banner",
                     arguments=[],
+                    parsed_args=parsed_args,
                     raw_input="banner",
                     client_session=client_session,
                     interpreter_context=BaseInterpreterContext(

@@ -42,23 +42,20 @@ class RcCommand(BaseCommand[AnyContext]):
         self,
         context: AnyContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            resource_file = parsed_args.resource_file
+        parsed_args = context.parsed_args
+        resource_file = parsed_args.resource_file
 
-            try:
-                with open(resource_file) as f:
-                    commands = [
-                        line
-                        for line in f.read().splitlines()
-                        if line and not line.startswith("#")
-                    ]
-                    for command in commands:
-                        context.interpreter_context.resource_commands.append(command)
-                    print_info(f"Loaded resource file: {resource_file}")
-            except OSError as exc:
-                print_error(f"Failed to read resource file '{resource_file}'.", exc=exc)
-        except SystemExit:
-            pass
+        try:
+            with open(resource_file) as f:
+                commands = [
+                    line
+                    for line in f.read().splitlines()
+                    if line and not line.startswith("#")
+                ]
+                for command in commands:
+                    context.interpreter_context.resource_commands.append(command)
+                print_info(f"Loaded resource file: {resource_file}")
+        except OSError as exc:
+            print_error(f"Failed to read resource file '{resource_file}'.", exc=exc)
 
         return ContinueSignal()

@@ -33,22 +33,19 @@ class ListenerCancelCommand(BaseConnectedCommand):
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            # If listener does not exist, a RESTAPIError is raised and caught by the
-            # outer try-except block
-            listener = await rest_api.get_listener_by_listener_id(
-                parsed_args.listener_id[0],
-            )
-            _ = await rest_api.cancel_listener_by_listener_id(
-                listener_id=parsed_args.listener_id[0],
-            )
-            print_success(
-                f"Cancelled listener: '{listener['name']}' ({listener['listener_id']})",
-            )
-        except SystemExit:
-            pass
+        # If listener does not exist, a RESTAPIError is raised and caught by the
+        # outer try-except block
+        listener = await rest_api.get_listener_by_listener_id(
+            parsed_args.listener_id[0],
+        )
+        _ = await rest_api.cancel_listener_by_listener_id(
+            listener_id=parsed_args.listener_id[0],
+        )
+        print_success(
+            f"Cancelled listener: '{listener['name']}' ({listener['listener_id']})",
+        )
 
         return ContinueSignal()

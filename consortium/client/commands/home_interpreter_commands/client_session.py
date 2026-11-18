@@ -142,10 +142,7 @@ class SessionCommand(BaseCommand[AnyContext]):
             help="Available sub-commands", dest="sub_command", required=True
         )
 
-        # connect sub-command. Held onto so that the custom checking of its arguments
-        # can be reported against the sub-parser they were declared on rather than
-        # against the `session` parser itself.
-        self.connect_parser = subparsers.add_parser(
+        parser_connect = subparsers.add_parser(
             "connect",
             help="Connect to a Consortium server, creating a new client session.",
             formatter_class=RawDescriptionHelpFormatter,
@@ -154,36 +151,41 @@ class SessionCommand(BaseCommand[AnyContext]):
                 Examples:
                   session connect  # Connect using the default filepath to the client configuration file.
                   session connect -c path/to/client_config.json  # Connect using a custom configuration file.
+                  session connect -u username  # Override the username from the default configuration file.
                   session connect -u username -p password -rh server.com -rp 1234  # Connect through manually provided connection details.
+
+                Connection flags override values from the configuration file. When all
+                four connection flags are supplied, the default configuration file is
+                not read. An explicitly selected configuration file is always read.
                 """,
             ),
         )
-        self.connect_parser.add_argument(
+        parser_connect.add_argument(
             "-c",
             "--config",
             help=(
                 "Filepath of the client configuration file to use when connecting to a "
-                "server. By default the configuration file from "
-                "`data/client/client_config.json` is used."
+                "server. If omitted, `data/client/client_config.json` fills in any "
+                "missing connection details."
             ),
-            nargs="?",
-            default=str(CLIENT_CONFIG_JSON_FILE),
+            default=None,
+            metavar="PATH",
         )
-        self.connect_parser.add_argument(
+        parser_connect.add_argument(
             "-rh",
             "--remote-host",
             help="Remote host of the Consortium server to connect to.",
         )
-        self.connect_parser.add_argument(
+        parser_connect.add_argument(
             "-rp",
             "--remote-port",
             help="Remote port of the Consortium server to connect to.",
             type=int,
         )
-        self.connect_parser.add_argument(
+        parser_connect.add_argument(
             "-u", "--username", help="Username of the account to login as."
         )
-        self.connect_parser.add_argument(
+        parser_connect.add_argument(
             "-p", "--password", help="Password of the account to login with."
         )
 
@@ -316,23 +318,20 @@ class SessionCommand(BaseCommand[AnyContext]):
         self,
         parsed_args: Namespace,
     ) -> InterpreterSignal:
-        # Perform custom checking of arguments to ensure that if a config file is not
-        # passed then all of the connection details must be provided.
-        if not parsed_args.config and not all(
-            [
-                parsed_args.remote_host,
-                parsed_args.remote_port,
-                parsed_args.username,
-                parsed_args.password,
-            ],
+        connection_details = {
+            "remote_host": parsed_args.remote_host,
+            "remote_port": parsed_args.remote_port,
+            "username": parsed_args.username,
+            "password": parsed_args.password,
+        }
+        config_path = parsed_args.config
+        if config_path is None and any(
+            value is None for value in connection_details.values()
         ):
-            self.connect_parser.error(
-                "All of -rh/--remote-host, -rp/--remote-port, -u/--username, and "
-                "-p/--password must be provided if the client configuration file "
-                "is not provided.",
-            )
+            config_path = CLIENT_CONFIG_JSON_FILE
 
-        if parsed_args.config:
+        config_data = {}
+        if config_path is not None:
             client_config_file_json_schema = {
                 "type": "object",
                 "properties": {
@@ -346,65 +345,65 @@ class SessionCommand(BaseCommand[AnyContext]):
             }
 
             try:
-                with open(parsed_args.config) as file:
+                with open(config_path) as file:
                     config_data = json.load(fp=file)
                 jsonschema.validate(config_data, client_config_file_json_schema)
             except FileNotFoundError, IsADirectoryError:
                 print_error(
-                    f"Failed to read the provided client configuration file "
-                    f"'{parsed_args.config}'. The file path supplied was not "
+                    f"Failed to read the client configuration file "
+                    f"'{config_path}'. The file path supplied was not "
                     f"found.",
                 )
                 return ContinueSignal()
             except PermissionError:
                 print_error(
-                    f"Failed to read the provided client configuration file "
-                    f"'{parsed_args.config}'. Insufficient permissions to read the "
+                    f"Failed to read the client configuration file "
+                    f"'{config_path}'. Insufficient permissions to read the "
                     f"file.",
                 )
                 return ContinueSignal()
             except json.decoder.JSONDecodeError:
                 print_error(
-                    f"Failed to read the provided client configuration file "
-                    f"'{parsed_args.config}'. The configuration file does not "
+                    f"Failed to read the client configuration file "
+                    f"'{config_path}'. The configuration file does not "
                     f"contain valid JSON data"
                 )
                 return ContinueSignal()
             except jsonschema.ValidationError as exc:
                 print_error(
-                    f"Failed to read the provided client configuration file "
-                    f"'{parsed_args.config}'. The configuration file's JSON data "
+                    f"Failed to read the client configuration file "
+                    f"'{config_path}'. The configuration file's JSON data "
                     f"does not conform to the expected JSON schema: {exc}",
                 )
                 return ContinueSignal()
 
-            username = parsed_args.username or config_data["username"]
-            password = parsed_args.password or config_data["password"]
-            remote_host = parsed_args.remote_host or config_data["remote_host"]
-            remote_port = parsed_args.remote_port or config_data["remote_port"]
-        else:
-            username = parsed_args.username
-            password = parsed_args.password
-            remote_host = parsed_args.remote_host
-            remote_port = parsed_args.remote_port
+        connection_details = {
+            name: value if value is not None else config_data.get(name)
+            for name, value in connection_details.items()
+        }
+        missing_fields = [
+            name
+            for name, value in connection_details.items()
+            if value is None or value == ""
+        ]
+        if missing_fields:
+            print_error(f"Missing connection details: {', '.join(missing_fields)}.")
+            return ContinueSignal()
 
         try:
-            client_session = await self._connect(
-                username=username,
-                password=password,
-                remote_host=remote_host,
-                remote_port=remote_port,
-            )
+            client_session = await self._connect(**connection_details)
         except BaseClientSessionError as exc:
             print_error(
                 f"Failed to login to server at "
-                f"{remote_host}:{remote_port} as '{username}'.",
+                f"{connection_details['remote_host']}:"
+                f"{connection_details['remote_port']} as '{connection_details['username']}'.",
                 exc=exc,
             )
             return ContinueSignal()
 
         print_success(
-            f"Connected to server {remote_host}:{remote_port} as '{username}'"
+            f"Connected to server {connection_details['remote_host']}:"
+            f"{connection_details['remote_port']} as '{connection_details['username']}'"
         )
         print_info(f"New client session created: {client_session}")
 
@@ -511,46 +510,41 @@ class SessionCommand(BaseCommand[AnyContext]):
         self,
         context: AnyContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
+        parsed_args = context.parsed_args
 
-            match parsed_args.sub_command:
-                case "connect":
-                    return await self._handle_connect_sub_command(
-                        parsed_args=parsed_args,
-                    )
-                case "disconnect":
-                    return await self._handle_disconnect_sub_command(
-                        parsed_args=parsed_args,
-                        context=context,
-                    )
-                case "info":
-                    return await self._handle_info_sub_command(
-                        parsed_args=parsed_args,
-                        context=context,
-                    )
-                case "interact":
-                    return await self._handle_interact_sub_command(
-                        parsed_args=parsed_args,
-                        context=context,
-                    )
-                case "list":
-                    return await self._handle_list_sub_command()
-                case "describe":
-                    return await self._handle_describe_sub_command(
-                        parsed_args=parsed_args,
-                        context=context,
-                    )
-                case "rename":
-                    return await self._handle_rename_sub_command(
-                        parsed_args=parsed_args,
-                        context=context,
-                    )
-                case _:
-                    raise AssertionError(
-                        f"Unknown session sub-command '{parsed_args.sub_command}'",
-                    )
-        except SystemExit:
-            pass
-
-        return ContinueSignal()
+        match parsed_args.sub_command:
+            case "connect":
+                return await self._handle_connect_sub_command(
+                    parsed_args=parsed_args,
+                )
+            case "disconnect":
+                return await self._handle_disconnect_sub_command(
+                    parsed_args=parsed_args,
+                    context=context,
+                )
+            case "info":
+                return await self._handle_info_sub_command(
+                    parsed_args=parsed_args,
+                    context=context,
+                )
+            case "interact":
+                return await self._handle_interact_sub_command(
+                    parsed_args=parsed_args,
+                    context=context,
+                )
+            case "list":
+                return await self._handle_list_sub_command()
+            case "describe":
+                return await self._handle_describe_sub_command(
+                    parsed_args=parsed_args,
+                    context=context,
+                )
+            case "rename":
+                return await self._handle_rename_sub_command(
+                    parsed_args=parsed_args,
+                    context=context,
+                )
+            case _:
+                raise AssertionError(
+                    f"Unknown session sub-command '{parsed_args.sub_command}'",
+                )

@@ -23,12 +23,8 @@ class AgentListCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            _ = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        rest_api = context.client_session.rest_api
 
-            display_all_agents(all_agents=await rest_api.get_all_agents())
-        except SystemExit:
-            pass
+        display_all_agents(all_agents=await rest_api.get_all_agents())
 
         return ContinueSignal()

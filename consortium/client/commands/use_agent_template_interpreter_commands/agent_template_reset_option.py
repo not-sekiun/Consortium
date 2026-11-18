@@ -34,26 +34,21 @@ class AgentTemplateResetOptionCommand(BaseConnectedCommand):
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
+        parsed_args = context.parsed_args
+        agent_template_options = context.interpreter_context.agent_template["options"]
+        option_name = parsed_args.option_name[0]
+
         try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            agent_template_options = context.interpreter_context.agent_template[
-                "options"
-            ]
-            option_name = parsed_args.option_name[0]
-
-            try:
-                option = agent_template_options[option_name]
-            except KeyError:
-                print_error(
-                    f"Agent template option not found: '{option_name}'",
-                )
-                return ContinueSignal()
-
-            option["value"] = copy.deepcopy(option["default_value"])
-            print_success(
-                f"Reset agent template option '{option_name}' to its default value '{option['value']}'",
+            option = agent_template_options[option_name]
+        except KeyError:
+            print_error(
+                f"Agent template option not found: '{option_name}'",
             )
-        except SystemExit:
-            pass
+            return ContinueSignal()
+
+        option["value"] = copy.deepcopy(option["default_value"])
+        print_success(
+            f"Reset agent template option '{option_name}' to its default value '{option['value']}'",
+        )
 
         return ContinueSignal()

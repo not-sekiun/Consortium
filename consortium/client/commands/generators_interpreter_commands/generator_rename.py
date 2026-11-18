@@ -38,22 +38,19 @@ class GeneratorRenameCommand(BaseConnectedCommand):
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            agent_generator = await rest_api.get_agent_generator_by_agent_generator_id(
-                agent_generator_id=parsed_args.agent_generator_id[0],
-            )
-            await rest_api.update_agent_generator_by_agent_generator_id(
-                agent_generator_id=parsed_args.agent_generator_id[0],
-                new_agent_generator_attributes={"name": parsed_args.name[0]},
-            )
-            print_success(
-                f"Renamed agent generator '{agent_generator['name']}' ({agent_generator['agent_generator_id']}) "
-                f"to '{parsed_args.name[0]}'",
-            )
-        except SystemExit:
-            pass
+        agent_generator = await rest_api.get_agent_generator_by_agent_generator_id(
+            agent_generator_id=parsed_args.agent_generator_id[0],
+        )
+        await rest_api.update_agent_generator_by_agent_generator_id(
+            agent_generator_id=parsed_args.agent_generator_id[0],
+            new_agent_generator_attributes={"name": parsed_args.name[0]},
+        )
+        print_success(
+            f"Renamed agent generator '{agent_generator['name']}' ({agent_generator['agent_generator_id']}) "
+            f"to '{parsed_args.name[0]}'",
+        )
 
         return ContinueSignal()

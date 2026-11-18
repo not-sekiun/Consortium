@@ -37,32 +37,27 @@ class AgentTemplateUseCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
-            current_agent_template = context.interpreter_context.agent_template
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
+        current_agent_template = context.interpreter_context.agent_template
 
-            if (
-                parsed_args.agent_template_id[0]
-                == current_agent_template["agent_template_id"]
-            ):
-                print_error(
-                    f"Already using agent template: '{current_agent_template['name']}' "
-                    f"({current_agent_template['agent_template_id']})",
-                )
-                return ContinueSignal()
+        if (
+            parsed_args.agent_template_id[0]
+            == current_agent_template["agent_template_id"]
+        ):
+            print_error(
+                f"Already using agent template: '{current_agent_template['name']}' "
+                f"({current_agent_template['agent_template_id']})",
+            )
+            return ContinueSignal()
 
-            agent_template = await rest_api.get_agent_template_by_agent_template_id(
-                parsed_args.agent_template_id[0],
-            )
-            print_info(
-                f"Using agent template: '{agent_template['name']}' "
-                f"({agent_template['agent_template_id']})",
-            )
-            return SwitchUseAgentTemplateInterpreterSignal(
-                agent_template=agent_template,
-            )
-        except SystemExit:
-            pass
-
-        return ContinueSignal()
+        agent_template = await rest_api.get_agent_template_by_agent_template_id(
+            parsed_args.agent_template_id[0],
+        )
+        print_info(
+            f"Using agent template: '{agent_template['name']}' "
+            f"({agent_template['agent_template_id']})",
+        )
+        return SwitchUseAgentTemplateInterpreterSignal(
+            agent_template=agent_template,
+        )

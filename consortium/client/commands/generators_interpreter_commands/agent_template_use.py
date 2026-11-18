@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 
 from consortium.client.models.context_models import ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
-    ContinueSignal,
     InterpreterSignal,
     SwitchUseAgentTemplateInterpreterSignal,
 )
@@ -37,21 +36,16 @@ class AgentTemplateUseCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            agent_template = await rest_api.get_agent_template_by_agent_template_id(
-                agent_template_id=parsed_args.agent_template_id[0],
-            )
-            print_info(
-                f"Using agent template: '{agent_template['name']}' "
-                f"({agent_template['agent_template_id']})",
-            )
-            return SwitchUseAgentTemplateInterpreterSignal(
-                agent_template=agent_template,
-            )
-        except SystemExit:
-            pass
-
-        return ContinueSignal()
+        agent_template = await rest_api.get_agent_template_by_agent_template_id(
+            agent_template_id=parsed_args.agent_template_id[0],
+        )
+        print_info(
+            f"Using agent template: '{agent_template['name']}' "
+            f"({agent_template['agent_template_id']})",
+        )
+        return SwitchUseAgentTemplateInterpreterSignal(
+            agent_template=agent_template,
+        )

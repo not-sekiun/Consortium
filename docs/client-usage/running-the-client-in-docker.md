@@ -163,6 +163,9 @@ host's real address rather than loopback:
 session connect -rh 192.168.1.10 -rp 9999 -u admin -p admin
 ```
 
+Supplying all four connection flags connects directly without reading the default
+client configuration file.
+
 Reaching servers elsewhere on the network works normally. See
 [Managing Client Sessions](client-sessions/managing-client-sessions.md).
 

@@ -157,26 +157,17 @@ class AliasCommand(BaseCommand[AnyContext]):
         self,
         context: AnyContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
+        parsed_args = context.parsed_args
 
-            if parsed_args.sub_command == "list":
-                return self._handle_list_sub_command(
-                    context.interpreter_context.aliases
-                )
-            elif parsed_args.sub_command == "set":
-                return self._handle_set_sub_command(
-                    parsed_args, context.interpreter_context.aliases
-                )
-            elif parsed_args.sub_command == "unset":
-                return self._handle_unset_sub_command(
-                    parsed_args, context.interpreter_context.aliases
-                )
-            else:
-                raise AssertionError(
-                    f"Unknown alias sub-command {parsed_args.sub_command}"
-                )
-        except SystemExit:
-            pass
-
-        return ContinueSignal()
+        if parsed_args.sub_command == "list":
+            return self._handle_list_sub_command(context.interpreter_context.aliases)
+        elif parsed_args.sub_command == "set":
+            return self._handle_set_sub_command(
+                parsed_args, context.interpreter_context.aliases
+            )
+        elif parsed_args.sub_command == "unset":
+            return self._handle_unset_sub_command(
+                parsed_args, context.interpreter_context.aliases
+            )
+        else:
+            raise AssertionError(f"Unknown alias sub-command {parsed_args.sub_command}")

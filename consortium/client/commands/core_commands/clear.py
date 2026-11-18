@@ -27,18 +27,14 @@ class ClearCommand(BaseCommand[AnyContext]):
         self,
         context: AnyContext,
     ) -> InterpreterSignal:
-        try:
-            _ = self.parser.parse_args(context.arguments)
-            if platform.system() == "Windows":
-                subprocess.run("cls", shell=True)
-            # platform.system() returns "Darwin" for macOS and "Linux" for nix systems.
-            elif platform.system() in ["Darwin", "Linux"]:
-                subprocess.run("clear", shell=True)
-            else:
-                print_error(
-                    "Cannot clear terminal screen on unsupported operating system",
-                )
-        except SystemExit:
-            pass
+        if platform.system() == "Windows":
+            subprocess.run("cls", shell=True)
+        # platform.system() returns "Darwin" for macOS and "Linux" for nix systems.
+        elif platform.system() in ["Darwin", "Linux"]:
+            subprocess.run("clear", shell=True)
+        else:
+            print_error(
+                "Cannot clear terminal screen on unsupported operating system",
+            )
 
         return ContinueSignal()

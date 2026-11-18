@@ -36,39 +36,35 @@ class AgentDeleteCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            # If the agent does not exist, a RestAPIError is raised and caught by the
-            # outer try-except block.
-            agent = await rest_api.get_agent_by_agent_id(parsed_args.agent_id[0])
+        # If the agent does not exist, a RestAPIError is raised and caught by the
+        # outer try-except block.
+        agent = await rest_api.get_agent_by_agent_id(parsed_args.agent_id[0])
 
-            # Deleting an active agent removes an agent that is still checking in, so
-            # warn the operator and require an explicit confirmation before proceeding.
-            if agent["status"] == "ACTIVE":
-                print_warning(
-                    f"Agent '{agent['name']}' ({agent['agent_id']}) is currently "
-                    "ACTIVE.",
-                )
-                confirmation = await PromptSession().prompt_async(
-                    HTML(
-                        "Are you sure you want to delete this agent? It is still "
-                        "checking in and deleting it will make it "
-                        "<b><ansired>unmanageable</ansired></b> until it "
-                        "re-registers (y/N): ",
-                    )
-                )
-                if confirmation.lower() != "y":
-                    return ContinueSignal()
-
-            await rest_api.delete_agent_by_agent_id(
-                agent_id=parsed_args.agent_id[0],
+        # Deleting an active agent removes an agent that is still checking in, so
+        # warn the operator and require an explicit confirmation before proceeding.
+        if agent["status"] == "ACTIVE":
+            print_warning(
+                f"Agent '{agent['name']}' ({agent['agent_id']}) is currently ACTIVE.",
             )
-            print_success(
-                f"Deleted agent: '{agent['name']}' ({agent['agent_id']})",
+            confirmation = await PromptSession().prompt_async(
+                HTML(
+                    "Are you sure you want to delete this agent? It is still "
+                    "checking in and deleting it will make it "
+                    "<b><ansired>unmanageable</ansired></b> until it "
+                    "re-registers (y/N): ",
+                )
             )
-        except SystemExit:
-            pass
+            if confirmation.lower() != "y":
+                return ContinueSignal()
+
+        await rest_api.delete_agent_by_agent_id(
+            agent_id=parsed_args.agent_id[0],
+        )
+        print_success(
+            f"Deleted agent: '{agent['name']}' ({agent['agent_id']})",
+        )
 
         return ContinueSignal()

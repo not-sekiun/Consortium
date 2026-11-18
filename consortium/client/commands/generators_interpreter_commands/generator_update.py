@@ -5,6 +5,7 @@ from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
     InterpreterSignal,
 )
+from consortium.client.repl_interface.argparse_actions import ExtendedHelpAction
 from consortium.client.repl_interface.autocompletes import Autocomplete
 from consortium.client.repl_interface.base_command import (
     BaseConnectedCommand,
@@ -59,65 +60,54 @@ class GeneratorUpdateCommand(BaseConnectedCommand):
                 "Show this help message and include detailed examples "
                 "for specifying option value types."
             ),
-            action="store_true",
-            default=False,
+            action=ExtendedHelpAction,
+            epilog=format_value_type_specification_with_examples_epilog(
+                example_prefix="update <agent_generator_id> <parameter_name>",
+            ),
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
-        try:
-            if "--help-full" in context.arguments:
-                self.parser.epilog = (
-                    format_value_type_specification_with_examples_epilog(
-                        example_prefix="update <agent_generator_id> <parameter_name>"
-                    )
-                )
-                self.parser.print_help()
-                self.parser.epilog = self.epilog
-                return ContinueSignal()
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
-
-            agent_generator = await rest_api.get_agent_generator_by_agent_generator_id(
-                agent_generator_id=parsed_args.agent_generator_id[0],
+        agent_generator = await rest_api.get_agent_generator_by_agent_generator_id(
+            agent_generator_id=parsed_args.agent_generator_id[0],
+        )
+        agent_template_options = (
+            await rest_api.get_agent_template_by_agent_template_id(
+                agent_template_id=agent_generator["creating_agent_template"][
+                    "agent_template_id"
+                ],
             )
-            agent_template_options = (
-                await rest_api.get_agent_template_by_agent_template_id(
-                    agent_template_id=agent_generator["creating_agent_template"][
-                        "agent_template_id"
-                    ],
-                )
-            )["options"]
+        )["options"]
 
-            try:
-                option = agent_template_options[parsed_args.parameter_name[0]]
-            except KeyError:
-                print_error(
-                    f"Agent generator parameter not found: '{parsed_args.parameter_name[0]}'",
-                )
-                return ContinueSignal()
+        try:
+            option = agent_template_options[parsed_args.parameter_name[0]]
+        except KeyError:
+            print_error(
+                f"Agent generator parameter not found: '{parsed_args.parameter_name[0]}'",
+            )
+            return ContinueSignal()
 
-            try:
-                parameter_name, parameter_value = (
-                    convert_option_value_strings_to_option_value(
-                        option_json_data=option,
-                        value_strings=parsed_args.parameter_values,
-                        value_type_flag=parsed_args.value_type,
-                    )
+        try:
+            parameter_name, parameter_value = (
+                convert_option_value_strings_to_option_value(
+                    option_json_data=option,
+                    value_strings=parsed_args.parameter_values,
+                    value_type_flag=parsed_args.value_type,
                 )
-                await rest_api.update_agent_generator_by_agent_generator_id(
-                    agent_generator_id=parsed_args.agent_generator_id[0],
-                    new_agent_generator_attributes={
-                        "parameters": {parameter_name: parameter_value},
-                    },
-                )
-                print_success(
-                    f"Updated agent generator parameter '{parameter_name}' to '{parameter_value}'",
-                )
-            except ValueError as exc:
-                print_error(exc)
-                return ContinueSignal()
-        except SystemExit:
-            pass
+            )
+            await rest_api.update_agent_generator_by_agent_generator_id(
+                agent_generator_id=parsed_args.agent_generator_id[0],
+                new_agent_generator_attributes={
+                    "parameters": {parameter_name: parameter_value},
+                },
+            )
+            print_success(
+                f"Updated agent generator parameter '{parameter_name}' to '{parameter_value}'",
+            )
+        except ValueError as exc:
+            print_error(exc)
+            return ContinueSignal()
 
         return ContinueSignal()

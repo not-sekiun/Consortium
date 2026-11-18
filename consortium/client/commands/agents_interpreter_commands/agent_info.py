@@ -46,18 +46,15 @@ class AgentInfoCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            agent = await rest_api.get_agent_by_agent_id(
-                agent_id=parsed_args.agent_id[0],
-            )
-            display_agent_info(
-                agent=agent,
-                verbose=parsed_args.verbose,
-            )
-        except SystemExit:
-            pass
+        agent = await rest_api.get_agent_by_agent_id(
+            agent_id=parsed_args.agent_id[0],
+        )
+        display_agent_info(
+            agent=agent,
+            verbose=parsed_args.verbose,
+        )
 
         return ContinueSignal()

@@ -126,22 +126,17 @@ class ListenerTemplateCommand(BaseConnectedCommand):
         self,
         context: ConnectedContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
+        parsed_args = context.parsed_args
 
-            match parsed_args.sub_command:
-                case "list":
-                    return await self._handle_list_sub_command(context=context)
-                case "info":
-                    return await self._handle_info_sub_command(
-                        parsed_args=parsed_args,
-                        context=context,
-                    )
-                case _:
-                    raise AssertionError(
-                        f"Unknown template sub-command '{parsed_args.sub_command}'",
-                    )
-        except SystemExit:
-            pass
-
-        return ContinueSignal()
+        match parsed_args.sub_command:
+            case "list":
+                return await self._handle_list_sub_command(context=context)
+            case "info":
+                return await self._handle_info_sub_command(
+                    parsed_args=parsed_args,
+                    context=context,
+                )
+            case _:
+                raise AssertionError(
+                    f"Unknown template sub-command '{parsed_args.sub_command}'",
+                )

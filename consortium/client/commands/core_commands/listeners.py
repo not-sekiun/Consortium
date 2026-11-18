@@ -1,6 +1,5 @@
 from consortium.client.models.context_models import AnyContext
 from consortium.client.models.interpreter_signal_models import (
-    ContinueSignal,
     InterpreterSignal,
     SwitchListenersInterpreterSignal,
 )
@@ -25,11 +24,5 @@ class ListenersCommand(BaseCommand[AnyContext]):
         self,
         context: AnyContext,
     ) -> InterpreterSignal:
-        try:
-            _ = self.parser.parse_args(context.arguments)
-            print_info("Switching to the listeners interpreter...")
-            return SwitchListenersInterpreterSignal()
-        except SystemExit:
-            pass
-
-        return ContinueSignal()
+        print_info("Switching to the listeners interpreter...")
+        return SwitchListenersInterpreterSignal()

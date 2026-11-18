@@ -51,42 +51,39 @@ class ListenerCreateCommand(BaseConnectedCommand):
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
-            listener_template_id = context.interpreter_context.listener_template[
-                "listener_template_id"
-            ]
-            listener_template_options = context.interpreter_context.listener_template[
-                "options"
-            ]
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
+        listener_template_id = context.interpreter_context.listener_template[
+            "listener_template_id"
+        ]
+        listener_template_options = context.interpreter_context.listener_template[
+            "options"
+        ]
 
-            listener_template_option_values = {}
-            for option_name, option in listener_template_options.items():
-                listener_template_option_values[option_name] = option["value"]
-            # The name and description are sent separately from the option values: they
-            # are the created listener's display metadata rather than listener template
-            # options, so a listener template that declares its own option called `name`
-            # or `description` still sets that option through `set` as normal. A name of
-            # `None` means none was given, leaving the server to generate one.
-            listener = await rest_api.create_listener_through_listener_template_by_listener_template_id(
-                listener_template_id=listener_template_id,
-                listener_template_option_values=listener_template_option_values,
-                name=parsed_args.name,
-                description=parsed_args.description,
+        listener_template_option_values = {}
+        for option_name, option in listener_template_options.items():
+            listener_template_option_values[option_name] = option["value"]
+        # The name and description are sent separately from the option values: they
+        # are the created listener's display metadata rather than listener template
+        # options, so a listener template that declares its own option called `name`
+        # or `description` still sets that option through `set` as normal. A name of
+        # `None` means none was given, leaving the server to generate one.
+        listener = await rest_api.create_listener_through_listener_template_by_listener_template_id(
+            listener_template_id=listener_template_id,
+            listener_template_option_values=listener_template_option_values,
+            name=parsed_args.name,
+            description=parsed_args.description,
+        )
+        if parsed_args.no_start:
+            print_success(
+                f"Created listener: '{listener['name']}' ({listener['listener_id']})",
             )
-            if parsed_args.no_start:
-                print_success(
-                    f"Created listener: '{listener['name']}' ({listener['listener_id']})",
-                )
-            else:
-                _ = await rest_api.start_listener_by_listener_id(
-                    listener_id=listener["listener_id"],
-                )
-                print_success(
-                    f"Created and started listener: '{listener['name']}' ({listener['listener_id']})",
-                )
-        except SystemExit:
-            pass
+        else:
+            _ = await rest_api.start_listener_by_listener_id(
+                listener_id=listener["listener_id"],
+            )
+            print_success(
+                f"Created and started listener: '{listener['name']}' ({listener['listener_id']})",
+            )
 
         return ContinueSignal()

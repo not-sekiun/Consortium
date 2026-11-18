@@ -99,20 +99,15 @@ class HelpCommand(BaseCommand[AnyContext]):
         self,
         context: AnyContext,
     ) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(
-                context.arguments,
-            )
-            commands_info = context.interpreter_context.commands_info
+        parsed_args = context.parsed_args
+        commands_info = context.interpreter_context.commands_info
 
-            if parsed_args.command_name:
-                if parsed_args.command_name in commands_info:
-                    print(commands_info[parsed_args.command_name].summary)
-                else:
-                    print_error(f"Invalid command: {parsed_args.command_name}")
+        if parsed_args.command_name:
+            if parsed_args.command_name in commands_info:
+                print(commands_info[parsed_args.command_name].summary)
             else:
-                self._print_summarized_help_menu(commands_info)
-        except SystemExit:
-            pass
+                print_error(f"Invalid command: {parsed_args.command_name}")
+        else:
+            self._print_summarized_help_menu(commands_info)
 
         return ContinueSignal()

@@ -39,52 +39,48 @@ class ListenerDeleteCommand(BaseConnectedCommand):
         )
 
     async def run(self, context: ConnectedContext) -> InterpreterSignal:
-        try:
-            parsed_args = self.parser.parse_args(context.arguments)
-            rest_api = context.client_session.rest_api
+        parsed_args = context.parsed_args
+        rest_api = context.client_session.rest_api
 
-            # If listener does not exist, a RESTAPIError is raised and caught by the
-            # outer try-except block
-            listener = await rest_api.get_listener_by_listener_id(
-                parsed_args.listener_id[0],
-            )
+        # If listener does not exist, a RESTAPIError is raised and caught by the
+        # outer try-except block
+        listener = await rest_api.get_listener_by_listener_id(
+            parsed_args.listener_id[0],
+        )
 
-            if (
-                listener["connected_agents"]
-                and listener["status"]["state"] != "RUNNING"
-            ):  # You can't delete a running listener
-                print_warning(
-                    f"Listener '{listener['name']}' ({listener['listener_id']}) has the following connected agents:",
+        if (
+            listener["connected_agents"] and listener["status"]["state"] != "RUNNING"
+        ):  # You can't delete a running listener
+            print_warning(
+                f"Listener '{listener['name']}' ({listener['listener_id']}) has the following connected agents:",
+            )
+            print(
+                textwrap.indent(
+                    format_list_as_multi_line_bulleted_string(
+                        [
+                            f"'{agent['name']}' ({agent['agent_id']})"
+                            for agent in listener["connected_agents"]
+                        ],
+                    ),
+                    "    ",
                 )
-                print(
-                    textwrap.indent(
-                        format_list_as_multi_line_bulleted_string(
-                            [
-                                f"'{agent['name']}' ({agent['agent_id']})"
-                                for agent in listener["connected_agents"]
-                            ],
-                        ),
-                        "    ",
-                    )
-                    + "\n"
+                + "\n"
+            )
+            confirmation = await PromptSession().prompt_async(
+                HTML(
+                    "Are you sure you want to delete this listener? This will cause "
+                    "those agents to be <b><ansired>permanently "
+                    "unreachable</ansired></b> (y/N): ",
                 )
-                confirmation = await PromptSession().prompt_async(
-                    HTML(
-                        "Are you sure you want to delete this listener? This will cause "
-                        "those agents to be <b><ansired>permanently "
-                        "unreachable</ansired></b> (y/N): ",
-                    )
-                )
-                if confirmation.lower() != "y":
-                    return ContinueSignal()
+            )
+            if confirmation.lower() != "y":
+                return ContinueSignal()
 
-            _ = await rest_api.delete_listener_by_listener_id(
-                listener_id=parsed_args.listener_id[0],
-            )
-            print_success(
-                f"Deleted listener: '{listener['name']}' ({listener['listener_id']})",
-            )
-        except SystemExit:
-            pass
+        _ = await rest_api.delete_listener_by_listener_id(
+            listener_id=parsed_args.listener_id[0],
+        )
+        print_success(
+            f"Deleted listener: '{listener['name']}' ({listener['listener_id']})",
+        )
 
         return ContinueSignal()
