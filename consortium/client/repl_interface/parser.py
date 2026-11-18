@@ -1,9 +1,10 @@
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 from consortium.client.repl_interface.lexer import TokenizedString
 
 
-class ParsedCommand(BaseModel):
+@dataclass
+class ParsedCommand:
     command: str
     arguments: list[str]
     raw_input: str

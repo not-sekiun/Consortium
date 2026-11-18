@@ -1,16 +1,12 @@
 from argparse import Namespace
-
-from pydantic import BaseModel, ConfigDict
+from dataclasses import dataclass
 
 from consortium.client.client_session import ClientSession
 from consortium.client.models.interpreter_context_models import BaseInterpreterContext
 
 
-class _Context(BaseModel):
-    model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-    )
-
+@dataclass
+class _Context:
     command: str
     arguments: list[str]
     parsed_args: Namespace
@@ -18,10 +14,12 @@ class _Context(BaseModel):
     interpreter_context: BaseInterpreterContext
 
 
+@dataclass
 class ConnectedContext(_Context):
     client_session: ClientSession
 
 
+@dataclass
 class DisconnectedContext(_Context): ...
 
 

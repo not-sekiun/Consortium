@@ -1,7 +1,8 @@
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 
-class CommandInfo(BaseModel):
+@dataclass
+class CommandInfo:
     name: str
     description: str
     group: str

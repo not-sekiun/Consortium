@@ -1,11 +1,12 @@
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 from consortium.client.exceptions.client_interpreter_exceptions import (
     UnclosedQuotesError,
 )
 
 
-class TokenizedString(BaseModel):
+@dataclass
+class TokenizedString:
     tokens: list[str]
     raw_input: str
 

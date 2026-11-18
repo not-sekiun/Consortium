@@ -23,6 +23,7 @@ from consortium.client.commands.use_agent_template_interpreter_commands.agent_te
 from consortium.client.commands.use_listener_template_interpreter_commands.listener_template_set_option import (
     ListenerTemplateSetOptionCommand,
 )
+from consortium.client.models.alias_models import Alias
 from consortium.client.models.context_models import (
     AnyContext,
     ConnectedContext,
@@ -89,11 +90,34 @@ async def test_dispatch_parses_once_and_supplies_the_execution_context(connected
     assert isinstance(context, ConnectedContext if connected else DisconnectedContext)
     assert context.command == command.name
     assert context.arguments == ["42"]
+    assert context.arguments is parsed_command.arguments
     assert context.raw_input == parsed_command.raw_input
     assert context.parsed_args.value == 42
     assert context.interpreter_context is interpreter.interpreter_context
     if connected:
         assert context.client_session is interpreter.client_session
+    assert isinstance(signal, SwitchHomeInterpreterSignal)
+
+
+@pytest.mark.parametrize("connected", [False, True])
+async def test_alias_input_is_tokenized_parsed_and_dispatched(connected):
+    command = _InspectCommand()
+    command.run = AsyncMock(return_value=SwitchHomeInterpreterSignal())
+    interpreter = _interpreter(command=command, connected=connected)
+    interpreter.interpreter_context.aliases["short"] = Alias(
+        command="inspect", is_global=False
+    )
+    raw_input = "short '42'"
+
+    parsed_command = interpreter._parse_input_string(input_string=raw_input)
+    signal = await interpreter._dispatch_command(parsed_command=parsed_command)
+
+    command.run.assert_awaited_once()
+    context = command.run.call_args.kwargs["context"]
+    assert context.command == "inspect"
+    assert context.arguments == ["42"]
+    assert context.parsed_args.value == 42
+    assert context.raw_input == raw_input
     assert isinstance(signal, SwitchHomeInterpreterSignal)
 
 
@@ -106,7 +130,9 @@ async def test_dispatch_parses_once_and_supplies_the_execution_context(connected
         (["42", "--unknown"], "unrecognized arguments"),
     ],
 )
-async def test_dispatch_returns_to_the_prompt_without_executing(arguments, output, capsys):
+async def test_dispatch_returns_to_the_prompt_without_executing(
+    arguments, output, capsys
+):
     command = _InspectCommand()
     command.run = AsyncMock()
     interpreter = _interpreter(command)
