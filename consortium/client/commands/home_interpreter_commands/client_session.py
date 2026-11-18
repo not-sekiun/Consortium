@@ -1,7 +1,4 @@
-import json
 from argparse import ArgumentParser, Namespace, RawDescriptionHelpFormatter
-
-import jsonschema
 
 import consortium.client.client_singletons as client_singletons
 from consortium.client.client_config import CLIENT_CONFIG_JSON_FILE
@@ -12,6 +9,8 @@ from consortium.client.exceptions.client_session_exceptions import (
 from consortium.client.exceptions.client_sessions_service_exceptions import (
     ClientSessionNotFoundError,
 )
+from consortium.client.exceptions.config_exceptions import ConfigLoadError
+from consortium.client.models.client_models import ClientConfig
 from consortium.client.models.context_models import AnyContext, ConnectedContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
@@ -28,6 +27,7 @@ from consortium.client.utils.client_session_command_utils import (
     display_client_session_info,
     rename_client_session,
 )
+from consortium.client.utils.config_utils import load_config_model_from_json_file
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import (
     print_error,
@@ -332,49 +332,15 @@ class SessionCommand(BaseCommand[AnyContext]):
 
         config_data = {}
         if config_path is not None:
-            client_config_file_json_schema = {
-                "type": "object",
-                "properties": {
-                    "username": {"type": "string"},
-                    "password": {"type": "string"},
-                    "remote_host": {"type": "string"},
-                    "remote_port": {"type": "number"},
-                },
-                "required": ["remote_host", "remote_port", "username", "password"],
-                "additionalProperties": False,
-            }
-
             try:
-                with open(config_path) as file:
-                    config_data = json.load(fp=file)
-                jsonschema.validate(config_data, client_config_file_json_schema)
-            except FileNotFoundError, IsADirectoryError:
-                print_error(
-                    f"Failed to read the client configuration file "
-                    f"'{config_path}'. The file path supplied was not "
-                    f"found.",
+                client_config = load_config_model_from_json_file(
+                    path=config_path,
+                    model=ClientConfig,
+                    description="client configuration",
                 )
-                return ContinueSignal()
-            except PermissionError:
-                print_error(
-                    f"Failed to read the client configuration file "
-                    f"'{config_path}'. Insufficient permissions to read the "
-                    f"file.",
-                )
-                return ContinueSignal()
-            except json.decoder.JSONDecodeError:
-                print_error(
-                    f"Failed to read the client configuration file "
-                    f"'{config_path}'. The configuration file does not "
-                    f"contain valid JSON data"
-                )
-                return ContinueSignal()
-            except jsonschema.ValidationError as exc:
-                print_error(
-                    f"Failed to read the client configuration file "
-                    f"'{config_path}'. The configuration file's JSON data "
-                    f"does not conform to the expected JSON schema: {exc}",
-                )
+                config_data = client_config.model_dump()
+            except ConfigLoadError as exc:
+                print_error(str(exc))
                 return ContinueSignal()
 
         connection_details = {

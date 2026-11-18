@@ -1,4 +1,4 @@
-from consortium.client.models.alias_model import Alias
+from consortium.client.models.alias_models import Alias
 from consortium.client.repl_interface.lexer import tokenize
 
 

@@ -1,32 +1,29 @@
 from collections import deque
+from dataclasses import dataclass, field
 
-from pydantic import BaseModel, ConfigDict, JsonValue
+from pydantic import JsonValue
 
-from consortium.client.models.alias_model import Alias
+from consortium.client.models.alias_models import Alias
 from consortium.client.models.command_info_model import CommandInfo
 
 
-class BaseInterpreterContext(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    commands_info: dict[
-        str, CommandInfo
-    ] = {}  # For the `help` command to get interpreter specific help information
-    aliases: dict[
-        str, Alias
-    ] = {}  # For the `alias` command to access and modify aliases across interpreters.
-    resource_commands: deque[str] = (
-        deque()
-    )  # For the `rc` command to add resource commands and for interpreters to read them
+@dataclass(kw_only=True)
+class BaseInterpreterContext:
+    commands_info: dict[str, CommandInfo] = field(default_factory=dict)
+    aliases: dict[str, Alias] = field(default_factory=dict)
+    resource_commands: deque[str] = field(default_factory=deque)
 
 
+@dataclass(kw_only=True)
 class UseAgentTemplateInterpreterContext(BaseInterpreterContext):
     agent_template: dict[str, JsonValue]
 
 
+@dataclass(kw_only=True)
 class UseListenerTemplateInterpreterContext(BaseInterpreterContext):
     listener_template: dict[str, JsonValue]
 
 
+@dataclass(kw_only=True)
 class InteractAgentInterpreterContext(BaseInterpreterContext):
     agent: dict[str, JsonValue]

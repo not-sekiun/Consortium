@@ -4,7 +4,8 @@ import json
 from rich.table import Table
 
 import consortium.client.client_config as client_config
-from consortium.client.models.alias_model import Alias
+from consortium.client.exceptions.config_exceptions import ConfigLoadError
+from consortium.client.models.alias_models import Alias
 from consortium.client.models.context_models import AnyContext
 from consortium.client.models.interpreter_signal_models import (
     ContinueSignal,
@@ -13,6 +14,7 @@ from consortium.client.models.interpreter_signal_models import (
 from consortium.client.repl_interface.base_command import (
     BaseCommand,
 )
+from consortium.client.utils.config_utils import load_aliases_from_json_file
 from consortium.client.utils.formatter_utils import format_argparse_epilog
 from consortium.client.utils.printer_utils import (
     console,
@@ -29,6 +31,8 @@ class AliasCommand(BaseCommand[AnyContext]):
         """
         Examples:
           alias list
+          alias load
+          alias load path/to/aliases.json
           alias set my_alias "command arg1 arg2"
           alias set -g my_alias "command arg1 arg2"  # set a global alias
           alias unset my_alias
@@ -38,9 +42,31 @@ class AliasCommand(BaseCommand[AnyContext]):
           expand anywhere else. This is the default behavior.
 
           A global alias will expand as a token anywhere.
+          Loading replaces the active aliases. Without a path, the default alias
+          file is reloaded. Loading does not write to the default alias file.
         """,
     )
-    autocompletes = {"list": None, "set": None, "unset": None}
+    autocompletes = {"list": None, "load": None, "set": None, "unset": None}
+
+    @staticmethod
+    def _handle_load_sub_command(
+        parsed_args: argparse.Namespace, aliases: dict[str, Alias]
+    ) -> InterpreterSignal:
+        path = (
+            client_config.ALIASES_JSON_FILE
+            if parsed_args.path is None
+            else parsed_args.path
+        )
+        try:
+            loaded_aliases = load_aliases_from_json_file(path=path)
+        except ConfigLoadError as exc:
+            print_error(str(exc))
+            return ContinueSignal()
+
+        aliases.clear()
+        aliases.update(loaded_aliases)
+        print_success(f"Loaded {len(aliases)} aliases from '{path}'.")
+        return ContinueSignal()
 
     @staticmethod
     def _write_aliases_to_alias_file(aliases: dict[str, Alias]) -> None:
@@ -119,6 +145,17 @@ class AliasCommand(BaseCommand[AnyContext]):
         # list sub-command
         subparsers.add_parser("list", help="List all currently set aliases.")
 
+        parser_load = subparsers.add_parser(
+            "load",
+            help="Replace active aliases from a file (defaults to the alias file).",
+        )
+        parser_load.add_argument(
+            "path",
+            nargs="?",
+            default=None,
+            help="Alias file to load. Omit to reload the default alias file.",
+        )
+
         # set sub-command
         parser_set = subparsers.add_parser("set", help="Set an alias.")
         parser_set.add_argument(
@@ -161,6 +198,10 @@ class AliasCommand(BaseCommand[AnyContext]):
 
         if parsed_args.sub_command == "list":
             return self._handle_list_sub_command(context.interpreter_context.aliases)
+        elif parsed_args.sub_command == "load":
+            return self._handle_load_sub_command(
+                parsed_args, context.interpreter_context.aliases
+            )
         elif parsed_args.sub_command == "set":
             return self._handle_set_sub_command(
                 parsed_args, context.interpreter_context.aliases

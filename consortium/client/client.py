@@ -1,7 +1,4 @@
-import json
 from collections import deque
-
-import jsonschema
 
 import consortium.client.client_config as client_config_module
 import consortium.client.client_singletons as client_singletons
@@ -10,6 +7,7 @@ from consortium.client.commands.core_commands.banner import BannerCommand
 from consortium.client.exceptions.client_session_exceptions import (
     BaseClientSessionError,
 )
+from consortium.client.exceptions.config_exceptions import ConfigLoadError
 from consortium.client.exceptions.rest_api_exceptions import (
     RestAPIOperationError,
 )
@@ -25,7 +23,6 @@ from consortium.client.interpreters import (
 from consortium.client.interpreters.disconnected_interpreter import (
     DisconnectedInterpreter,
 )
-from consortium.client.models.alias_model import Alias
 from consortium.client.models.client_models import ClientConfig
 from consortium.client.models.context_models import (
     ConnectedContext,
@@ -50,6 +47,7 @@ from consortium.client.models.interpreter_signal_models import (
     SwitchUseAgentTemplateInterpreterSignal,
     SwitchUseListenerTemplateInterpreterSignal,
 )
+from consortium.client.utils.config_utils import load_aliases_from_json_file
 from consortium.client.utils.environment_utils import (
     print_containerized_working_directory_notice,
 )
@@ -65,7 +63,13 @@ class Client:
     def __init__(self, client_config: ClientConfig):
         self._client_sessions_service = client_singletons.client_sessions_service
         self._client_config = client_config
-        self._aliases = self._load_aliases_from_aliases_json_file()
+        try:
+            self._aliases = load_aliases_from_json_file(
+                path=client_config_module.ALIASES_JSON_FILE
+            )
+        except ConfigLoadError as exc:
+            print_error(f"Failed to load client aliases. {exc}")
+            self._aliases = {}
         self._resource_commands = deque()
 
     @property
@@ -74,54 +78,6 @@ class Client:
             aliases=self._aliases,
             resource_commands=self._resource_commands,
         )
-
-    @staticmethod
-    def _load_aliases_from_aliases_json_file() -> dict[str, Alias]:
-        aliases = {}
-        with open(client_config_module.ALIASES_JSON_FILE) as file:
-            try:
-                alias_json = json.load(file)
-                jsonschema.validate(
-                    alias_json,
-                    {
-                        "type": "object",
-                        "properties": {
-                            "local_aliases": {
-                                "type": "object",
-                                "additionalProperties": {"type": "string"},
-                            },
-                            "global_aliases": {
-                                "type": "object",
-                                "additionalProperties": {"type": "string"},
-                            },
-                        },
-                        "additionalProperties": False,
-                        "required": ["local_aliases", "global_aliases"],
-                    },
-                )
-            except json.JSONDecodeError:
-                print_error(
-                    "Failed to load client aliases from "
-                    f"{client_config_module.ALIASES_JSON_FILE}. The "
-                    "client alias file was not valid JSON."
-                )
-                return aliases
-            except jsonschema.ValidationError:
-                print_error(
-                    "Failed to load client aliases from "
-                    f"{client_config_module.ALIASES_JSON_FILE}. The "
-                    "client alias file was invalidly formatted. Hint: An entry should "
-                    "be formatted as: "
-                    "{'local_aliases'/'global_aliases': {<alias_1>: <command_1>, <alias_2>: <command_2>}}"
-                )
-                return aliases
-
-            for alias, command in alias_json["local_aliases"].items():
-                aliases[alias] = Alias(command=command, is_global=False)
-            for alias, command in alias_json["global_aliases"].items():
-                aliases[alias] = Alias(command=command, is_global=True)
-
-        return aliases
 
     @with_spinner()
     async def _connect(self) -> ClientSession | None:

@@ -16,7 +16,7 @@ class LoggingConfigModel(BaseModel):
     ] = "INFO"
     log_file: str | None = None
     rotation: str | int | None = None
-    retention: str | int | None = None
+    retention: str | int | None = 1
     colorize: bool = True
 
 

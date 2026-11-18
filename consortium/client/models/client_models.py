@@ -1,9 +1,11 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ClientConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
     username: str
     password: str
     remote_host: str

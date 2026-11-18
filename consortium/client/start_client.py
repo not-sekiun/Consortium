@@ -1,11 +1,9 @@
 import argparse
 import asyncio
-import json
 import pathlib
 import sys
 
 from loguru import logger
-from pydantic import ValidationError
 
 from consortium.client.client import Client
 from consortium.client.client_config import (
@@ -13,82 +11,39 @@ from consortium.client.client_config import (
     CONSORTIUM_ROOT,
     LOGGING_CONFIG_JSON_FILE,
 )
+from consortium.client.exceptions.config_exceptions import ConfigLoadError
 from consortium.client.models.client_models import ClientConfig
 from consortium.client.models.logging_models import LoggingConfigModel
-from consortium.client.utils.formatter_utils import format_validation_error
+from consortium.client.utils.config_utils import load_config_model_from_json_file
 from consortium.client.utils.logging_utils import log_formatter
 
 
 async def _start_client(arguments: argparse.Namespace) -> None:
-    # Configure client from configuration file.
-    if arguments.client_config is None:
-        # Use relative pathing from the module to allow directory independent
-        # invocation.
-        client_config_filepath = str(CLIENT_CONFIG_JSON_FILE)
-    else:
-        client_config_filepath = arguments.client_config
-
     try:
-        with open(client_config_filepath) as file:
-            json_data = json.load(fp=file)
-    except FileNotFoundError:
-        print(
-            f"Failed to start client. Could not find client configuration file at "
-            f"the provided file path '{client_config_filepath}'.",
+        client_config = load_config_model_from_json_file(
+            path=(
+                CLIENT_CONFIG_JSON_FILE
+                if arguments.client_config is None
+                else arguments.client_config
+            ),
+            model=ClientConfig,
+            description="client configuration",
         )
-        return
-    except PermissionError:
-        print(
-            f"Failed to start client. Permission denied when attempting to read client "
-            f"configuration file at '{client_config_filepath}'.",
+        logging_config = load_config_model_from_json_file(
+            path=(
+                LOGGING_CONFIG_JSON_FILE
+                if arguments.logging_config is None
+                else arguments.logging_config
+            ),
+            model=LoggingConfigModel,
+            description="logging configuration",
         )
-        return
-
-    try:
-        client_config = ClientConfig(**json_data)
-    except ValidationError as exc:
-        print(
-            f"Failed to start client. The provided client configuration file "
-            f"'{client_config_filepath}' does not adhere to the expected client "
-            f"configuration file JSON schema:\n{format_validation_error(exc)}",
-        )
+    except ConfigLoadError as exc:
+        print(f"Failed to start client. {exc}")
         return
 
-    # Configure logging from configuration file.
-    if arguments.logging_config is None:
-        logging_config_filepath = str(LOGGING_CONFIG_JSON_FILE)
-    else:
-        logging_config_filepath = arguments.logging_config
-
-    try:
-        with open(logging_config_filepath) as file:
-            json_data = json.load(file)
-        logging_config = LoggingConfigModel(
-            level="DEBUG" if arguments.debug else json_data.get("level", "INFO"),
-            log_file=json_data.get("log_file"),
-            rotation=json_data.get("rotation", None),
-            retention=json_data.get("retention", 1),
-            colorize=json_data.get("colorize", True),
-        )
-    except FileNotFoundError:
-        print(
-            f"Failed to start client. Could not find the logging configuration file at "
-            f"the provided file path '{logging_config_filepath}'.",
-        )
-        return
-    except PermissionError:
-        print(
-            "Failed to start client. Permission denied when attempting to read the "
-            f"logging configuration file at '{logging_config_filepath}'.",
-        )
-        return
-    except ValidationError as exc:
-        print(
-            f"Failed to start client. The provided logging configuration file "
-            f"'{logging_config_filepath}' does not adhere to the expected logging "
-            f"configuration file JSON schema:\n{format_validation_error(exc)}",
-        )
-        return
+    if arguments.debug:
+        logging_config.level = "DEBUG"
 
     if logging_config.log_file is not None:
         path = pathlib.Path(logging_config.log_file)
